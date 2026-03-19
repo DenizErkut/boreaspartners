@@ -208,18 +208,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
   .form-row{grid-template-columns:1fr}
   .modal{width:96%}
 }
-
-.file-upload-area{border:1.5px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:.2s;margin-top:4px}
-.file-upload-area:hover{border-color:var(--accent);background:rgba(59,130,246,.04)}
-.file-upload-area input[type=file]{display:none}
-.file-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-.file-item{display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:7px;padding:8px 10px;font-size:12px}
-.file-item-icon{font-size:16px;flex-shrink:0}
-.file-item-name{flex:1;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-item-size{color:var(--text3);flex-shrink:0}
-.file-item-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px}
-.file-item-del:hover{color:var(--danger)}
-.file-item-link{color:var(--accent);text-decoration:none;font-size:11px;flex-shrink:0}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -244,8 +232,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a> → Projeniz →
       <code>Settings</code> → <code>API</code> → <code>Project URL</code> + <code>anon public key</code><br><br>
       🗄️ Henüz yapmadıysanız, indirdiğiniz <code>supabase-kurulum.sql</code> dosyasını önce
-      <strong>SQL Editor</strong>'de çalıştırın.<br><br>
-      📁 Dosya yükleme için: Supabase → <code>Storage</code> → <code>New bucket</code> → isim: <code>proflow-files</code> → Public → Create
+      <strong>SQL Editor</strong>'de çalıştırın.
     </div>
 
     <button class="btn btn-primary btn-full" onclick="saveConfig()">Bağlan →</button>
@@ -264,17 +251,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" id="lEmail" type="email" placeholder="ad@sirket.com"></div>
       <div class="form-group"><label class="form-label">Şifre</label><input class="form-input" id="lPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <button class="btn btn-primary btn-full" id="btnLogin" onclick="doLogin()">Giriş Yap</button>
-      <div style="text-align:right;margin-top:8px;margin-bottom:4px">
-        <a style="font-size:12px;color:var(--text2);cursor:pointer" onclick="showForgot()">Şifremi unuttum</a>
-      </div>
       <div class="switch-link">Hesabınız yok mu? <a onclick="toggleForms()">Kayıt Olun</a></div>
-    </div>
-
-    <div id="fForgot" style="display:none">
-      <div style="margin-bottom:16px;font-size:13px;color:var(--text2)">E-posta adresinizi girin, şifre sıfırlama bağlantısı gönderelim.</div>
-      <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" id="forgotEmail" type="email" placeholder="ad@sirket.com"></div>
-      <button class="btn btn-primary btn-full" id="btnForgot" onclick="doForgot()">Sıfırlama Bağlantısı Gönder</button>
-      <div class="switch-link"><a onclick="showLogin()">← Giriş ekranına dön</a></div>
     </div>
 
     <div id="fRegister" style="display:none">
@@ -523,16 +500,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group"><label class="form-label">İlerleme %</label><input class="form-input" id="pProgress" type="number" min="0" max="100" placeholder="0"></div>
     </div>
     <div class="form-group"><label class="form-label">Açıklama</label><textarea class="form-textarea" id="pDesc" placeholder="Proje detayları..."></textarea></div>
-    <div class="form-group">
-      <label class="form-label">Dosya & Görseller</label>
-      <div class="file-upload-area" onclick="document.getElementById('pFiles').click()">
-        <input type="file" id="pFiles" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx" onchange="handleFiles(this,'pFileList')">
-        <div style="font-size:22px;margin-bottom:6px">📎</div>
-        <div style="font-size:13px;color:var(--text2)">Dosya veya görsel eklemek için tıklayın</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">PDF, PNG, JPG, DOC, XLS desteklenir</div>
-      </div>
-      <div class="file-list" id="pFileList"></div>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('project')">İptal</button>
       <button class="btn btn-primary" onclick="saveProject()">Kaydet</button>
@@ -634,15 +601,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
     <div class="form-group"><label class="form-label">Notlar</label><textarea class="form-textarea" id="meetNotes" placeholder="Görüşülen konular..." style="min-height:100px"></textarea></div>
     <div class="form-group"><label class="form-label">Aksiyon Maddeleri</label><textarea class="form-textarea" id="meetActions" placeholder="1. Yapılacak — Sorumlu&#10;2. ..."></textarea></div>
-    <div class="form-group">
-      <label class="form-label">Ekler (Sunum, Tutanak vb.)</label>
-      <div class="file-upload-area" onclick="document.getElementById('meetFiles').click()">
-        <input type="file" id="meetFiles" multiple accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.ppt,.pptx" onchange="handleFiles(this,'meetFileList')">
-        <div style="font-size:20px;margin-bottom:4px">📎</div>
-        <div style="font-size:13px;color:var(--text2)">Toplantı belgelerini ekleyin</div>
-      </div>
-      <div class="file-list" id="meetFileList"></div>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('meeting')">İptal</button>
       <button class="btn btn-primary" onclick="saveMeeting()">Kaydet</button>
@@ -676,15 +634,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group"><label class="form-label">Ödeme Vadesi (gün)</label><input class="form-input" id="custPayment" type="number" placeholder="30"></div>
     </div>
     <div class="form-group"><label class="form-label">Notlar</label><textarea class="form-textarea" id="custNotes" placeholder="Ek bilgiler..."></textarea></div>
-    <div class="form-group">
-      <label class="form-label">Sözleşme / Logo / Belgeler</label>
-      <div class="file-upload-area" onclick="document.getElementById('custFiles').click()">
-        <input type="file" id="custFiles" multiple accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleFiles(this,'custFileList')">
-        <div style="font-size:20px;margin-bottom:4px">📁</div>
-        <div style="font-size:13px;color:var(--text2)">Müşteriye ait belgeleri ekleyin</div>
-      </div>
-      <div class="file-list" id="custFileList"></div>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('customer')">İptal</button>
       <button class="btn btn-primary" onclick="saveCustomer()">Kaydet</button>
@@ -716,15 +665,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
     <div class="form-group"><label class="form-label">Durum</label><select class="form-select" id="commStatus"><option value="draft">Taslak</option><option value="pending">Bekliyor</option><option value="collected">Tahsil</option><option value="completed">Tamamlandı</option><option value="cancelled">İptal</option></select></div>
     <div class="form-group"><label class="form-label">Not</label><textarea class="form-textarea" id="commNote" placeholder="Ek bilgiler..."></textarea></div>
-    <div class="form-group">
-      <label class="form-label">Belge Ekle (Fatura PDF, vb.)</label>
-      <div class="file-upload-area" onclick="document.getElementById('commFiles').click()">
-        <input type="file" id="commFiles" multiple accept=".pdf,.png,.jpg,.jpeg" onchange="handleFiles(this,'commFileList')">
-        <div style="font-size:20px;margin-bottom:4px">🧾</div>
-        <div style="font-size:13px;color:var(--text2)">Fatura veya belge PDF'i ekleyin</div>
-      </div>
-      <div class="file-list" id="commFileList"></div>
-    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('commercial')">İptal</button>
       <button class="btn btn-primary" onclick="saveCommercial()">Kaydet</button>
@@ -919,107 +859,6 @@ async function doLogout() {
   showLogin();
 }
 function showErr(msg) { const e=document.getElementById('lErr'); e.textContent=msg; e.classList.add('show'); }
-
-function showForgot() {
-  document.getElementById('fLogin').style.display='none';
-  document.getElementById('fRegister').style.display='none';
-  document.getElementById('fForgot').style.display='block';
-  document.getElementById('lsub').textContent='Şifre Sıfırlama';
-  document.getElementById('lErr').classList.remove('show');
-}
-function showLogin() {
-  document.getElementById('fLogin').style.display='block';
-  document.getElementById('fRegister').style.display='none';
-  document.getElementById('fForgot').style.display='none';
-  document.getElementById('lsub').textContent='Hesabınıza giriş yapın';
-  document.getElementById('lErr').classList.remove('show');
-}
-async function doForgot() {
-  const email = document.getElementById('forgotEmail').value;
-  if (!email) return showErr('E-posta adresi gerekli');
-  if (isDemo) return showErr('Demo modunda şifre sıfırlama yapılamaz');
-  const btn = document.getElementById('btnForgot');
-  btn.disabled = true; btn.textContent = 'Gönderiliyor...';
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href
-  });
-  btn.disabled = false; btn.textContent = 'Sıfırlama Bağlantısı Gönder';
-  if (error) return showErr('Hata: ' + error.message);
-  document.getElementById('lErr').classList.remove('show');
-  document.getElementById('fForgot').innerHTML = `
-    <div style="text-align:center;padding:20px 0">
-      <div style="font-size:40px;margin-bottom:12px">📧</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:8px">E-posta gönderildi!</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.6">${email} adresine şifre sıfırlama bağlantısı gönderildi.<br>Lütfen gelen kutunuzu kontrol edin.</div>
-      <a style="display:block;margin-top:16px;font-size:12px;color:var(--accent);cursor:pointer" onclick="showLogin()">← Giriş ekranına dön</a>
-    </div>`;
-}
-
-// ── FILE UPLOAD HANDLER ──
-const uploadedFiles = {};
-
-function handleFiles(input, listId) {
-  const files = Array.from(input.files);
-  if (!uploadedFiles[listId]) uploadedFiles[listId] = [];
-  files.forEach(f => {
-    const id = Date.now() + Math.random();
-    uploadedFiles[listId].push({ id, file: f, name: f.name, size: f.size, url: null });
-  });
-  renderFileList(listId);
-}
-
-function renderFileList(listId) {
-  const list = document.getElementById(listId);
-  const files = uploadedFiles[listId] || [];
-  if (!list) return;
-  list.innerHTML = files.map(f => `
-    <div class="file-item" id="fi-${f.id}">
-      <span class="file-item-icon">${getFileIcon(f.name)}</span>
-      <span class="file-item-name">${f.name}</span>
-      <span class="file-item-size">${fmtFileSize(f.size)}</span>
-      ${f.url ? `<a class="file-item-link" href="${f.url}" target="_blank">Görüntüle</a>` : '<span style="font-size:11px;color:var(--text3)">Kaydedilecek</span>'}
-      <button class="file-item-del" onclick="removeFile('${listId}','${f.id}')">✕</button>
-    </div>`).join('');
-}
-
-function removeFile(listId, id) {
-  uploadedFiles[listId] = (uploadedFiles[listId] || []).filter(f => String(f.id) !== String(id));
-  renderFileList(listId);
-}
-
-async function uploadFilesToSupabase(listId, folder) {
-  if (isDemo) return [];
-  const files = uploadedFiles[listId] || [];
-  const urls = [];
-  for (const f of files) {
-    if (f.url) { urls.push({ name: f.name, url: f.url }); continue; }
-    const path = `${folder}/${Date.now()}_${f.name.replace(/\s/g,'_')}`;
-    const { data, error } = await sb.storage.from('proflow-files').upload(path, f.file, { upsert: true });
-    if (!error && data) {
-      const { data: pub } = sb.storage.from('proflow-files').getPublicUrl(path);
-      urls.push({ name: f.name, url: pub.publicUrl });
-      f.url = pub.publicUrl;
-    }
-  }
-  renderFileList(listId);
-  return urls;
-}
-
-function getFileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  const icons = { pdf:'📄', png:'🖼️', jpg:'🖼️', jpeg:'🖼️', gif:'🖼️', webp:'🖼️', doc:'📝', docx:'📝', xls:'📊', xlsx:'📊', ppt:'📋', pptx:'📋' };
-  return icons[ext] || '📎';
-}
-function fmtFileSize(bytes) {
-  if (bytes < 1024) return bytes + 'B';
-  if (bytes < 1048576) return (bytes/1024).toFixed(1) + 'KB';
-  return (bytes/1048576).toFixed(1) + 'MB';
-}
-function clearFileList(listId) {
-  uploadedFiles[listId] = [];
-  const el = document.getElementById(listId);
-  if (el) el.innerHTML = '';
-}
 function setBtnLoading(id,loading) { const b=document.getElementById(id); b.disabled=loading; b.textContent=loading?'Bekleyin...':b.dataset.text||b.textContent; }
 
 // ═══════════════════════════════════════════════
@@ -1837,12 +1676,7 @@ function openModal(name, isEdit=false){
   if(name==='process'||name==='event'||name==='meeting'||name==='commercial') populateProjectSelects();
   document.getElementById('m-'+name).classList.add('open');
 }
-function closeModal(name){ 
-  document.getElementById('m-'+name).classList.remove('open');
-  // Clear file lists on close
-  const fileLists = {project:'pFileList',meeting:'meetFileList',commercial:'commFileList',customer:'custFileList'};
-  if(fileLists[name]) clearFileList(fileLists[name]);
-}
+function closeModal(name){ document.getElementById('m-'+name).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(o=>{
   o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
 });
