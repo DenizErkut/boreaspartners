@@ -1,4 +1,3 @@
-<!-- v3 -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -227,28 +226,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </style>
 </head>
 <body>
-
-    <p class="config-sub">Supabase projenizle bağlantı kurarak başlayın.<br>Bilgiler yalnızca tarayıcınızda saklanır.</p>
-
-    <div class="step-label">Supabase Project URL</div>
-    <input class="form-input" id="cfgUrl" type="text" placeholder="https://xxxxxxxx.supabase.co" style="margin-bottom:12px">
-
-    <div class="step-label">Anon / Public Key</div>
-    <input class="form-input" id="cfgKey" type="text" placeholder="eyJhbGci..." style="margin-bottom:14px">
-
-    <div class="hint-box">
-      📌 <strong>Nereden bulunur?</strong><br>
-      <a href="https://supabase.com/dashboard" target="_blank">supabase.com/dashboard</a> → Projeniz →
-      <code>Settings</code> → <code>API</code> → <code>Project URL</code> + <code>anon public key</code><br><br>
-      🗄️ Henüz yapmadıysanız, indirdiğiniz <code>supabase-kurulum.sql</code> dosyasını önce
-      <strong>SQL Editor</strong>'de çalıştırın.<br><br>
-      📁 Dosya yükleme için: Supabase → <code>Storage</code> → <code>New bucket</code> → isim: <code>proflow-files</code> → Public → Create
-    </div>
-
-    <button class="btn btn-primary btn-full" onclick="saveConfig()">Bağlan →</button>
-    <div class="demo-link"><a onclick="useDemo()">Demo modunda dene (veriler kaydedilmez)</a></div>
-  </div>
-</div>
 
 <!-- ═══ GİRİŞ ═══ -->
 <div id="loginScreen">
