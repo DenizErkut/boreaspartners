@@ -969,9 +969,12 @@ function renderFileList(listId) {
   list.innerHTML = files.map(f => `
     <div class="file-item" id="fi-${f.id}">
       <span class="file-item-icon">${getFileIcon(f.name)}</span>
-      <span class="file-item-name">${f.name}</span>
-      <span class="file-item-size">${fmtFileSize(f.size)}</span>
-      ${f.url ? `<a class="file-item-link" href="${f.url}" target="_blank">Görüntüle</a>` : '<span style="font-size:11px;color:var(--text3)">Kaydedilecek</span>'}
+      <span class="file-item-name" title="${f.name}">${f.name}</span>
+      ${f.size > 0 ? `<span class="file-item-size">${fmtFileSize(f.size)}</span>` : ''}
+      ${f.url ? `
+        <a class="file-item-link" href="${f.url}" target="_blank">👁 Görüntüle</a>
+        <a class="file-item-link" href="${f.url}" download="${f.name}" style="margin-left:4px">⬇ İndir</a>
+      ` : '<span style="font-size:11px;color:var(--warning)">⏳ Yüklenecek</span>'}
       <button class="file-item-del" onclick="removeFile('${listId}','${f.id}')">✕</button>
     </div>`).join('');
 }
@@ -1013,6 +1016,19 @@ function clearFileList(listId) {
   uploadedFiles[listId] = [];
   const el = document.getElementById(listId);
   if (el) el.innerHTML = '';
+}
+
+function loadExistingFiles(listId, attachmentsJson) {
+  uploadedFiles[listId] = [];
+  if (!attachmentsJson) return;
+  try {
+    const files = typeof attachmentsJson === 'string' ? JSON.parse(attachmentsJson) : attachmentsJson;
+    if (!Array.isArray(files)) return;
+    files.forEach(f => {
+      uploadedFiles[listId].push({ id: Date.now() + Math.random(), name: f.name, size: 0, url: f.url, file: null });
+    });
+    renderFileList(listId);
+  } catch(e) { console.warn('loadExistingFiles error:', e); }
 }
 function setBtnLoading(id,loading) { const b=document.getElementById(id); b.disabled=loading; b.textContent=loading?'Bekleyin...':b.dataset.text||b.textContent; }
 
@@ -1227,6 +1243,7 @@ async function editProject(id) {
   document.getElementById('pStatus').value = p.status;
   document.getElementById('pProgress').value = p.progress||0;
   document.getElementById('pDesc').value = p.description||'';
+  loadExistingFiles('pFileList', p.attachments);
   openModal('project', true);
 }
 
@@ -1494,6 +1511,10 @@ async function saveMeeting(){
 
   };
   if(!d.title||!d.meeting_date) return showNotif('Başlık ve tarih zorunlu','err');
+  const mFileUrls = await uploadFilesToSupabase('meetFileList','meetings');
+  const mExisting = uploadedFiles['meetFileList']?.filter(f=>f.url).map(f=>({name:f.name,url:f.url})) || [];
+  const allMUrls = [...mExisting.filter(e=>!mFileUrls.find(n=>n.name===e.name)),...mFileUrls];
+  if(allMUrls.length) d.attachments = JSON.stringify(allMUrls);
   const res=id?await dbUpdate('meetings',id,d):await dbInsert('meetings',d);
   if(res.error) return showNotif('Hata','err');
   closeModal('meeting'); loadMeetings(); showNotif('Toplantı notu kaydedildi!','ok');
@@ -1509,6 +1530,7 @@ async function editMeeting(id){
   document.getElementById('meetAttendees').value=(m.attendees||[]).join(', ');
   document.getElementById('meetNotes').value=m.notes||'';
   document.getElementById('meetActions').value=m.action_items||'';
+  loadExistingFiles('meetFileList', m.attachments);
   openModal('meeting', true);
 }
 async function deleteMeeting(id){
@@ -1534,7 +1556,7 @@ function renderCustomers(list){
       <td><b>${c.company_name}</b></td><td>${c.tax_number||'–'}</td><td>${c.city||'–'}</td>
       <td>${c.email||'–'}</td><td><span class="tag">${c.segment||'–'}</span></td>
       <td><span class="status s-${c.status||'active'}">${STATUS_TR[c.status||'active']}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️</button></td>
+      <td style="display:flex;gap:4px"><button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️</button>${c.attachments?`<span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)" title="Ekler var">📎${JSON.parse(c.attachments).length}</span>`:''}</td>
     </tr>`).join('')}</tbody>
   </table></div>`:'<div class="empty">Yurt içi müşteri eklenmedi</div>';
   document.getElementById('custIntl').innerHTML=exp.length?`<div class="table-wrap"><table>
@@ -1549,6 +1571,9 @@ function renderCustomers(list){
 }
 async function saveCustomer(){
   const id=document.getElementById('custId').value;
+  const fileUrls = await uploadFilesToSupabase('custFileList','customers');
+  const existingUrls = uploadedFiles['custFileList']?.filter(f=>f.url).map(f=>({name:f.name,url:f.url})) || [];
+  const allUrls = [...existingUrls.filter(e=>!fileUrls.find(n=>n.name===e.name)), ...fileUrls];
   const d={
     type:document.getElementById('custType').value,
     segment:document.getElementById('custSegment').value,
@@ -1561,7 +1586,7 @@ async function saveCustomer(){
     currency:document.getElementById('custCurrency').value,
     payment_terms:parseInt(document.getElementById('custPayment').value)||30,
     notes:document.getElementById('custNotes').value,
-
+    attachments: allUrls.length ? JSON.stringify(allUrls) : null,
   };
   if(!d.company_name) return showNotif('Firma adı zorunlu','err');
   const res=id?await dbUpdate('customers',id,d):await dbInsert('customers',d);
@@ -1583,6 +1608,7 @@ async function editCustomer(id){
   document.getElementById('custCurrency').value=c.currency||'TRY';
   document.getElementById('custPayment').value=c.payment_terms||30;
   document.getElementById('custNotes').value=c.notes||'';
+  loadExistingFiles('custFileList', c.attachments);
   openModal('customer', true);
 }
 
@@ -1635,6 +1661,10 @@ async function saveCommercial(){
 
   };
   if(!d.doc_number||!d.record_date) return showNotif('Belge no ve tarih zorunlu','err');
+  const cFileUrls = await uploadFilesToSupabase('commFileList','commercial');
+  const cExisting = uploadedFiles['commFileList']?.filter(f=>f.url).map(f=>({name:f.name,url:f.url})) || [];
+  const allCUrls = [...cExisting.filter(e=>!cFileUrls.find(n=>n.name===e.name)),...cFileUrls];
+  if(allCUrls.length) d.attachments = JSON.stringify(allCUrls);
   const res=id?await dbUpdate('commercial_records',id,d):await dbInsert('commercial_records',d);
   if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
   closeModal('commercial'); loadCommercial(); showNotif('Kayıt oluşturuldu!','ok');
@@ -1655,6 +1685,7 @@ async function editCommercial(id){
   document.getElementById('commTotal').value=r.total_amount;
   document.getElementById('commStatus').value=r.status;
   document.getElementById('commNote').value=r.notes||'';
+  loadExistingFiles('commFileList', r.attachments);
   openModal('commercial', true);
 }
 
