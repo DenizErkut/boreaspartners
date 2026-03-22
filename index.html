@@ -973,6 +973,8 @@ function handleFiles(input, listId) {
     uploadedFiles[listId].push({ id, file: f, name: f.name, size: f.size, url: null });
   });
   renderFileList(listId);
+  // Auto-upload immediately on select
+  uploadFilesToSupabase(listId, getFolder(listId));
 }
 
 function renderFileList(listId) {
@@ -1053,7 +1055,8 @@ async function uploadFilesToSupabase(listId, folder) {
     }, 50);
     
     try {
-      const path = `${folder}/${Date.now()}_${f.name.replace(/[\s]/g,'_')}`;
+      const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${folder}/${Date.now()}_${safeName}`;
       
       // Animate to 60%
       setTimeout(() => {
@@ -1106,8 +1109,11 @@ async function uploadFilesToSupabase(listId, folder) {
         if(fiStatus2) fiStatus2.textContent = '❌ Yükleme başarısız';
       }
     } catch(e) {
+      console.error('Upload error:', e);
       const status = document.getElementById(pid+'_status');
-      if(status) status.innerHTML = '❌ Yükleme başarısız';
+      if(status) status.innerHTML = '❌ ' + (e.message || 'Yükleme başarısız');
+      const fiStatus = document.getElementById('fi-status-'+f.id);
+      if(fiStatus) fiStatus.textContent = '❌ ' + (e.message || 'Hata');
     }
     
     // Remove progress item after 3 seconds
@@ -1121,6 +1127,12 @@ async function uploadFilesToSupabase(listId, folder) {
   // Also return already-uploaded files
   const alreadyUploaded = (uploadedFiles[listId]||[]).filter(f=>f.url && !files.find(nf=>nf.id===f.id)).map(f=>({name:f.name,url:f.url}));
   return [...alreadyUploaded, ...urls];
+}
+
+// Map listId to folder name
+function getFolder(listId) {
+  const map = { pFileList:'projects', meetFileList:'meetings', custFileList:'customers', commFileList:'commercial' };
+  return map[listId] || 'misc';
 }
 
 function getFileIcon(name) {
@@ -1632,9 +1644,7 @@ async function saveMeeting(){
 
   };
   if(!d.title||!d.meeting_date) return showNotif('Başlık ve tarih zorunlu','err');
-  const mFileUrls = await uploadFilesToSupabase('meetFileList','meetings');
-  const mExisting = uploadedFiles['meetFileList']?.filter(f=>f.url).map(f=>({name:f.name,url:f.url})) || [];
-  const allMUrls = [...mExisting.filter(e=>!mFileUrls.find(n=>n.name===e.name)),...mFileUrls];
+  const allMUrls = (uploadedFiles['meetFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
   if(allMUrls.length) d.attachments = JSON.stringify(allMUrls);
   const res=id?await dbUpdate('meetings',id,d):await dbInsert('meetings',d);
   if(res.error) return showNotif('Hata','err');
@@ -1692,9 +1702,8 @@ function renderCustomers(list){
 }
 async function saveCustomer(){
   const id=document.getElementById('custId').value;
-  const fileUrls = await uploadFilesToSupabase('custFileList','customers');
-  const existingUrls = uploadedFiles['custFileList']?.filter(f=>f.url).map(f=>({name:f.name,url:f.url})) || [];
-  const allUrls = [...existingUrls.filter(e=>!fileUrls.find(n=>n.name===e.name)), ...fileUrls];
+  // Files already uploaded on select, just collect URLs
+  const allUrls = (uploadedFiles['custFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
   const d={
     type:document.getElementById('custType').value,
     segment:document.getElementById('custSegment').value,
@@ -1782,9 +1791,7 @@ async function saveCommercial(){
 
   };
   if(!d.doc_number||!d.record_date) return showNotif('Belge no ve tarih zorunlu','err');
-  const cFileUrls = await uploadFilesToSupabase('commFileList','commercial');
-  const cExisting = uploadedFiles['commFileList']?.filter(f=>f.url).map(f=>({name:f.name,url:f.url})) || [];
-  const allCUrls = [...cExisting.filter(e=>!cFileUrls.find(n=>n.name===e.name)),...cFileUrls];
+  const allCUrls = (uploadedFiles['commFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
   if(allCUrls.length) d.attachments = JSON.stringify(allCUrls);
   const res=id?await dbUpdate('commercial_records',id,d):await dbInsert('commercial_records',d);
   if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
