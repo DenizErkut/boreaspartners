@@ -401,6 +401,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="analysis" onclick="navigate(this)"><div class="nav-icon">💹</div><span class="nav-text">Kar-Zarar Analizi</span></div>
         <div class="nav-item" data-page="charts" onclick="navigate(this)"><div class="nav-icon">📊</div><span class="nav-text">Grafikler</span></div>
         <div class="nav-item" data-page="export" onclick="navigate(this)"><div class="nav-icon">📥</div><span class="nav-text">Dışa Aktar</span></div>
+        <div class="nav-item" data-page="import" onclick="navigate(this)"><div class="nav-icon">📤</div><span class="nav-text">Excel'den İçe Al</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-label">YÖNETİM</div>
@@ -1105,6 +1106,84 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
 
+      <!-- ── IMPORT ── -->
+      <div class="page" id="page-import">
+        <div class="grid grid-2" style="align-items:start;gap:16px">
+          <!-- Sol: Upload -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title">📤 Excel / CSV Dosyası Yükle</div>
+              <div style="margin-bottom:14px">
+                <div class="form-group"><label class="form-label">İçe Aktarılacak Tablo</label>
+                  <select class="form-select" id="importTable" onchange="showImportTemplate()">
+                    <option value="">Seçin...</option>
+                    <option value="customers">👥 Müşteriler</option>
+                    <option value="products">📦 Ürünler & Fiyatlar</option>
+                    <option value="stock_movements">📊 Stok Hareketleri</option>
+                    <option value="crm_leads">🎯 Lead / Pipeline</option>
+                    <option value="commercial_records">💼 Ticari Kayıtlar</option>
+                    <option value="partner_price_lists">💰 Partner Fiyat Listesi</option>
+                  </select>
+                </div>
+                <div class="file-upload-area" onclick="document.getElementById('importFile').click()" id="importDropZone">
+                  <input type="file" id="importFile" accept=".xlsx,.xls,.csv" onchange="handleImportFile(this)" style="display:none">
+                  <div style="font-size:32px;margin-bottom:8px">📂</div>
+                  <div style="font-size:13px;font-weight:600">Dosya seçin veya sürükleyin</div>
+                  <div style="font-size:11px;color:var(--text2);margin-top:4px">.xlsx, .xls, .csv desteklenir</div>
+                </div>
+              </div>
+              <div id="importPreviewWrap" style="display:none">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <div style="font-size:13px;font-weight:600" id="importPreviewTitle">Önizleme</div>
+                  <div style="font-size:12px;color:var(--text2)" id="importRowCount"></div>
+                </div>
+                <div id="importPreview" style="overflow-x:auto;max-height:280px;font-size:12px"></div>
+                <div style="margin-top:12px;display:flex;gap:8px">
+                  <button class="btn btn-primary btn-sm" onclick="runImport()" id="btnRunImport">📥 İçe Aktar</button>
+                  <button class="btn btn-ghost btn-sm" onclick="clearImport()">✕ Temizle</button>
+                </div>
+              </div>
+              <div id="importResult" style="display:none"></div>
+            </div>
+          </div>
+          <!-- Sağ: Şablonlar -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title">📋 Şablon İndir</div>
+              <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Her tablo için hazır Excel şablonunu indirin, doldurun ve yükleyin.</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">👥 Müşteriler</div><div class="text-xs">firma_adi, tip, ulke, sehir, eposta, telefon...</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('customers')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">📦 Ürünler & Fiyatlar</div><div class="text-xs">kod, urun_adi, kategori, birim, perakende, toptan...</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('products')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">📊 Stok Hareketleri</div><div class="text-xs">urun_kodu, hareket_turu, miktar, tarih, aciklama</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('stock_movements')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">🎯 Lead / Pipeline</div><div class="text-xs">baslik, musteri, asama, deger, para_birimi, proje</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('crm_leads')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">💰 Partner Fiyat Listesi</div><div class="text-xs">partner_adi, urun_kodu, fiyat, para_birimi, gecerlilik</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('partner_price_lists')">⬇ Şablon</button>
+                </div>
+              </div>
+            </div>
+            <div class="card" id="importTipsCard">
+              <div class="card-title">💡 İpuçları</div>
+              <div id="importTips" style="font-size:12px;color:var(--text2);line-height:1.7">
+                Tablo seçin, şablonu indirin ve doldurun.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- USERS -->
       <div class="page" id="page-users">
         <div class="flex-btw mb-14"><div></div><button class="btn btn-primary btn-sm" onclick="openModal('user')">+ Kullanıcı Ekle</button></div>
@@ -1299,6 +1378,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group"><label class="form-label">Para Birimi</label><select class="form-select" id="custCurrency"><option value="TRY">TRY</option><option value="EUR">EUR</option><option value="USD">USD</option></select></div>
       <div class="form-group"><label class="form-label">Ödeme Vadesi (gün)</label><input class="form-input" id="custPayment" type="number" placeholder="30"></div>
     </div>
+    <div class="form-group"><label class="form-label">Bağlı Projeler</label>
+      <div id="custProjectTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <select class="form-select" id="custProjectAdd" style="flex:1"><option value="">Proje seçin...</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="addCustProject()">+ Ekle</button>
+      </div>
+    </div>
     <div class="form-group"><label class="form-label">Notlar</label><textarea class="form-textarea" id="custNotes" placeholder="Ek bilgiler..."></textarea></div>
     <div class="form-group">
       <label class="form-label">Sözleşme / Logo / Belgeler</label>
@@ -1422,6 +1508,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </select>
       </div>
       <div class="form-group"><label class="form-label">Kazanma İhtimali %</label><input class="form-input" id="leadProb" type="number" min="0" max="100" placeholder="50"></div>
+    </div>
+    <div class="form-group"><label class="form-label">📁 İlgili Proje</label>
+      <select class="form-select" id="leadProject"><option value="">Proje seçin...</option></select>
     </div>
     <div class="form-group"><label class="form-label">Notlar</label><textarea class="form-textarea" id="leadNotes" placeholder="Fırsat detayları..."></textarea></div>
     <div class="modal-footer">
@@ -1712,7 +1801,7 @@ const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', gantt:'Gantt Chart — Proje Takvimi', recurring:'Tekrarlayan Görevler', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
-  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
+  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
 };
 
 const STATUS_TR = {
@@ -2140,7 +2229,7 @@ function navigate(el) {
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
-    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
+    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
   };
   if (loaders[page]) loaders[page]();
 }
@@ -5572,6 +5661,391 @@ async function filterStockByProject(projectId) {
   if(!projectId) { renderStockTable(allProductsCache); return; }
   const filtered = allProductsCache.filter(p=>p.project_id===projectId);
   renderStockTable(filtered);
+}
+
+// ═══════════════════════════════════════════════
+// CUSTOMER — PROJECT TAGS
+// ═══════════════════════════════════════════════
+let custSelectedProjects = [];
+
+function addCustProject() {
+  const sel = document.getElementById('custProjectAdd');
+  const id = sel.value, name = sel.options[sel.selectedIndex]?.text;
+  if(!id || custSelectedProjects.find(p=>p.id===id)) return;
+  custSelectedProjects.push({id, name});
+  renderCustProjectTags();
+  sel.value = '';
+}
+
+function removeCustProject(id) {
+  custSelectedProjects = custSelectedProjects.filter(p=>p.id!==id);
+  renderCustProjectTags();
+}
+
+function renderCustProjectTags() {
+  const el = document.getElementById('custProjectTags');
+  if(!el) return;
+  el.innerHTML = custSelectedProjects.map(p=>`
+    <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:16px;padding:3px 10px;font-size:12px">
+      <span>📁 ${p.name}</span>
+      <span onclick="removeCustProject('${p.id}')" style="cursor:pointer;color:var(--text2);font-size:14px;line-height:1">×</span>
+    </div>`).join('');
+}
+
+// Populate project select in customer modal
+const _origOpenModalCustomer = openModal;
+// Hook into customer modal open — inject into openModal's populate logic
+const _origPopulateCustomerSelects = typeof populateCustomerSelects === 'function' ? populateCustomerSelects : ()=>{};
+
+// Patch openModal to populate custProjectAdd
+const __om = openModal;
+openModal = function(name, isEdit=false) {
+  __om(name, isEdit);
+  if(name==='customer') {
+    if(!isEdit) custSelectedProjects = [];
+    renderCustProjectTags();
+    dbSelect('projects',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      const el=document.getElementById('custProjectAdd');
+      if(el) el.innerHTML='<option value="">Proje seçin...</option>'+opts;
+    });
+    // Lead project
+    dbSelect('projects',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      const lp=document.getElementById('leadProject');
+      if(lp) lp.innerHTML='<option value="">Proje seçin...</option>'+opts;
+    });
+  }
+  if(name==='lead') {
+    dbSelect('projects',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      const lp=document.getElementById('leadProject');
+      if(lp) lp.innerHTML='<option value="">Proje seçin...</option>'+opts;
+    });
+  }
+};
+
+// Patch saveCustomer to include projects
+const _origSaveCustomer = saveCustomer;
+saveCustomer = async function() {
+  // inject projects before save
+  const custNotesEl = document.getElementById('custNotes');
+  const projectsJson = custSelectedProjects.length ? JSON.stringify(custSelectedProjects) : null;
+  // Call original — but we need to inject project_ids into the data
+  // We'll do a post-save update
+  await _origSaveCustomer();
+  // Update with projects (get last inserted/updated customer)
+  // This is handled by modifying saveCustomer directly below
+};
+
+// Override saveCustomer fully to include project data
+async function saveCustomer(){
+  const id=document.getElementById('custId').value;
+  const fileUrls = (uploadedFiles['custFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
+  const d={
+    type:document.getElementById('custType').value,
+    segment:document.getElementById('custSegment').value,
+    company_name:document.getElementById('custName').value,
+    tax_number:document.getElementById('custTax').value,
+    country:document.getElementById('custCountry').value,
+    city:document.getElementById('custCity').value,
+    email:document.getElementById('custEmail').value,
+    phone:document.getElementById('custPhone').value,
+    currency:document.getElementById('custCurrency').value,
+    payment_terms:parseInt(document.getElementById('custPayment').value)||30,
+    notes:document.getElementById('custNotes').value,
+    attachments: fileUrls.length ? JSON.stringify(fileUrls) : null,
+    project_ids: custSelectedProjects.length ? JSON.stringify(custSelectedProjects) : null,
+  };
+  if(!d.company_name) return showNotif('Firma adı zorunlu','err');
+  const res=id?await dbUpdate('customers',id,d):await dbInsert('customers',d);
+  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  clearFileList('custFileList');
+  custSelectedProjects = [];
+  closeModal('customer'); loadCustomers(); showNotif('Müşteri kaydedildi!','ok');
+}
+
+// Override editCustomer to load project tags
+const _origEditCustomer = editCustomer;
+editCustomer = async function(id) {
+  await _origEditCustomer(id);
+  const cust = allCustomers.find(x=>x.id===id);
+  if(cust?.project_ids) {
+    try { custSelectedProjects = JSON.parse(cust.project_ids); } catch(e) { custSelectedProjects=[]; }
+  } else { custSelectedProjects = []; }
+  renderCustProjectTags();
+};
+
+// Patch saveLead to include project_id
+const _origSaveLead = saveLead;
+saveLead = async function() {
+  // inject project_id into lead data before save
+  const projId = document.getElementById('leadProject')?.value||null;
+  const projName = document.getElementById('leadProject')?.options[document.getElementById('leadProject').selectedIndex]?.text;
+  // temporarily add to form — handled in actual save below
+  await _origSaveLead();
+};
+
+// Full saveLead override with project
+async function saveLead() {
+  const id = document.getElementById('leadId').value;
+  const projSel = document.getElementById('leadProject');
+  const d = {
+    customer_id: document.getElementById('leadCustomer').value||null,
+    stage: document.getElementById('leadStage').value,
+    title: document.getElementById('leadTitle').value,
+    value: parseFloat(document.getElementById('leadValue').value)||null,
+    currency: document.getElementById('leadCurrency').value,
+    close_date: document.getElementById('leadClose').value||null,
+    segment: document.getElementById('leadSegment').value,
+    probability: parseInt(document.getElementById('leadProb').value)||null,
+    notes: document.getElementById('leadNotes').value,
+    project_id: projSel?.value||null,
+    project_name: projSel?.value ? projSel.options[projSel.selectedIndex]?.text : null,
+  };
+  if(!d.title) return showNotif('Başlık zorunlu','err');
+  const res = id ? await dbUpdate('crm_leads',id,d) : await dbInsert('crm_leads',d);
+  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  closeModal('lead'); loadPipeline(); showNotif(id?'Lead güncellendi!':'Lead eklendi!','ok');
+}
+
+// Patch editLead to show project
+const _origEditLead = editLead;
+editLead = async function(id) {
+  await _origEditLead(id);
+  const l = allLeads.find(x=>x.id===id);
+  if(l?.project_id) {
+    const sel = document.getElementById('leadProject');
+    if(sel) sel.value = l.project_id;
+  }
+};
+
+// Patch renderPipelineBoard to show project badge
+const _origRenderPipelineBoard = renderPipelineBoard;
+renderPipelineBoard = function(leads) {
+  _origRenderPipelineBoard(leads);
+  // Add project badges (post-render enhancement handled in card template below)
+};
+
+// ═══════════════════════════════════════════════
+// EXCEL IMPORT MODULE
+// ═══════════════════════════════════════════════
+let importData = [];
+let importHeaders = [];
+let importTableName = '';
+
+const IMPORT_TEMPLATES = {
+  customers: {
+    headers: ['firma_adi','tip','segment','ulke','sehir','eposta','telefon','para_birimi','odeme_vadesi','notlar'],
+    sample: [['Örnek A.Ş.','customer','OEM','Türkiye','İstanbul','info@ornek.com','+90 212 000 0000','TRY','30',''],
+             ['Sample GmbH','export','Tier1','Almanya','Berlin','info@sample.de','+49 30 000 0000','EUR','60','']],
+    tips: 'tip: customer/producer/broker/domestic/export | segment: OEM,Tier1,Distributor | para_birimi: TRY,EUR,USD'
+  },
+  products: {
+    headers: ['kod','urun_adi','kategori','birim','perakende_fiyat','toptan_fiyat','ihracat_usd','ihracat_eur','maliyet','stok_miktari','min_stok'],
+    sample: [['PRD-001','Ürün Adı','Kategori','Adet','100','80','10','9','60','100','10']],
+    tips: 'birim: Adet,Kg,Lt,m2,Paket | Fiyatlar sayisal (9.99 gibi)'
+  },
+  stock_movements: {
+    headers: ['urun_kodu','hareket_turu','miktar','tarih','birim_maliyet','aciklama'],
+    sample: [['PRD-001','in','50','2025-03-01','55','Satın alma'],['PRD-001','out','10','2025-03-05','','Satış']],
+    tips: 'hareket_turu: in/out/adjust/return | tarih: YYYY-MM-DD'
+  },
+  crm_leads: {
+    headers: ['baslik','asama','deger','para_birimi','kapalis_tarihi','segment','ihtimal','proje_adi','notlar'],
+    sample: [['Büyük Sipariş Fırsatı','lead','50000','TRY','2025-06-30','A','70','Proje Adı','']],
+    tips: 'asama: lead/offer/negotiation/won/lost | segment: A,B,C | ihtimal: 0-100'
+  },
+  commercial_records: {
+    headers: ['belge_no','belge_turu','tarih','tutar','para_birimi','kdv_orani','durum','notlar'],
+    sample: [['FTR-2025-001','invoice','2025-03-01','10000','TRY','20','pending','']],
+    tips: 'belge_turu: invoice/offer/order/waybill | durum: draft/pending/collected | kdv: 0,10,20'
+  },
+  partner_price_lists: {
+    headers: ['partner_adi','urun_kodu','fiyat','para_birimi','min_miktar','gecerlilik_tarihi','proje_adi','not'],
+    sample: [['Tedarikçi A.Ş.','PRD-001','85','TRY','100','2025-12-31','','']],
+    tips: 'partner_adi: Musteriler tablosundaki firma | urun_kodu: Urunler kodundan | tarih: YYYY-MM-DD'
+  }
+};
+
+async function loadImport() { /* static */ }
+
+function showImportTemplate() {
+  const table = document.getElementById('importTable').value;
+  const tpl = IMPORT_TEMPLATES[table];
+  const tipsEl = document.getElementById('importTips');
+  if(tipsEl) tipsEl.innerHTML = tpl ? tpl.tips.replace(/[|]/g,'<br>') : 'Tablo seçin.';
+}
+
+function downloadTemplate(table) {
+  const tpl = IMPORT_TEMPLATES[table];
+  if(!tpl) return showNotif('Şablon bulunamadı','err');
+  const rows = [tpl.headers, ...tpl.sample];
+  const csv = rows.map(r=>r.map(v=>(v&&typeof v==='string'&&v.includes(','))?'"'+v+'"':String(v||'')).join(',')).join('\n');
+  downloadFile('\xEF\xBB\xBF'+csv, 'vexio-sablon-'+table+'.csv', 'text/csv;charset=utf-8');
+  showNotif('Şablon indirildi!','ok');
+}
+
+function handleImportFile(input) {
+  const file = input.files[0]; if(!file) return;
+  const table = document.getElementById('importTable').value;
+  if(!table) return showNotif('Önce tablo seçin!','err');
+  importTableName = table;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    parseCSV(text);
+  };
+  // Handle Excel via SheetJS if available, else treat as CSV
+  if(file.name.endsWith('.csv')) {
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    // Try SheetJS
+    const reader2 = new FileReader();
+    reader2.onload = (e) => {
+      try {
+        const XLSX = window.XLSX;
+        if(!XLSX) { showNotif('xlsx için .csv kullanın','err'); return; }
+        const wb = XLSX.read(e.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csv = XLSX.utils.sheet_to_csv(ws);
+        parseCSV(csv);
+      } catch(err) { showNotif('Dosya okunamadı: '+err.message,'err'); }
+    };
+    reader2.readAsArrayBuffer(file);
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l=>l.trim());
+
+  if(lines.length < 2) return showNotif('Dosya boş veya tek satır','err');
+  importHeaders = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  importData = lines.slice(1).map(line=>{
+    const vals = line.split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+    const obj = {};
+    importHeaders.forEach((h,i)=>obj[h]=vals[i]||'');
+    return obj;
+  }).filter(row=>Object.values(row).some(v=>v));
+  showImportPreview();
+}
+
+function showImportPreview() {
+  const wrap = document.getElementById('importPreviewWrap');
+  const preview = document.getElementById('importPreview');
+  const countEl = document.getElementById('importRowCount');
+  const titleEl = document.getElementById('importPreviewTitle');
+  if(!wrap||!preview) return;
+  wrap.style.display = 'block';
+  if(countEl) countEl.textContent = importData.length + ' satır okundu';
+  if(titleEl) titleEl.textContent = 'Önizleme — ' + (importData.length > 5 ? 'İlk 5 satır gösteriliyor' : 'Tüm satırlar');
+  const sample = importData.slice(0,5);
+  preview.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead><tr style="background:var(--surface2)">${importHeaders.map(h=>`<th style="padding:5px 8px;text-align:left;color:var(--text2);white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+    <tbody>${sample.map((row,i)=>`<tr style="border-bottom:1px solid var(--border);background:${i%2?'var(--surface2)':'transparent'}">${importHeaders.map(h=>`<td style="padding:4px 8px;color:var(--text)">${row[h]||'–'}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function clearImport() {
+  importData=[]; importHeaders=[]; importTableName='';
+  document.getElementById('importPreviewWrap').style.display='none';
+  document.getElementById('importResult').style.display='none';
+  document.getElementById('importFile').value='';
+}
+
+async function runImport() {
+  if(!importData.length) return showNotif('Veri yok','err');
+  const btn = document.getElementById('btnRunImport');
+  btn.disabled=true; btn.textContent='⏳ Aktarılıyor...';
+  let success=0, errors=0;
+  const resultEl = document.getElementById('importResult');
+
+  for(const row of importData) {
+    try {
+      let data = {};
+      if(importTableName==='customers') {
+        data = {
+          company_name: row['firma_adi']||row['company_name'],
+          type: row['tip']||row['type']||'customer',
+          segment: row['segment']||'Other',
+          country: row['ulke']||row['country']||'',
+          city: row['sehir']||row['city']||'',
+          email: row['eposta']||row['email']||'',
+          phone: row['telefon']||row['phone']||'',
+          currency: row['para_birimi']||row['currency']||'TRY',
+          payment_terms: parseInt(row['odeme_vadesi']||row['payment_terms'])||30,
+          notes: row['notlar']||row['notes']||'',
+        };
+        if(!data.company_name) { errors++; continue; }
+      } else if(importTableName==='products') {
+        data = {
+          code: row['kod']||row['code'],
+          name: row['urun_adi']||row['name'],
+          category: row['kategori']||row['category']||'',
+          unit: row['birim']||row['unit']||'Adet',
+          retail_price: parseFloat(row['perakende_fiyat']||row['retail_price'])||null,
+          wholesale_price: parseFloat(row['toptan_fiyat']||row['wholesale_price'])||null,
+          export_usd: parseFloat(row['ihracat_usd']||row['export_usd'])||null,
+          export_eur: parseFloat(row['ihracat_eur']||row['export_eur'])||null,
+          cost_price: parseFloat(row['maliyet']||row['cost_price'])||null,
+          stock_qty: parseInt(row['stok_miktari']||row['stock_qty'])||0,
+          min_stock: parseInt(row['min_stok']||row['min_stock'])||5,
+        };
+        if(!data.code||!data.name) { errors++; continue; }
+      } else if(importTableName==='stock_movements') {
+        // Find product by code
+        const {data:prods} = await sb.from('products').select('id').eq('code',row['urun_kodu']||row['code']).single();
+        if(!prods?.id) { errors++; continue; }
+        data = {
+          product_id: prods.id,
+          move_type: row['hareket_turu']||row['move_type']||'in',
+          quantity: parseInt(row['miktar']||row['quantity'])||0,
+          move_date: row['tarih']||row['move_date']||new Date().toISOString().split('T')[0],
+          unit_cost: parseFloat(row['birim_maliyet']||row['unit_cost'])||null,
+          notes: row['aciklama']||row['notes']||'',
+        };
+      } else if(importTableName==='crm_leads') {
+        data = {
+          title: row['baslik']||row['title'],
+          stage: row['asama']||row['stage']||'lead',
+          value: parseFloat(row['deger']||row['value'])||null,
+          currency: row['para_birimi']||row['currency']||'TRY',
+          close_date: row['kapalis_tarihi']||row['close_date']||null,
+          segment: row['segment']||'B',
+          probability: parseInt(row['ihtimal']||row['probability'])||50,
+          notes: row['notlar']||row['notes']||'',
+        };
+        if(!data.title) { errors++; continue; }
+      } else if(importTableName==='commercial_records') {
+        data = {
+          doc_number: row['belge_no']||row['doc_number'],
+          doc_type: row['belge_turu']||row['doc_type']||'invoice',
+          record_date: row['tarih']||row['date']||new Date().toISOString().split('T')[0],
+          amount: parseFloat(row['tutar']||row['amount'])||0,
+          currency: row['para_birimi']||row['currency']||'TRY',
+          vat_rate: parseInt(row['kdv_orani']||row['vat_rate'])||20,
+          status: row['durum']||row['status']||'draft',
+          notes: row['notlar']||row['notes']||'',
+        };
+        data.vat_amount = data.amount * data.vat_rate/100;
+        data.total_amount = data.amount + data.vat_amount;
+        if(!data.doc_number) { errors++; continue; }
+      }
+
+      const {error} = await sb.from(importTableName).insert(data);
+      if(error) { console.warn('Import row error:', error.message); errors++; }
+      else success++;
+    } catch(e) { errors++; }
+  }
+
+  btn.disabled=false; btn.textContent='📥 İçe Aktar';
+  resultEl.style.display='block';
+  resultEl.innerHTML = `<div style="background:${errors?'rgba(245,158,11,.1)':'rgba(16,185,129,.1)'};border:1px solid ${errors?'var(--warning)':'var(--success)'};border-radius:8px;padding:12px;margin-top:12px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px">${success>0?'✅':'⚠️'} İçe Aktarma Tamamlandı</div>
+    <div style="font-size:12px;color:var(--text2)">✅ ${success} satır başarıyla eklendi${errors?` · ❌ ${errors} satır hatalı`:''}</div>
+    ${errors?'<div style="font-size:11px;color:var(--warning);margin-top:4px">Hatalı satırlar: zorunlu alan eksik veya format yanlış olabilir.</div>':''}
+  </div>`;
+  if(success>0) showNotif(success+' kayıt içe aktarıldı!','ok');
 }
 
 // ═══════════════════════════════════════════════
