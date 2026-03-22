@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0e1a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DengBeJ">
-<link rel="manifest" href="data:application/json,{%22name%22:%22DengBeJ%22,%22short_name%22:%22DengBeJ%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%230a0e1a%22,%22theme_color%22:%22%233b82f6%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b82f6'/%3E%3Ctext y='.9em' font-size='80' x='10'%3EDB%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
-<title>DengBeJ — Yönetim Sistemi</title>
+<meta name="apple-mobile-web-app-title" content="Vexio">
+<link rel="manifest" href="data:application/json,{%22name%22:%22Vexio%22,%22short_name%22:%22Vexio%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%230a0e1a%22,%22theme_color%22:%22%233b82f6%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b82f6'/%3E%3Ctext y='.9em' font-size='80' x='10'%3EDB%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+<title>Vexio — Yönetim Sistemi</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
@@ -299,7 +299,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- ═══ GİRİŞ ═══ -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-title">DengBe<span style="color:var(--accent)">J</span></div>
+    <div class="login-title">Vex<span style="color:var(--accent)">io</span></div>
     <div class="login-sub" id="lsub">Hesabınıza giriş yapın</div>
     <div class="err" id="lErr"></div>
 
@@ -348,8 +348,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <!-- SIDEBAR -->
   <nav id="sidebar">
     <div class="logo">
-      <div class="logo-icon">DB</div>
-      <div class="logo-text">DengBe<span>J</span></div>
+      <div class="logo-icon">VX</div>
+      <div class="logo-text">Vex<span>io</span></div>
     </div>
     <div class="nav-wrap">
       <div class="nav-section">
@@ -1298,7 +1298,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Yeni Kullanıcı Ekle</div><button class="modal-close" onclick="closeModal('user')">✕</button></div>
     <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px;font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-      ℹ️ Kullanıcı bu bilgilerle <b>DengBeJ giriş ekranından</b> kendisi kayıt olacak.<br>
+      ℹ️ Kullanıcı bu bilgilerle <b>Vexio giriş ekranından</b> kendisi kayıt olacak.<br>
       Aşağıdaki bilgileri kullanıcıyla paylaşın.
     </div>
     <div class="form-group"><label class="form-label">Ad Soyad *</label><input class="form-input" id="uFullName" placeholder="Ad Soyad"></div>
@@ -1636,7 +1636,7 @@ const ROLE_TR = { admin:'Sistem Yöneticisi', manager:'Proje Yöneticisi', sales
 // ═══════════════════════════════════════════════
 window.onload = () => {
   // Apply saved theme immediately
-  const savedTheme = localStorage.getItem('dengbej-theme') || 'dark';
+  const savedTheme = localStorage.getItem('vexio-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : '');
   const url = 'https://srvbecdjsgscntlnppxj.supabase.co';
   const key = 'sb_publishable_Oo5VaAG6uACAsfuBBIZnmQ_LVPzbqhg';
@@ -2855,7 +2855,7 @@ async function saveUser(){
 
   // Bilgi kartını göster
   const roleNames={admin:'Sistem Yöneticisi',manager:'Proje Yöneticisi',sales:'Satış',accounting:'Muhasebe',viewer:'Görüntüle'};
-  const shareText=`DengBeJ Giriş Bilgileri\n----------------------------\nURL: ${window.location.href}\nE-posta: ${email}\nŞifre: ${pass}\nRol: ${roleNames[role]||role}`;
+  const shareText=`Vexio Giriş Bilgileri\n----------------------------\nURL: ${window.location.href}\nE-posta: ${email}\nŞifre: ${pass}\nRol: ${roleNames[role]||role}`;
   document.getElementById('userShareText').textContent=shareText;
   document.getElementById('userShareCard').style.display='block';
   document.getElementById('btnSaveUser').style.display='none';
@@ -3246,7 +3246,7 @@ function renderWorldMap(customers) {
       <!-- Country dots -->
       ${dots}
       <!-- Labels -->
-      <text x="10" y="15" fill="#4b5563" font-size="9">DengBeJ — İhracat Müşteri Haritası</text>
+      <text x="10" y="15" fill="#4b5563" font-size="9">Vexio — İhracat Müşteri Haritası</text>
     </svg>
     <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:8px;align-items:center">
       <div style="width:10px;height:10px;border-radius:50%;background:rgba(59,130,246,0.7)"></div>
@@ -3560,7 +3560,7 @@ function updateQuotationPreview() {
     <div style="font-family:'DM Sans',sans-serif;color:#1a1a1a">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #3b82f6;margin-bottom:16px">
         <div>
-          <div style="font-size:22px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px">DengBeJ</div>
+          <div style="font-size:22px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px">Vexio</div>
           <div style="font-size:10px;color:#6b7280;margin-top:2px">Proje & Ticari Yönetim Sistemi</div>
         </div>
         <div style="text-align:right">
@@ -3600,7 +3600,7 @@ function updateQuotationPreview() {
         <div style="font-size:15px;font-weight:800;color:#3b82f6;margin-top:4px">TOPLAM: ${currSymbol}${fmtNum(total)}</div>
       </div>
       ${qtNotes?`<div style="margin-top:12px;font-size:10px;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:8px">${qtNotes}</div>`:''}
-      <div style="margin-top:14px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:8px">Bu teklif DengBeJ Yönetim Sistemi ile oluşturulmuştur.</div>
+      <div style="margin-top:14px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:8px">Bu teklif Vexio Yönetim Sistemi ile oluşturulmuştur.</div>
     </div>`;
 }
 
@@ -4186,7 +4186,7 @@ function buildReportHTML(title, content) {
     .report-date{font-size:10px;color:#6b7280}
   </style></head><body>
   <div class="header">
-    <div><div class="logo">DengBeJ</div><div style="font-size:10px;color:#6b7280">Proje & Ticari Yönetim</div></div>
+    <div><div class="logo">Vexio</div><div style="font-size:10px;color:#6b7280">Proje & Ticari Yönetim</div></div>
     <div style="text-align:right"><div class="report-title">${title}</div><div class="report-date">Tarih: ${new Date().toLocaleDateString('tr-TR')}</div></div>
   </div>
   ${content}
@@ -4520,7 +4520,7 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
   const btn = document.getElementById('pwaInstallBtn');
   if(btn) btn.style.display = 'none';
-  showNotif('DengBeJ uygulaması yüklendi! 🎉','ok');
+  showNotif('Vexio uygulaması yüklendi! 🎉','ok');
 });
 
 function installPWA() {
@@ -4540,7 +4540,7 @@ function installPWA() {
 if('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const swCode = `
-const CACHE = 'dengbej-v1';
+const CACHE = 'vexio-v1';
 const ASSETS = ['/'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))));
 self.addEventListener('fetch', e => e.respondWith(
@@ -4556,7 +4556,7 @@ self.addEventListener('fetch', e => e.respondWith(
 // THEME — DARK / LIGHT
 // ═══════════════════════════════════════════════
 function initTheme() {
-  const saved = localStorage.getItem('dengbej-theme') || 'dark';
+  const saved = localStorage.getItem('vexio-theme') || 'dark';
   applyTheme(saved);
 }
 
@@ -4564,11 +4564,11 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
   const btn = document.getElementById('themeBtn');
   if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
-  localStorage.setItem('dengbej-theme', theme);
+  localStorage.setItem('vexio-theme', theme);
 }
 
 function toggleTheme() {
-  const current = localStorage.getItem('dengbej-theme') || 'dark';
+  const current = localStorage.getItem('vexio-theme') || 'dark';
   applyTheme(current === 'dark' ? 'light' : 'dark');
 }
 
@@ -4706,12 +4706,12 @@ function addNotification(type, title, message, link='') {
   appNotifications.unshift(notif);
   if(appNotifications.length > 50) appNotifications.pop();
   updateNotifBadge();
-  localStorage.setItem('dengbej-notifs', JSON.stringify(appNotifications));
+  localStorage.setItem('vexio-notifs', JSON.stringify(appNotifications));
 }
 
 function loadSavedNotifications() {
   try {
-    const saved = localStorage.getItem('dengbej-notifs');
+    const saved = localStorage.getItem('vexio-notifs');
     if(saved) appNotifications = JSON.parse(saved);
   } catch(e) {}
   updateNotifBadge();
@@ -4758,14 +4758,14 @@ function markRead(id) {
   if(n) n.read = true;
   updateNotifBadge();
   renderNotifPanel();
-  localStorage.setItem('dengbej-notifs', JSON.stringify(appNotifications));
+  localStorage.setItem('vexio-notifs', JSON.stringify(appNotifications));
 }
 
 function markAllRead() {
   appNotifications.forEach(n=>n.read=true);
   updateNotifBadge();
   renderNotifPanel();
-  localStorage.setItem('dengbej-notifs', JSON.stringify(appNotifications));
+  localStorage.setItem('vexio-notifs', JSON.stringify(appNotifications));
 }
 
 function timeAgo(isoStr) {
@@ -4804,8 +4804,8 @@ function open2FA() {
   const secret = btoa(Math.random().toString(36)).slice(0,16).toUpperCase();
   const qrEl = document.getElementById('twoFAQR');
   if(qrEl) {
-    const user = currentUser?.email || 'user@dengbej.com';
-    const otpUrl = `otpauth://totp/DengBeJ:${encodeURIComponent(user)}?secret=${secret}&issuer=DengBeJ`;
+    const user = currentUser?.email || 'user@vexio.com';
+    const otpUrl = `otpauth://totp/Vexio:${encodeURIComponent(user)}?secret=${secret}&issuer=Vexio`;
     // Simple QR placeholder
     qrEl.innerHTML = `<div style="font-size:11px;color:#374151;margin-bottom:8px">Manuel giriş kodu:</div>
       <div style="font-family:monospace;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:3px">${secret}</div>
@@ -5081,7 +5081,7 @@ let currentPerms = {};
 async function loadPermissions() {
   // Load saved or use defaults
   try {
-    const saved = localStorage.getItem('dengbej-perms');
+    const saved = localStorage.getItem('vexio-perms');
     currentPerms = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_PERMS));
   } catch(e) { currentPerms = JSON.parse(JSON.stringify(DEFAULT_PERMS)); }
 
@@ -5129,7 +5129,7 @@ async function updateUserRole(userId, role) {
 }
 
 function savePermissions() {
-  localStorage.setItem('dengbej-perms', JSON.stringify(currentPerms));
+  localStorage.setItem('vexio-perms', JSON.stringify(currentPerms));
   applyPermissions();
   showNotif('İzinler kaydedildi!','ok');
 }
@@ -5159,7 +5159,7 @@ function applyPermissions() {
 // ═══════════════════════════════════════════════
 async function loadBackup() {
   renderBackupHistory();
-  const autoEnabled = localStorage.getItem('dengbej-autobackup')==='true';
+  const autoEnabled = localStorage.getItem('vexio-autobackup')==='true';
   const toggle = document.getElementById('autoBackupToggle');
   const slider = document.getElementById('autoBackupSlider');
   if(toggle) toggle.checked = autoEnabled;
@@ -5170,7 +5170,7 @@ async function loadBackup() {
 function renderBackupHistory() {
   const el = document.getElementById('backupHistory'); if(!el) return;
   try {
-    const history = JSON.parse(localStorage.getItem('dengbej-backup-history')||'[]');
+    const history = JSON.parse(localStorage.getItem('vexio-backup-history')||'[]');
     el.innerHTML = history.length ? history.slice(0,5).map(b=>`
       <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
         <span style="font-size:20px">💾</span>
@@ -5194,18 +5194,18 @@ async function fullBackup() {
   }
   const json = JSON.stringify(allData, null, 2);
   const date = new Date().toISOString().split('T')[0];
-  downloadFile(json, `dengbej-yedek-${date}.json`, 'application/json');
+  downloadFile(json, `vexio-yedek-${date}.json`, 'application/json');
 
   // Save to history
-  const history = JSON.parse(localStorage.getItem('dengbej-backup-history')||'[]');
+  const history = JSON.parse(localStorage.getItem('vexio-backup-history')||'[]');
   history.unshift({name:`Tam Yedek — ${date}`, tables:tables.length, size:Math.round(json.length/1024)+'KB', date:new Date().toISOString()});
-  localStorage.setItem('dengbej-backup-history', JSON.stringify(history.slice(0,10)));
+  localStorage.setItem('vexio-backup-history', JSON.stringify(history.slice(0,10)));
   renderBackupHistory();
   showNotif(`Yedek tamamlandı! ${totalRows} kayıt indirildi.`,'ok');
 }
 
 function toggleAutoBackup(enabled) {
-  localStorage.setItem('dengbej-autobackup', enabled);
+  localStorage.setItem('vexio-autobackup', enabled);
   const slider = document.getElementById('autoBackupSlider');
   if(slider) slider.style.background = enabled ? 'var(--success)' : 'var(--surface3)';
   if(enabled) { scheduleAutoBackup(); showNotif('Otomatik yedekleme aktif!','ok'); }
@@ -5213,13 +5213,13 @@ function toggleAutoBackup(enabled) {
 }
 
 function scheduleAutoBackup() {
-  const lastBackup = localStorage.getItem('dengbej-last-autobackup');
+  const lastBackup = localStorage.getItem('vexio-last-autobackup');
   const now = new Date();
   const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
   if(!lastBackup || new Date(lastBackup) < weekAgo) {
     if(now.getDay()===1) { // Monday
       fullBackup();
-      localStorage.setItem('dengbej-last-autobackup', now.toISOString());
+      localStorage.setItem('vexio-last-autobackup', now.toISOString());
     }
   }
 }
