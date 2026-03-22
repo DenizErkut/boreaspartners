@@ -3001,6 +3001,19 @@ function openModal(name, isEdit=false){
   // populate selects on demand
   if(name==='project'||name==='commercial') populateCustomerSelects();
   if(name==='process'||name==='event'||name==='meeting'||name==='commercial') populateProjectSelects();
+  // partner price modal populate
+  if(name==='partnerPrice') {
+    dbSelect('products',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
+      const el=document.getElementById('ppProduct');
+      if(el) el.innerHTML='<option value="">Seçin...</option>'+opts;
+    });
+    dbSelect('projects',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      const el=document.getElementById('ppProject');
+      if(el) el.innerHTML='<option value="">Proje seçin (isteğe bağlı)</option>'+opts;
+    });
+  }
   document.getElementById('m-'+name).classList.add('open');
 }
 function closeModal(name){ 
@@ -5489,20 +5502,7 @@ async function savePartnerPrice() {
 }
 
 // Populate partner price modal selects on open
-const _origOpenModal = openModal;
-function openModal(name, isEdit=false) {
-  _origOpenModal(name, isEdit);
-  if(name==='partnerPrice') {
-    dbSelect('products',{order:'name'}).then(({data})=>{
-      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
-      document.getElementById('ppProduct').innerHTML='<option value="">Seçin...</option>'+opts;
-    });
-    dbSelect('projects',{order:'name'}).then(({data})=>{
-      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-      document.getElementById('ppProject').innerHTML='<option value="">Proje seçin (isteğe bağlı)</option>'+opts;
-    });
-  }
-}
+// partnerPrice modal populate handled inline via openModal extension below
 
 async function loadProducerPrices(partnerId) {
   await loadPartnerPrices(partnerId, 'producerPriceList', 'producer');
