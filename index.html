@@ -1,10 +1,9 @@
-<!-- v4 -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProFlow — Proje Yönetim Sistemi</title>
+<title>DengBeJ — Yönetim Sistemi</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
@@ -253,6 +252,29 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .prob-fill{height:100%;border-radius:2px;transition:width .5s}
 .country-flag{font-size:22px;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* GANTT */
+.gantt-wrap{overflow-x:auto}
+.gantt-header{display:flex;background:var(--surface2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5}
+.gantt-label-col{width:240px;min-width:240px;padding:8px 12px;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text2);border-right:1px solid var(--border);flex-shrink:0}
+.gantt-day-header{flex:1;text-align:center;padding:6px 2px;font-size:10px;color:var(--text2);min-width:32px;border-right:1px solid var(--border)}
+.gantt-day-header.today{background:rgba(59,130,246,.15);color:var(--accent)}
+.gantt-row{display:flex;border-bottom:1px solid var(--border);align-items:center;min-height:40px}
+.gantt-row:hover{background:rgba(255,255,255,.02)}
+.gantt-row-label{width:240px;min-width:240px;padding:8px 12px;font-size:12px;border-right:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:8px}
+.gantt-row-label .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.gantt-timeline{flex:1;position:relative;height:40px;display:flex}
+.gantt-cell{min-width:32px;height:100%;border-right:1px solid var(--border);flex:1}
+.gantt-cell.today{background:rgba(59,130,246,.06)}
+.gantt-cell.weekend{background:rgba(255,255,255,.02)}
+.gantt-bar{position:absolute;height:24px;top:8px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;cursor:pointer;transition:.15s;z-index:2}
+.gantt-bar:hover{opacity:.85;transform:scaleY(1.05)}
+/* CHECKLIST */
+.check-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:8px;transition:.15s}
+.check-item.done{opacity:.6}
+.check-item.done .check-text{text-decoration:line-through;color:var(--text3)}
+.check-checkbox{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+.check-checkbox.checked{background:var(--success);border-color:var(--success)}
+.check-text{flex:1;font-size:13px}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -264,7 +286,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- ═══ GİRİŞ ═══ -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-title">Pro<span style="color:var(--accent)">Flow</span></div>
+    <div class="login-title">DengBe<span style="color:var(--accent)">J</span></div>
     <div class="login-sub" id="lsub">Hesabınıza giriş yapın</div>
     <div class="err" id="lErr"></div>
 
@@ -313,8 +335,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <!-- SIDEBAR -->
   <nav id="sidebar">
     <div class="logo">
-      <div class="logo-icon">PF</div>
-      <div class="logo-text">Pro<span>Flow</span></div>
+      <div class="logo-icon">DB</div>
+      <div class="logo-text">DengBe<span>J</span></div>
     </div>
     <div class="nav-wrap">
       <div class="nav-section">
@@ -327,6 +349,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="quotation" onclick="navigate(this)"><div class="nav-icon">📋</div><span class="nav-text">Teklif Oluştur</span></div>
         <div class="nav-item" data-page="barcode" onclick="navigate(this)"><div class="nav-icon">🔖</div><span class="nav-text">Barkod & QR</span></div>
         <div class="nav-item" data-page="processes" onclick="navigate(this)"><div class="nav-icon">⚙️</div><span class="nav-text">Süreç Takibi</span></div>
+        <div class="nav-item" data-page="gantt" onclick="navigate(this)"><div class="nav-icon">📅</div><span class="nav-text">Gantt Chart</span></div>
+        <div class="nav-item" data-page="recurring" onclick="navigate(this)"><div class="nav-icon">🔄</div><span class="nav-text">Tekrarlayan Görevler</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-label">PLANLAMA</div>
@@ -796,6 +820,47 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
 
+      <!-- ── GANTT ── -->
+      <div class="page" id="page-gantt">
+        <div class="flex-btw mb-14">
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-select" id="ganttProject" onchange="loadGanttForProject(this.value)" style="width:220px;font-size:12px">
+              <option value="">Tüm Projeler</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="ganttZoom(-1)">🔍−</button>
+            <button class="btn btn-ghost btn-sm" onclick="ganttZoom(1)">🔍+</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('process')">+ Süreç Ekle</button>
+          </div>
+        </div>
+        <div class="card" style="overflow-x:auto">
+          <div id="ganttChart" style="min-width:800px"></div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="card-title">Bağımlılık Takibi</div>
+          <div id="dependencyList" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- ── RECURRING TASKS ── -->
+      <div class="page" id="page-recurring">
+        <div class="flex-btw mb-14">
+          <div></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('recurringTask')">+ Tekrarlayan Görev</button>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Aktif Tekrarlayan Görevler</div>
+            <div id="recurringList" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Yaklaşan Otomatik Görevler</div>
+            <div id="recurringUpcoming" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── CRM PIPELINE ── -->
       <div class="page" id="page-crm-pipeline">
         <div class="flex-btw mb-14">
@@ -1094,7 +1159,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Yeni Kullanıcı Ekle</div><button class="modal-close" onclick="closeModal('user')">✕</button></div>
     <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px;font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-      ℹ️ Kullanıcı bu bilgilerle <b>ProFlow giriş ekranından</b> kendisi kayıt olacak.<br>
+      ℹ️ Kullanıcı bu bilgilerle <b>DengBeJ giriş ekranından</b> kendisi kayıt olacak.<br>
       Aşağıdaki bilgileri kullanıcıyla paylaşın.
     </div>
     <div class="form-group"><label class="form-label">Ad Soyad *</label><input class="form-input" id="uFullName" placeholder="Ad Soyad"></div>
@@ -1247,6 +1312,63 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── RECURRING TASK MODAL ── -->
+<div class="modal-overlay" id="m-recurringTask">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="mRecTitle">Tekrarlayan Görev</div><button class="modal-close" onclick="closeModal('recurringTask')">✕</button></div>
+    <input type="hidden" id="recId">
+    <div class="form-group"><label class="form-label">Görev Adı *</label><input class="form-input" id="recName" placeholder="Görev adı"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Proje</label><select class="form-select" id="recProject"><option value="">Seçin...</option></select></div>
+      <div class="form-group"><label class="form-label">Sorumlu</label><select class="form-select" id="recOwner"><option value="">Seçin...</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tekrar Sıklığı *</label>
+        <select class="form-select" id="recFreq">
+          <option value="daily">Her Gün</option>
+          <option value="weekly">Her Hafta</option>
+          <option value="biweekly">2 Haftada Bir</option>
+          <option value="monthly">Her Ay</option>
+          <option value="quarterly">Her Çeyrek</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Başlangıç Tarihi</label><input class="form-input" id="recStart" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Bitiş Tarihi (isteğe bağlı)</label><input class="form-input" id="recEnd" type="date"></div>
+      <div class="form-group"><label class="form-label">Durum</label>
+        <select class="form-select" id="recStatus">
+          <option value="active">Aktif</option>
+          <option value="paused">Durduruldu</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Açıklama</label><textarea class="form-textarea" id="recDesc" placeholder="Görev detayları..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('recurringTask')">İptal</button>
+      <button class="btn btn-primary" onclick="saveRecurringTask()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHECKLIST MODAL ── -->
+<div class="modal-overlay" id="m-checklist">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="mCheckTitle">Alt Görevler (Checklist)</div><button class="modal-close" onclick="closeModal('checklist')">✕</button></div>
+    <input type="hidden" id="checkProcessId">
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="form-input" id="checkNewItem" placeholder="Yeni alt görev..." style="flex:1" onkeydown="if(event.key==='Enter')addCheckItem()">
+      <button class="btn btn-primary btn-sm" onclick="addCheckItem()">Ekle</button>
+    </div>
+    <div id="checkItemList" style="display:flex;flex-direction:column;gap:6px;max-height:350px;overflow-y:auto"></div>
+    <div class="modal-footer">
+      <div id="checkProgress" style="flex:1;font-size:12px;color:var(--text2)"></div>
+      <button class="btn btn-ghost" onclick="closeModal('checklist')">Kapat</button>
+      <button class="btn btn-primary" onclick="saveChecklist()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -1265,7 +1387,7 @@ let allCustomers = [];
 
 const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
-  processes:'Süreç Takibi', calendar:'Takvim', meetings:'Toplantı Notları',
+  processes:'Süreç Takibi', gantt:'Gantt Chart — Proje Takvimi', recurring:'Tekrarlayan Görevler', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
   'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', users:'Kullanıcılar & Yetkiler'
 };
@@ -1677,7 +1799,7 @@ function navigate(el) {
   document.getElementById('sidebar').classList.remove('mobile-open');
   currentPage = page;
   const loaders = {
-    projects: loadProjects, products: loadProducts, stock: loadStock, 'price-history': loadPriceHistory, quotation: loadQuotation, barcode: loadBarcode, processes: loadProcesses,
+    projects: loadProjects, products: loadProducts, stock: loadStock, 'price-history': loadPriceHistory, quotation: loadQuotation, barcode: loadBarcode, processes: loadProcesses, gantt: loadGantt, recurring: loadRecurring,
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
@@ -2454,7 +2576,7 @@ async function saveUser(){
 
   // Bilgi kartını göster
   const roleNames={admin:'Sistem Yöneticisi',manager:'Proje Yöneticisi',sales:'Satış',accounting:'Muhasebe',viewer:'Görüntüle'};
-  const shareText=`ProFlow Giriş Bilgileri\n----------------------------\nURL: ${window.location.href}\nE-posta: ${email}\nŞifre: ${pass}\nRol: ${roleNames[role]||role}`;
+  const shareText=`DengBeJ Giriş Bilgileri\n----------------------------\nURL: ${window.location.href}\nE-posta: ${email}\nŞifre: ${pass}\nRol: ${roleNames[role]||role}`;
   document.getElementById('userShareText').textContent=shareText;
   document.getElementById('userShareCard').style.display='block';
   document.getElementById('btnSaveUser').style.display='none';
@@ -2845,7 +2967,7 @@ function renderWorldMap(customers) {
       <!-- Country dots -->
       ${dots}
       <!-- Labels -->
-      <text x="10" y="15" fill="#4b5563" font-size="9">ProFlow — İhracat Müşteri Haritası</text>
+      <text x="10" y="15" fill="#4b5563" font-size="9">DengBeJ — İhracat Müşteri Haritası</text>
     </svg>
     <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:8px;align-items:center">
       <div style="width:10px;height:10px;border-radius:50%;background:rgba(59,130,246,0.7)"></div>
@@ -3159,7 +3281,7 @@ function updateQuotationPreview() {
     <div style="font-family:'DM Sans',sans-serif;color:#1a1a1a">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #3b82f6;margin-bottom:16px">
         <div>
-          <div style="font-size:22px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px">ProFlow</div>
+          <div style="font-size:22px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px">DengBeJ</div>
           <div style="font-size:10px;color:#6b7280;margin-top:2px">Proje & Ticari Yönetim Sistemi</div>
         </div>
         <div style="text-align:right">
@@ -3199,7 +3321,7 @@ function updateQuotationPreview() {
         <div style="font-size:15px;font-weight:800;color:#3b82f6;margin-top:4px">TOPLAM: ${currSymbol}${fmtNum(total)}</div>
       </div>
       ${qtNotes?`<div style="margin-top:12px;font-size:10px;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:8px">${qtNotes}</div>`:''}
-      <div style="margin-top:14px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:8px">Bu teklif ProFlow Yönetim Sistemi ile oluşturulmuştur.</div>
+      <div style="margin-top:14px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:8px">Bu teklif DengBeJ Yönetim Sistemi ile oluşturulmuştur.</div>
     </div>`;
 }
 
@@ -3785,7 +3907,7 @@ function buildReportHTML(title, content) {
     .report-date{font-size:10px;color:#6b7280}
   </style></head><body>
   <div class="header">
-    <div><div class="logo">ProFlow</div><div style="font-size:10px;color:#6b7280">Proje & Ticari Yönetim</div></div>
+    <div><div class="logo">DengBeJ</div><div style="font-size:10px;color:#6b7280">Proje & Ticari Yönetim</div></div>
     <div style="text-align:right"><div class="report-title">${title}</div><div class="report-date">Tarih: ${new Date().toLocaleDateString('tr-TR')}</div></div>
   </div>
   ${content}
@@ -3797,6 +3919,310 @@ function printHTML(html) {
   w.document.write(html); w.document.close();
   setTimeout(()=>w.print(), 600);
   showNotif('PDF hazırlanıyor...','ok');
+}
+
+// ═══════════════════════════════════════════════
+// GANTT CHART
+// ═══════════════════════════════════════════════
+let ganttDays = 30;
+let ganttProcesses = [];
+
+async function loadGantt() {
+  const [{data:procs},{data:projs}] = await Promise.all([
+    dbSelect('processes', {select:'*,projects(name)', order:'start_date'}),
+    dbSelect('projects', {select:'id,name', order:'name'})
+  ]);
+  ganttProcesses = procs||[];
+
+  // Populate project filter
+  const opts = (projs||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('ganttProject').innerHTML = '<option value="">Tüm Projeler</option>'+opts;
+
+  renderGantt(ganttProcesses);
+  renderDependencies(ganttProcesses);
+}
+
+function loadGanttForProject(projectId) {
+  const filtered = projectId ? ganttProcesses.filter(p=>p.project_id===projectId) : ganttProcesses;
+  renderGantt(filtered);
+  renderDependencies(filtered);
+}
+
+function ganttZoom(dir) {
+  ganttDays = Math.max(14, Math.min(90, ganttDays + dir*7));
+  const pid = document.getElementById('ganttProject').value;
+  loadGanttForProject(pid);
+}
+
+function renderGantt(procs) {
+  const el = document.getElementById('ganttChart');
+  if(!el) return;
+
+  const today = new Date();
+  const startDate = new Date(today); startDate.setDate(startDate.getDate()-7);
+  const days = [];
+  for(let i=0; i<ganttDays; i++) {
+    const d = new Date(startDate); d.setDate(d.getDate()+i);
+    days.push(d);
+  }
+
+  const stageColors = {planning:'#8b5cf6', active:'#3b82f6', done:'#10b981'};
+  const stageDots = {planning:'#8b5cf6', active:'#3b82f6', done:'#10b981'};
+
+  const headerDays = days.map(d=>{
+    const isToday = d.toDateString()===today.toDateString();
+    const isWknd = d.getDay()===0||d.getDay()===6;
+    const label = d.getDate()===1||d.getDay()===1 ? `${['','Pzt','Sal','Çar','Per','Cum','Cmt','Paz'][d.getDay()]} ${d.getDate()}` : d.getDate();
+    return `<div class="gantt-day-header ${isToday?'today':''}">${label}</div>`;
+  }).join('');
+
+  const rows = procs.map(p=>{
+    const color = stageColors[p.status]||'#3b82f6';
+    const dot = stageDots[p.status]||'#3b82f6';
+    const pStart = p.start_date ? new Date(p.start_date) : null;
+    const pEnd = p.due_date ? new Date(p.due_date) : pStart ? new Date(pStart.getTime()+7*86400000) : null;
+
+    // Calculate bar position
+    let barStyle = '';
+    if(pStart && pEnd) {
+      const totalMs = days[days.length-1].getTime() - startDate.getTime();
+      const barStartMs = Math.max(0, pStart.getTime() - startDate.getTime());
+      const barEndMs = Math.min(totalMs, pEnd.getTime() - startDate.getTime());
+      if(barEndMs > barStartMs) {
+        const left = (barStartMs/totalMs*100).toFixed(1);
+        const width = ((barEndMs-barStartMs)/totalMs*100).toFixed(1);
+        const progress = p.status==='done'?100:p.status==='active'?50:10;
+        barStyle = `left:${left}%;width:${width}%;background:${color}`;
+      }
+    }
+
+    const cells = days.map(d=>{
+      const isToday = d.toDateString()===today.toDateString();
+      const isWknd = d.getDay()===0||d.getDay()===6;
+      return `<div class="gantt-cell ${isToday?'today':''} ${isWknd?'weekend':''}"></div>`;
+    }).join('');
+
+    return `<div class="gantt-row">
+      <div class="gantt-row-label">
+        <div class="status-dot" style="background:${dot}"></div>
+        <div style="overflow:hidden">
+          <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+          <div style="font-size:10px;color:var(--text2)">${p.projects?.name||'–'}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;flex-shrink:0" onclick="openChecklist('${p.id}','${p.name}')" title="Alt görevler">☑️</button>
+      </div>
+      <div class="gantt-timeline" style="position:relative">
+        ${cells}
+        ${barStyle ? `<div class="gantt-bar" style="${barStyle}" onclick="editProcess('${p.id}')" title="${p.name}&#10;${fmtDate(p.start_date)} → ${fmtDate(p.due_date)}">${p.name.slice(0,20)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="gantt-header">
+      <div class="gantt-label-col">Süreç</div>
+      ${headerDays}
+    </div>
+    ${rows || '<div class="empty" style="padding:40px">Süreç bulunamadı. Önce süreç ekleyin.</div>'}`;
+}
+
+function renderDependencies(procs) {
+  const el = document.getElementById('dependencyList');
+  if(!el) return;
+  const withDeps = procs.filter(p=>p.depends_on);
+  if(!withDeps.length) {
+    el.innerHTML = '<div class="empty">Bağımlılık tanımlanmamış</div>'; return;
+  }
+  el.innerHTML = withDeps.map(p=>{
+    const dep = procs.find(x=>x.id===p.depends_on);
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+      <div style="flex:1"><b>${p.name}</b></div>
+      <div style="color:var(--text2);font-size:12px">bağımlı →</div>
+      <div style="flex:1;color:var(--accent)"><b>${dep?.name||'–'}</b></div>
+      <span class="status s-${dep?.status||'planning'}">${STATUS_TR[dep?.status]||'–'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── CHECKLIST ──
+let currentChecklist = [];
+let currentCheckProcessId = null;
+
+async function openChecklist(processId, processName) {
+  currentCheckProcessId = processId;
+  document.getElementById('mCheckTitle').textContent = `☑️ ${processName} — Alt Görevler`;
+
+  // Load existing checklist from process notes (stored as JSON)
+  const {data} = await dbSelect('processes', {eq:{id:processId}});
+  const proc = (data||[])[0];
+  try {
+    currentChecklist = proc?.checklist ? JSON.parse(proc.checklist) : [];
+  } catch(e) { currentChecklist = []; }
+
+  renderChecklist();
+  openModal('checklist', true);
+}
+
+function renderChecklist() {
+  const el = document.getElementById('checkItemList');
+  const done = currentChecklist.filter(i=>i.done).length;
+  const total = currentChecklist.length;
+  document.getElementById('checkProgress').textContent = total ? `${done}/${total} tamamlandı (%${Math.round(done/total*100)})` : '';
+  el.innerHTML = currentChecklist.map((item,i)=>`
+    <div class="check-item ${item.done?'done':''}">
+      <div class="check-checkbox ${item.done?'checked':''}" onclick="toggleCheck(${i})">
+        ${item.done?'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
+      </div>
+      <span class="check-text">${item.text}</span>
+      <button class="btn btn-ghost btn-sm" style="padding:2px 6px" onclick="removeCheck(${i})">✕</button>
+    </div>`).join('') || '<div class="text-xs" style="text-align:center;padding:16px;color:var(--text3)">Alt görev yok. Üstten ekleyin.</div>';
+}
+
+function toggleCheck(i) { currentChecklist[i].done = !currentChecklist[i].done; renderChecklist(); }
+function removeCheck(i) { currentChecklist.splice(i,1); renderChecklist(); }
+function addCheckItem() {
+  const inp = document.getElementById('checkNewItem');
+  const text = inp.value.trim();
+  if(!text) return;
+  currentChecklist.push({text, done:false, created:new Date().toISOString()});
+  inp.value = '';
+  renderChecklist();
+}
+
+async function saveChecklist() {
+  if(!currentCheckProcessId) return;
+  const {error} = await dbUpdate('processes', currentCheckProcessId, {checklist: JSON.stringify(currentChecklist)});
+  if(error) return showNotif('Hata','err');
+  closeModal('checklist');
+  showNotif('Checklist kaydedildi!','ok');
+  loadGantt();
+}
+
+// ═══════════════════════════════════════════════
+// RECURRING TASKS
+// ═══════════════════════════════════════════════
+let allRecurring = [];
+
+async function loadRecurring() {
+  const [{data:recs},{data:projs},{data:profiles}] = await Promise.all([
+    dbSelect('recurring_tasks', {select:'*,projects(name)', order:'created_at', asc:false}),
+    dbSelect('projects', {select:'id,name'}),
+    dbSelect('profiles', {select:'id,full_name'})
+  ]);
+  allRecurring = recs||[];
+
+  // Populate selects
+  const projOpts = (projs||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('recProject').innerHTML = '<option value="">Seçin...</option>'+projOpts;
+  const profOpts = (profiles||[]).map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  document.getElementById('recOwner').innerHTML = '<option value="">Seçin...</option>'+profOpts;
+
+  renderRecurringList(allRecurring);
+  renderUpcoming(allRecurring);
+}
+
+const FREQ_TR = {daily:'Her Gün',weekly:'Her Hafta',biweekly:'2 Haftada Bir',monthly:'Her Ay',quarterly:'Her Çeyrek'};
+const FREQ_DAYS = {daily:1,weekly:7,biweekly:14,monthly:30,quarterly:90};
+
+function renderRecurringList(list) {
+  const el = document.getElementById('recurringList');
+  el.innerHTML = list.length ? list.map(r=>`
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;border-left:3px solid ${r.status==='active'?'var(--success)':'var(--border)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <div style="font-size:13px;font-weight:600">${r.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${r.projects?.name||'Genel'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)">🔄 ${FREQ_TR[r.frequency]||r.frequency}</span>
+          <span class="status ${r.status==='active'?'s-active':'s-draft'}">${r.status==='active'?'Aktif':'Durduruldu'}</span>
+        </div>
+      </div>
+      ${r.description?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${r.description}</div>`:''}
+      <div style="display:flex;gap:6px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="generateFromRecurring('${r.id}')">▶ Şimdi Oluştur</button>
+        <button class="btn btn-ghost btn-sm" onclick="editRecurring('${r.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecurring('${r.id}')">🗑</button>
+      </div>
+    </div>`).join('') : '<div class="empty">Tekrarlayan görev yok</div>';
+}
+
+function renderUpcoming(list) {
+  const el = document.getElementById('recurringUpcoming');
+  const active = list.filter(r=>r.status==='active');
+  const today = new Date();
+  const upcoming = active.map(r=>{
+    const start = r.start_date ? new Date(r.start_date) : today;
+    const days = FREQ_DAYS[r.frequency]||7;
+    const nextDate = new Date(start);
+    while(nextDate <= today) nextDate.setDate(nextDate.getDate()+days);
+    return {...r, nextDate};
+  }).sort((a,b)=>a.nextDate-b.nextDate).slice(0,8);
+
+  el.innerHTML = upcoming.length ? upcoming.map(r=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+      <div style="width:36px;height:36px;border-radius:8px;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔄</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${r.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${FREQ_TR[r.frequency]}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:600;color:var(--accent)">${fmtDate(r.nextDate.toISOString().split('T')[0])}</div>
+        <div style="font-size:10px;color:var(--text2)">${Math.ceil((r.nextDate-today)/86400000)} gün</div>
+      </div>
+    </div>`).join('') : '<div class="empty">Aktif görev yok</div>';
+}
+
+async function saveRecurringTask() {
+  const id = document.getElementById('recId').value;
+  const d = {
+    name: document.getElementById('recName').value,
+    project_id: document.getElementById('recProject').value||null,
+    owner_id: document.getElementById('recOwner').value||null,
+    frequency: document.getElementById('recFreq').value,
+    start_date: document.getElementById('recStart').value||null,
+    end_date: document.getElementById('recEnd').value||null,
+    status: document.getElementById('recStatus').value,
+    description: document.getElementById('recDesc').value,
+  };
+  if(!d.name) return showNotif('Görev adı zorunlu','err');
+  const res = id ? await dbUpdate('recurring_tasks',id,d) : await dbInsert('recurring_tasks',d);
+  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  closeModal('recurringTask'); loadRecurring(); showNotif('Görev kaydedildi!','ok');
+}
+
+async function generateFromRecurring(id) {
+  const r = allRecurring.find(x=>x.id===id); if(!r) return;
+  const today = new Date().toISOString().split('T')[0];
+  const dueDate = new Date(); dueDate.setDate(dueDate.getDate()+(FREQ_DAYS[r.frequency]||7));
+  const {error} = await dbInsert('processes', {
+    name: r.name, project_id: r.project_id, status:'planning',
+    start_date:today, due_date:dueDate.toISOString().split('T')[0],
+    description: r.description+' (Otomatik oluşturuldu)'
+  });
+  if(error) return showNotif('Hata','err');
+  showNotif('Süreç oluşturuldu!','ok');
+}
+
+async function editRecurring(id) {
+  const r = allRecurring.find(x=>x.id===id); if(!r) return;
+  document.getElementById('recId').value=r.id;
+  document.getElementById('mRecTitle').textContent='Görev Düzenle';
+  document.getElementById('recName').value=r.name;
+  document.getElementById('recProject').value=r.project_id||'';
+  document.getElementById('recOwner').value=r.owner_id||'';
+  document.getElementById('recFreq').value=r.frequency;
+  document.getElementById('recStart').value=r.start_date||'';
+  document.getElementById('recEnd').value=r.end_date||'';
+  document.getElementById('recStatus').value=r.status;
+  document.getElementById('recDesc').value=r.description||'';
+  openModal('recurringTask',true);
+}
+
+async function deleteRecurring(id) {
+  const {error} = await dbDelete('recurring_tasks',id);
+  if(error) return showNotif('Hata','err');
+  loadRecurring(); showNotif('Silindi','ok');
 }
 
 // ═══════════════════════════════════════════════
