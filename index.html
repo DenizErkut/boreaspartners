@@ -1,3 +1,4 @@
+<!-- v4 -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -3638,19 +3639,16 @@ async function exportData(table, format) {
   if(format==='csv') {
     const headers = Object.keys(data[0]).join(',');
     const rows = data.map(row=>Object.values(row).map(v=>
-      v===null?'':typeof v==='string'&&(v.includes(','))||v.includes('"')?`"${v.replace(/"/g,'""')}"`:v
+      v===null?'':typeof v==='string'&&v.includes(',')?'"'+v.replace(/"/g,'""')+'"':v
     ).join(','));
-    const csv = [headers,...rows].join('
-');
-    downloadFile(csv, `${table}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+    const csv = [headers,...rows].join('\n');
+    downloadFile(csv, table+'-'+new Date().toISOString().split('T')[0]+'.csv', 'text/csv');
     showNotif('CSV indirildi!','ok');
   } else {
-    // Excel (tab-separated for compatibility)
-    const headers = Object.keys(data[0]).join('	');
-    const rows = data.map(row=>Object.values(row).map(v=>v===null?'':v).join('	'));
-    const tsv = [headers,...rows].join('
-');
-    downloadFile('﻿'+tsv, `${table}-${new Date().toISOString().split('T')[0]}.xls`, 'application/vnd.ms-excel');
+    const headers = Object.keys(data[0]).join('\t');
+    const rows = data.map(row=>Object.values(row).map(v=>v===null?'':v).join('\t'));
+    const tsv = [headers,...rows].join('\n');
+    downloadFile('\ufeff'+tsv, table+'-'+new Date().toISOString().split('T')[0]+'.xls', 'application/vnd.ms-excel');
     showNotif('Excel indirildi!','ok');
   }
 }
@@ -3664,8 +3662,7 @@ function exportTableCSV(tableId, filename) {
     const cells = [...tr.querySelectorAll('th,td')].map(td=>td.innerText.replace(/,/g,';'));
     rows.push(cells.join(','));
   });
-  downloadFile(rows.join('
-'), `${filename}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+  downloadFile(rows.join('\n'), filename+'-'+new Date().toISOString().split('T')[0]+'.csv', 'text/csv');
   showNotif('CSV indirildi!','ok');
 }
 
