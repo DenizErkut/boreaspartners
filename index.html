@@ -232,6 +232,24 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .file-item-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px}
 .file-item-del:hover{color:var(--danger)}
 .file-item-link{color:var(--accent);text-decoration:none;font-size:11px;flex-shrink:0}
+/* ── CRM STYLES ── */
+.pipeline-col{background:var(--surface2);border-radius:12px;padding:12px;min-height:400px;display:flex;flex-direction:column;gap:8px}
+.pipeline-col-header{padding:8px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.pipeline-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:.15s;position:relative}
+.pipeline-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(59,130,246,.15)}
+.pipeline-card-title{font-size:13px;font-weight:600;margin-bottom:5px}
+.pipeline-card-company{font-size:11px;color:var(--text2);margin-bottom:8px}
+.pipeline-card-footer{display:flex;align-items:center;justify-content:space-between}
+.pipeline-card-value{font-size:12px;font-weight:600;color:var(--success)}
+.seg-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:700}
+.seg-a{background:rgba(251,191,36,.15);color:#fbbf24}
+.seg-b{background:rgba(59,130,246,.15);color:var(--accent)}
+.seg-c{background:rgba(148,163,184,.1);color:var(--text2)}
+.int-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;gap:12px}
+.int-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.prob-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:4px}
+.prob-fill{height:100%;border-radius:2px;transition:width .5s}
+.country-flag{font-size:22px;flex-shrink:0}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -309,8 +327,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="meetings" onclick="navigate(this)"><div class="nav-icon">🗒️</div><span class="nav-text">Toplantı Notları</span></div>
       </div>
       <div class="nav-section">
-        <div class="nav-label">MÜŞTERİLER</div>
+        <div class="nav-label">MÜŞTERİLER & CRM</div>
         <div class="nav-item" data-page="customers" onclick="navigate(this)"><div class="nav-icon">👥</div><span class="nav-text">Müşteriler</span></div>
+        <div class="nav-item" data-page="crm-pipeline" onclick="navigate(this)"><div class="nav-icon">🎯</div><span class="nav-text">Satış Pipeline</span></div>
+        <div class="nav-item" data-page="crm-interactions" onclick="navigate(this)"><div class="nav-icon">💬</div><span class="nav-text">Etkileşim Geçmişi</span></div>
+        <div class="nav-item" data-page="crm-map" onclick="navigate(this)"><div class="nav-icon">🗺️</div><span class="nav-text">İhracat Haritası</span></div>
         <div class="nav-item" data-page="commercial" onclick="navigate(this)"><div class="nav-icon">💼</div><span class="nav-text">Ticari Kayıtlar</span></div>
       </div>
       <div class="nav-section">
@@ -472,6 +493,56 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div class="kpi purple"><div class="kpi-label">Ort. Marj</div><div class="kpi-value" id="anaMargin">–</div></div>
         </div>
         <div class="card"><div class="card-title">Proje Bazlı Analiz</div><div id="anaTable"><div class="loading"><div class="spinner"></div></div></div></div>
+      </div>
+
+      <!-- ── CRM PIPELINE ── -->
+      <div class="page" id="page-crm-pipeline">
+        <div class="flex-btw mb-14">
+          <div id="pipelineStats" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('lead')">+ Yeni Lead</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px" id="pipelineBoard"></div>
+      </div>
+
+      <!-- ── CRM INTERACTIONS ── -->
+      <div class="page" id="page-crm-interactions">
+        <div class="flex-btw mb-14">
+          <div class="tabs" style="margin-bottom:0;flex:none">
+            <div class="tab active" onclick="switchTab(this,'tIntAll')">Tümü</div>
+            <div class="tab" onclick="switchTab(this,'tIntCall')">📞 Arama</div>
+            <div class="tab" onclick="switchTab(this,'tIntEmail')">📧 Mail</div>
+            <div class="tab" onclick="switchTab(this,'tIntVisit')">🤝 Ziyaret</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('interaction')">+ Etkileşim Ekle</button>
+        </div>
+        <div class="card">
+          <div id="tIntAll" class="tab-content active"><div id="intListAll"><div class="loading"><div class="spinner"></div></div></div></div>
+          <div id="tIntCall" class="tab-content"><div id="intListCall"></div></div>
+          <div id="tIntEmail" class="tab-content"><div id="intListEmail"></div></div>
+          <div id="tIntVisit" class="tab-content"><div id="intListVisit"></div></div>
+        </div>
+      </div>
+
+      <!-- ── CRM MAP ── -->
+      <div class="page" id="page-crm-map">
+        <div class="grid grid-4 mb-14">
+          <div class="kpi blue"><div class="kpi-label">İhracat Müşterileri</div><div class="kpi-value" id="mapKpi1">–</div><div class="kpi-icon">🌍</div></div>
+          <div class="kpi green"><div class="kpi-label">Aktif Ülkeler</div><div class="kpi-value" id="mapKpi2">–</div><div class="kpi-icon">🗺️</div></div>
+          <div class="kpi purple"><div class="kpi-label">A Segmenti</div><div class="kpi-value" id="mapKpi3">–</div><div class="kpi-icon">⭐</div></div>
+          <div class="kpi yellow"><div class="kpi-label">Toplam Ciro (İhracat)</div><div class="kpi-value" id="mapKpi4">–</div><div class="kpi-icon">💶</div></div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Dünya Haritası — İhracat Müşterileri</div>
+            <div id="worldMap" style="position:relative;width:100%;min-height:320px;background:var(--surface2);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center">
+              <div class="loading"><div class="spinner"></div><span>Harita yükleniyor...</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Ülke Bazlı Müşteriler</div>
+            <div id="countryList" style="display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto"></div>
+          </div>
+        </div>
       </div>
 
       <!-- USERS -->
@@ -749,6 +820,81 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── LEAD MODAL ── -->
+<div class="modal-overlay" id="m-lead">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title" id="mLeadTitle">Yeni Lead</div><button class="modal-close" onclick="closeModal('lead')">✕</button></div>
+    <input type="hidden" id="leadId">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Müşteri / Firma *</label><select class="form-select" id="leadCustomer"><option value="">Seçin...</option></select></div>
+      <div class="form-group"><label class="form-label">Aşama</label>
+        <select class="form-select" id="leadStage">
+          <option value="lead">🎯 Lead</option>
+          <option value="offer">📋 Teklif</option>
+          <option value="negotiation">🤝 Müzakere</option>
+          <option value="won">✅ Kazanıldı</option>
+          <option value="lost">❌ Kaybedildi</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Başlık *</label><input class="form-input" id="leadTitle" placeholder="Fırsat başlığı"></div>
+      <div class="form-group"><label class="form-label">Tahmini Değer</label><input class="form-input" id="leadValue" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Para Birimi</label><select class="form-select" id="leadCurrency"><option value="TRY">TRY ₺</option><option value="EUR">EUR €</option><option value="USD">USD $</option></select></div>
+      <div class="form-group"><label class="form-label">Kapanış Tarihi</label><input class="form-input" id="leadClose" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Segment</label>
+        <select class="form-select" id="leadSegment">
+          <option value="A">⭐⭐⭐ A — Stratejik</option>
+          <option value="B">⭐⭐ B — Önemli</option>
+          <option value="C">⭐ C — Standart</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Kazanma İhtimali %</label><input class="form-input" id="leadProb" type="number" min="0" max="100" placeholder="50"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notlar</label><textarea class="form-textarea" id="leadNotes" placeholder="Fırsat detayları..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('lead')">İptal</button>
+      <button class="btn btn-primary" onclick="saveLead()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── INTERACTION MODAL ── -->
+<div class="modal-overlay" id="m-interaction">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="mIntTitle">Etkileşim Ekle</div><button class="modal-close" onclick="closeModal('interaction')">✕</button></div>
+    <input type="hidden" id="intId">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tür *</label>
+        <select class="form-select" id="intType">
+          <option value="call">📞 Telefon Araması</option>
+          <option value="email">📧 E-posta</option>
+          <option value="visit">🤝 Yüz Yüze Ziyaret</option>
+          <option value="video">📹 Video Görüşme</option>
+          <option value="whatsapp">💬 WhatsApp</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Müşteri *</label><select class="form-select" id="intCustomer"><option value="">Seçin...</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tarih *</label><input class="form-input" id="intDate" type="date"></div>
+      <div class="form-group"><label class="form-label">Süre (dakika)</label><input class="form-input" id="intDuration" type="number" placeholder="30"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Konu *</label><input class="form-input" id="intSubject" placeholder="Görüşme konusu"></div>
+    <div class="form-group"><label class="form-label">Notlar</label><textarea class="form-textarea" id="intNotes" placeholder="Görüşme detayları, kararlar..."></textarea></div>
+    <div class="form-group"><label class="form-label">Sonraki Aksiyon</label><input class="form-input" id="intNextAction" placeholder="Yapılacak iş..."></div>
+    <div class="form-group"><label class="form-label">Aksiyon Tarihi</label><input class="form-input" id="intNextDate" type="date"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('interaction')">İptal</button>
+      <button class="btn btn-primary" onclick="saveInteraction()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -768,7 +914,7 @@ let allCustomers = [];
 const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar',
   processes:'Süreç Takibi', calendar:'Takvim', meetings:'Toplantı Notları',
-  customers:'Müşteriler', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
+  customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
   analysis:'Maliyet & Kar Analizi', users:'Kullanıcılar & Yetkiler'
 };
 
@@ -1182,6 +1328,7 @@ function navigate(el) {
     projects: loadProjects, products: loadProducts, processes: loadProcesses,
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
+    'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
     reports: loadReports, analysis: loadAnalysis, users: loadUsers
   };
   if (loaders[page]) loaders[page]();
@@ -2071,6 +2218,309 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// ═══════════════════════════════════════════════
+// CRM — PIPELINE
+// ═══════════════════════════════════════════════
+const PIPELINE_STAGES = [
+  { id:'lead',        label:'🎯 Lead',       color:'#8b5cf6' },
+  { id:'offer',       label:'📋 Teklif',      color:'#3b82f6' },
+  { id:'negotiation', label:'🤝 Müzakere',    color:'#f59e0b' },
+  { id:'won',         label:'✅ Kazanıldı',   color:'#10b981' },
+  { id:'lost',        label:'❌ Kaybedildi',  color:'#ef4444' },
+];
+let allLeads = [];
+
+async function loadPipeline() {
+  const board = document.getElementById('pipelineBoard');
+  board.innerHTML = PIPELINE_STAGES.map(s=>
+    `<div class="pipeline-col">
+      <div class="pipeline-col-header" style="background:${s.color}22;color:${s.color}">
+        <span>${s.label}</span>
+        <span id="pcnt-${s.id}" style="font-size:10px;opacity:.7">0</span>
+      </div>
+      <div id="pcol-${s.id}" style="display:flex;flex-direction:column;gap:8px;flex:1"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%;font-size:11px" onclick="openLeadModal('${s.id}')">+ Ekle</button>
+    </div>`).join('');
+
+  const {data} = await dbSelect('crm_leads', {select:'*,customers(company_name)', order:'created_at', asc:false});
+  allLeads = data || [];
+  renderPipelineBoard(allLeads);
+  renderPipelineStats(allLeads);
+}
+
+function renderPipelineBoard(leads) {
+  PIPELINE_STAGES.forEach(s => {
+    const col = document.getElementById('pcol-'+s.id);
+    const cnt = document.getElementById('pcnt-'+s.id);
+    const items = leads.filter(l=>l.stage===s.id);
+    if(cnt) cnt.textContent = items.length;
+    if(!col) return;
+    col.innerHTML = items.map(l=>`
+      <div class="pipeline-card" onclick="editLead('${l.id}')">
+        <div style="position:absolute;top:10px;right:10px">
+          <span class="seg-badge seg-${(l.segment||'c').toLowerCase()}">${l.segment||'C'}</span>
+        </div>
+        <div class="pipeline-card-title">${l.title}</div>
+        <div class="pipeline-card-company">🏢 ${l.customers?.company_name||'–'}</div>
+        ${l.probability!=null?`<div class="prob-bar"><div class="prob-fill" style="width:${l.probability}%;background:${s.color}"></div></div>
+        <div style="font-size:10px;color:var(--text2);margin-top:3px">İhtimal: %${l.probability}</div>`:''}
+        <div class="pipeline-card-footer" style="margin-top:8px">
+          <span class="pipeline-card-value">${l.value?fmtCurrency(l.value,l.currency||'TRY'):'–'}</span>
+          ${l.close_date?`<span style="font-size:10px;color:var(--text2)">${fmtDate(l.close_date)}</span>`:''}
+        </div>
+      </div>`).join('') || `<div style="text-align:center;padding:20px;font-size:11px;color:var(--text3)">Boş</div>`;
+  });
+}
+
+function renderPipelineStats(leads) {
+  const stats = document.getElementById('pipelineStats');
+  const total = leads.length;
+  const won = leads.filter(l=>l.stage==='won').length;
+  const totalVal = leads.filter(l=>l.stage==='won'&&l.currency==='TRY').reduce((s,l)=>s+Number(l.value||0),0);
+  const pipeline = leads.filter(l=>!['won','lost'].includes(l.stage)).reduce((s,l)=>s+Number(l.value||0),0);
+  stats.innerHTML = `
+    <div class="kpi blue" style="padding:10px 16px;min-width:120px"><div class="kpi-label" style="font-size:10px">Toplam Lead</div><div class="kpi-value" style="font-size:20px">${total}</div></div>
+    <div class="kpi green" style="padding:10px 16px;min-width:120px"><div class="kpi-label" style="font-size:10px">Kazanıldı</div><div class="kpi-value" style="font-size:20px">${won}</div></div>
+    <div class="kpi purple" style="padding:10px 16px;min-width:140px"><div class="kpi-label" style="font-size:10px">Pipeline Değeri</div><div class="kpi-value" style="font-size:20px">${fmtCompact(pipeline)}</div></div>`;
+}
+
+function openLeadModal(stage) {
+  document.getElementById('leadId').value = '';
+  document.getElementById('mLeadTitle').textContent = 'Yeni Lead';
+  document.getElementById('leadStage').value = stage || 'lead';
+  document.getElementById('leadTitle').value = '';
+  document.getElementById('leadValue').value = '';
+  document.getElementById('leadNotes').value = '';
+  document.getElementById('leadProb').value = '50';
+  populateLeadCustomers();
+  openModal('lead');
+}
+
+async function populateLeadCustomers() {
+  const {data} = await dbSelect('customers',{order:'company_name'});
+  const opts=(data||[]).map(c=>`<option value="${c.id}">${c.company_name}</option>`).join('');
+  document.getElementById('leadCustomer').innerHTML='<option value="">Seçin...</option>'+opts;
+  document.getElementById('intCustomer').innerHTML='<option value="">Seçin...</option>'+opts;
+}
+
+async function saveLead() {
+  const id = document.getElementById('leadId').value;
+  const d = {
+    customer_id: document.getElementById('leadCustomer').value||null,
+    stage: document.getElementById('leadStage').value,
+    title: document.getElementById('leadTitle').value,
+    value: parseFloat(document.getElementById('leadValue').value)||null,
+    currency: document.getElementById('leadCurrency').value,
+    close_date: document.getElementById('leadClose').value||null,
+    segment: document.getElementById('leadSegment').value,
+    probability: parseInt(document.getElementById('leadProb').value)||null,
+    notes: document.getElementById('leadNotes').value,
+  };
+  if(!d.title) return showNotif('Başlık zorunlu','err');
+  const res = id ? await dbUpdate('crm_leads',id,d) : await dbInsert('crm_leads',d);
+  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  closeModal('lead'); loadPipeline(); showNotif(id?'Lead güncellendi!':'Lead eklendi!','ok');
+}
+
+async function editLead(id) {
+  const l = allLeads.find(x=>x.id===id); if(!l) return;
+  await populateLeadCustomers();
+  document.getElementById('leadId').value = l.id;
+  document.getElementById('mLeadTitle').textContent = 'Lead Düzenle';
+  document.getElementById('leadCustomer').value = l.customer_id||'';
+  document.getElementById('leadStage').value = l.stage;
+  document.getElementById('leadTitle').value = l.title;
+  document.getElementById('leadValue').value = l.value||'';
+  document.getElementById('leadCurrency').value = l.currency||'TRY';
+  document.getElementById('leadClose').value = l.close_date||'';
+  document.getElementById('leadSegment').value = l.segment||'B';
+  document.getElementById('leadProb').value = l.probability||50;
+  document.getElementById('leadNotes').value = l.notes||'';
+  openModal('lead', true);
+}
+
+// ═══════════════════════════════════════════════
+// CRM — INTERACTIONS
+// ═══════════════════════════════════════════════
+let allInteractions = [];
+
+async function loadInteractions() {
+  document.getElementById('intListAll').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const {data} = await dbSelect('crm_interactions', {select:'*,customers(company_name)', order:'interaction_date', asc:false});
+  allInteractions = data || [];
+  renderInteractionList('intListAll', allInteractions);
+  renderInteractionList('intListCall', allInteractions.filter(i=>i.type==='call'));
+  renderInteractionList('intListEmail', allInteractions.filter(i=>i.type==='email'));
+  renderInteractionList('intListVisit', allInteractions.filter(i=>i.type==='visit'||i.type==='video'));
+  populateLeadCustomers();
+}
+
+function renderInteractionList(containerId, list) {
+  const el = document.getElementById(containerId); if(!el) return;
+  const typeInfo = {
+    call:  { icon:'📞', label:'Arama',    bg:'rgba(59,130,246,.12)',  color:'var(--accent)' },
+    email: { icon:'📧', label:'E-posta',  bg:'rgba(16,185,129,.12)',  color:'var(--success)' },
+    visit: { icon:'🤝', label:'Ziyaret',  bg:'rgba(245,158,11,.12)',  color:'var(--warning)' },
+    video: { icon:'📹', label:'Video',    bg:'rgba(139,92,246,.12)',  color:'var(--accent3)' },
+    whatsapp:{ icon:'💬', label:'WhatsApp', bg:'rgba(16,185,129,.12)', color:'var(--success)' },
+  };
+  el.innerHTML = list.length ? list.map(i => {
+    const t = typeInfo[i.type] || typeInfo.call;
+    return `<div class="int-item">
+      <div class="int-icon" style="background:${t.bg}">${t.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-size:13px;font-weight:600">${i.subject||'–'}</span>
+          <span style="font-size:10px;padding:1px 7px;border-radius:10px;background:${t.bg};color:${t.color}">${t.label}</span>
+        </div>
+        <div class="text-xs" style="margin-bottom:5px">🏢 ${i.customers?.company_name||'–'} · ${fmtDate(i.interaction_date)} ${i.duration_minutes?'· '+i.duration_minutes+' dk':''}</div>
+        ${i.notes?`<div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:5px">${i.notes}</div>`:''}
+        ${i.next_action?`<div style="font-size:11px;background:var(--surface2);border-radius:6px;padding:5px 8px;color:var(--accent)">📌 ${i.next_action}${i.next_action_date?' — '+fmtDate(i.next_action_date):''}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="editInteraction('${i.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteInteraction('${i.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Kayıt bulunamadı</div>';
+}
+
+async function saveInteraction() {
+  const id = document.getElementById('intId').value;
+  const d = {
+    type: document.getElementById('intType').value,
+    customer_id: document.getElementById('intCustomer').value||null,
+    interaction_date: document.getElementById('intDate').value,
+    duration_minutes: parseInt(document.getElementById('intDuration').value)||null,
+    subject: document.getElementById('intSubject').value,
+    notes: document.getElementById('intNotes').value,
+    next_action: document.getElementById('intNextAction').value,
+    next_action_date: document.getElementById('intNextDate').value||null,
+  };
+  if(!d.subject||!d.interaction_date) return showNotif('Konu ve tarih zorunlu','err');
+  const res = id ? await dbUpdate('crm_interactions',id,d) : await dbInsert('crm_interactions',d);
+  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  closeModal('interaction'); loadInteractions(); showNotif('Etkileşim kaydedildi!','ok');
+}
+
+async function editInteraction(id) {
+  const i = allInteractions.find(x=>x.id===id); if(!i) return;
+  document.getElementById('intId').value = i.id;
+  document.getElementById('mIntTitle').textContent = 'Etkileşim Düzenle';
+  document.getElementById('intType').value = i.type;
+  document.getElementById('intCustomer').value = i.customer_id||'';
+  document.getElementById('intDate').value = i.interaction_date||'';
+  document.getElementById('intDuration').value = i.duration_minutes||'';
+  document.getElementById('intSubject').value = i.subject||'';
+  document.getElementById('intNotes').value = i.notes||'';
+  document.getElementById('intNextAction').value = i.next_action||'';
+  document.getElementById('intNextDate').value = i.next_action_date||'';
+  openModal('interaction', true);
+}
+
+async function deleteInteraction(id) {
+  const {error} = await dbDelete('crm_interactions',id);
+  if(error) return showNotif('Hata','err');
+  loadInteractions(); showNotif('Silindi','ok');
+}
+
+// ═══════════════════════════════════════════════
+// CRM — MAP
+// ═══════════════════════════════════════════════
+const COUNTRY_COORDS = {
+  'Almanya':{lat:51.2,lng:10.4,flag:'🇩🇪',code:'DE'},'Fransa':{lat:46.2,lng:2.2,flag:'🇫🇷',code:'FR'},
+  'İtalya':{lat:41.9,lng:12.5,flag:'🇮🇹',code:'IT'},'İspanya':{lat:40.4,lng:-3.7,flag:'🇪🇸',code:'ES'},
+  'Hollanda':{lat:52.1,lng:5.3,flag:'🇳🇱',code:'NL'},'Belçika':{lat:50.5,lng:4.5,flag:'🇧🇪',code:'BE'},
+  'İngiltere':{lat:51.5,lng:-0.1,flag:'🇬🇧',code:'GB'},'Polonya':{lat:51.9,lng:19.1,flag:'🇵🇱',code:'PL'},
+  'Romanya':{lat:45.9,lng:24.9,flag:'🇷🇴',code:'RO'},'İsveç':{lat:60.1,lng:18.6,flag:'🇸🇪',code:'SE'},
+  'Avusturya':{lat:47.5,lng:14.5,flag:'🇦🇹',code:'AT'},'İsviçre':{lat:46.8,lng:8.2,flag:'🇨🇭',code:'CH'},
+  'ABD':{lat:37.1,lng:-95.7,flag:'🇺🇸',code:'US'},'Kanada':{lat:56.1,lng:-106.3,flag:'🇨🇦',code:'CA'},
+  'BAE':{lat:23.4,lng:53.8,flag:'🇦🇪',code:'AE'},'Suudi Arabistan':{lat:23.9,lng:45.1,flag:'🇸🇦',code:'SA'},
+  'Japonya':{lat:36.2,lng:138.3,flag:'🇯🇵',code:'JP'},'Çin':{lat:35.9,lng:104.2,flag:'🇨🇳',code:'CN'},
+  'Avustralya':{lat:-25.3,lng:133.8,flag:'🇦🇺',code:'AU'},'Brezilya':{lat:-14.2,lng:-51.9,flag:'🇧🇷',code:'BR'},
+  'Rusya':{lat:61.5,lng:105.3,flag:'🇷🇺',code:'RU'},'Portekiz':{lat:39.4,lng:-8.2,flag:'🇵🇹',code:'PT'},
+  'Yunanistan':{lat:39.1,lng:21.8,flag:'🇬🇷',code:'GR'},'Macaristan':{lat:47.2,lng:19.5,flag:'🇭🇺',code:'HU'},
+  'Çekya':{lat:49.8,lng:15.5,flag:'🇨🇿',code:'CZ'},'Danimarka':{lat:56.3,lng:9.5,flag:'🇩🇰',code:'DK'},
+};
+
+async function loadMap() {
+  const {data} = await dbSelect('customers', {select:'*', eq:{type:'export'}});
+  const customers = data || [];
+  document.getElementById('mapKpi1').textContent = customers.length;
+  const countries = [...new Set(customers.map(c=>c.country).filter(Boolean))];
+  document.getElementById('mapKpi2').textContent = countries.length;
+  const segA = customers.filter(c=>c.segment==='A'||c.segment==='OEM').length;
+  document.getElementById('mapKpi3').textContent = segA;
+  document.getElementById('mapKpi4').textContent = customers.length + ' müşteri';
+
+  renderWorldMap(customers);
+  renderCountryList(customers, countries);
+}
+
+function renderWorldMap(customers) {
+  const mapEl = document.getElementById('worldMap');
+  // Simple SVG world map with dots
+  const byCountry = {};
+  customers.forEach(c => {
+    if(c.country) byCountry[c.country] = (byCountry[c.country]||[]).concat(c);
+  });
+
+  const dots = Object.entries(byCountry).map(([country, custs]) => {
+    const coords = COUNTRY_COORDS[country];
+    if(!coords) return '';
+    // Convert lat/lng to SVG coordinates (simple equirectangular)
+    const x = ((coords.lng + 180) / 360 * 960).toFixed(1);
+    const y = ((90 - coords.lat) / 180 * 500).toFixed(1);
+    const r = Math.min(8 + custs.length * 2, 18);
+    return `<g class="map-dot" style="cursor:pointer">
+      <circle cx="${x}" cy="${y}" r="${r}" fill="rgba(59,130,246,0.7)" stroke="#fff" stroke-width="1.5">
+        <title>${coords.flag} ${country}: ${custs.map(c=>c.company_name).join(', ')}</title>
+      </circle>
+      <text x="${x}" y="${parseFloat(y)+4}" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">${custs.length}</text>
+    </g>`;
+  }).join('');
+
+  mapEl.innerHTML = `
+    <svg viewBox="0 0 960 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#1a2235">
+      <!-- Simple world outline -->
+      <rect width="960" height="500" fill="#1a2235"/>
+      <!-- Grid lines -->
+      ${[0,60,120,180,240,300,360,420,480].map(y=>`<line x1="0" y1="${y}" x2="960" y2="${y}" stroke="#2a3550" stroke-width="0.5"/>`).join('')}
+      ${[0,96,192,288,384,480,576,672,768,864,960].map(x=>`<line x1="${x}" y1="0" x2="${x}" y2="500" stroke="#2a3550" stroke-width="0.5"/>`).join('')}
+      <!-- Equator -->
+      <line x1="0" y1="250" x2="960" y2="250" stroke="#3b82f6" stroke-width="0.8" opacity="0.3"/>
+      <!-- Country dots -->
+      ${dots}
+      <!-- Labels -->
+      <text x="10" y="15" fill="#4b5563" font-size="9">ProFlow — İhracat Müşteri Haritası</text>
+    </svg>
+    <div style="position:absolute;bottom:8px;left:8px;display:flex;gap:8px;align-items:center">
+      <div style="width:10px;height:10px;border-radius:50%;background:rgba(59,130,246,0.7)"></div>
+      <span style="font-size:10px;color:var(--text2)">Müşteri lokasyonu</span>
+    </div>`;
+}
+
+function renderCountryList(customers, countries) {
+  const byCountry = {};
+  customers.forEach(c => { if(c.country) { if(!byCountry[c.country]) byCountry[c.country]=[]; byCountry[c.country].push(c); }});
+  const sorted = Object.entries(byCountry).sort((a,b)=>b[1].length-a[1].length);
+  document.getElementById('countryList').innerHTML = sorted.length ? sorted.map(([country,custs])=>{
+    const coords = COUNTRY_COORDS[country];
+    const flag = coords?.flag || '🌍';
+    return `<div style="background:var(--surface2);border-radius:9px;padding:12px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:26px">${flag}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${country}</div>
+        <div style="font-size:11px;color:var(--text2)">${custs.map(c=>c.company_name).join(', ')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:18px;font-weight:700;color:var(--accent)">${custs.length}</div>
+        <div style="font-size:10px;color:var(--text2)">müşteri</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">İhracat müşterisi yok</div>';
+}
 
 // ═══════════════════════════════════════════════
 // FORMAT HELPERS
