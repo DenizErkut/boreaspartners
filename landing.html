@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VexIO — İşinizi Tek Ekrandan Yönetin</title>
+<meta name="description" content="VexIO: KOBİ'ler için ERP, CRM, Proje, Stok, Teklif ve Raporlama — tek platformda, sıfır kurulumla.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0D1B2A;--blue:#1B4FFF;--cyan:#00C2FF;--white:#fff;
+  --card:#132040;--gray:#64748B;--lightG:#CBD5E1;--dark:#0A1628;
+  --green:#10B981;--amber:#F59E0B;--surface:#1a2a45;--border:rgba(255,255,255,.08);
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 5%;background:rgba(13,27,42,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);transition:.3s}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-box{width:36px;height:36px;border-radius:9px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;font-family:'Syne',sans-serif;color:#fff;flex-shrink:0}
+.nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff}
+.nav-brand span{color:var(--cyan)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{color:var(--lightG);text-decoration:none;font-size:14px;font-weight:500;transition:.2s}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:var(--blue);color:#fff;padding:9px 22px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;transition:.2s;white-space:nowrap}
+.nav-cta:hover{background:#2d5fff;transform:translateY(-1px)}
+@media(max-width:768px){.nav-links{display:none}}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;padding:80px 5% 60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:700px;height:700px;background:var(--blue);border-radius:50%;opacity:.08;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:var(--cyan);border-radius:50%;opacity:.05;pointer-events:none}
+.hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 420px;gap:60px;align-items:center;width:100%;max-width:1200px;margin:0 auto}
+@media(max-width:1100px){.hero-inner{grid-template-columns:1fr}.hero-mockup{display:none}}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(27,79,255,.12);border:1px solid rgba(27,79,255,.35);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--cyan);font-weight:600;margin-bottom:24px;letter-spacing:.04em}
+.hero-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2.6rem,5.5vw,5rem);font-weight:900;line-height:1.05;letter-spacing:-.02em;margin-bottom:22px}
+.hero h1 em{color:var(--cyan);font-style:normal}
+.hero-sub{font-size:17px;color:var(--lightG);line-height:1.75;max-width:500px;margin-bottom:36px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:48px}
+.btn-primary{background:var(--blue);color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600;transition:.2s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary:hover{background:#2d5fff;transform:translateY(-2px);box-shadow:0 10px 28px rgba(27,79,255,.35)}
+.btn-ghost{border:1px solid rgba(255,255,255,.18);color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:500;transition:.2s}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+.hero-stats{display:flex;gap:36px;padding-top:36px;border-top:1px solid var(--border)}
+.stat-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:900;color:var(--cyan);display:block}
+.stat-lbl{font-size:12px;color:var(--gray);margin-top:2px}
+
+/* MOCKUP */
+.hero-mockup{background:var(--dark);border-radius:16px;border:1px solid rgba(27,79,255,.25);overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.5)}
+.mock-bar{background:var(--card);padding:9px 12px;display:flex;align-items:center;gap:6px}
+.mock-dot{width:9px;height:9px;border-radius:50%}
+.mock-url{font-size:9px;color:var(--gray);margin-left:8px}
+.mock-body{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:12px;min-height:240px}
+.mock-sidebar{display:flex;flex-direction:column;gap:5px}
+.mock-item{padding:5px 7px;border-radius:5px;font-size:8px;color:var(--lightG)}
+.mock-item.active{background:rgba(27,79,255,.2);color:var(--cyan)}
+.mock-content{display:flex;flex-direction:column;gap:8px}
+.mock-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.mock-kpi{background:var(--surface);border-radius:5px;padding:6px;border-left:2px solid var(--blue)}
+.mock-kpi-v{font-size:13px;font-weight:700}
+.mock-kpi-l{font-size:7px;color:var(--gray);margin-top:1px}
+.mock-chart{background:var(--surface);border-radius:5px;padding:8px;flex:1}
+.mock-bars{display:flex;align-items:flex-end;gap:4px;height:55px;margin-top:6px}
+.mock-bar{border-radius:2px 2px 0 0;flex:1;background:var(--blue);opacity:.75}
+
+/* TRUST */
+.trust{padding:28px 5%;border-bottom:1px solid var(--border);text-align:center}
+.trust-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin-bottom:16px}
+.trust-items{display:flex;justify-content:center;gap:36px;flex-wrap:wrap}
+.trust-item{font-size:13px;color:var(--gray);font-weight:500;opacity:.65}
+
+/* SECTIONS */
+section{padding:90px 5%}
+.sec-wrap{max-width:1200px;margin:0 auto}
+.sec-tag{display:inline-block;background:rgba(27,79,255,.12);border:1px solid rgba(27,79,255,.28);border-radius:16px;padding:4px 14px;font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:.07em;text-transform:uppercase;margin-bottom:16px}
+.sec-h{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:900;line-height:1.1;margin-bottom:14px}
+.sec-h em{color:var(--cyan);font-style:normal}
+.sec-sub{font-size:16px;color:var(--lightG);line-height:1.75;max-width:540px}
+
+/* MODULES */
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:44px}
+.mod-card{background:var(--card);border:1px solid rgba(27,79,255,.18);border-radius:14px;padding:20px;transition:.25s;cursor:default}
+.mod-card:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 14px 32px rgba(27,79,255,.18)}
+.mod-icon{font-size:26px;margin-bottom:10px}
+.mod-name{font-size:13px;font-weight:600;margin-bottom:5px}
+.mod-desc{font-size:11px;color:var(--gray);line-height:1.55}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;margin-top:44px}
+.feat-card{background:var(--card);border-radius:14px;padding:26px;border-top:3px solid var(--blue)}
+.feat-card.g{border-top-color:var(--green)}
+.feat-card.a{border-top-color:var(--amber)}
+.feat-card.c{border-top-color:var(--cyan)}
+.feat-icon{font-size:30px;margin-bottom:12px}
+.feat-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:9px}
+.feat-desc{font-size:13px;color:var(--lightG);line-height:1.7}
+
+/* PRICING */
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px;margin-top:44px;max-width:860px;margin-left:auto;margin-right:auto}
+.price-card{background:var(--card);border-radius:18px;padding:30px;border:1px solid rgba(255,255,255,.08);position:relative;transition:.25s}
+.price-card:hover{transform:translateY(-4px)}
+.price-card.pop{border:2px solid var(--blue);background:#132850}
+.pop-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:3px 16px;border-radius:16px;font-size:11px;font-weight:700;white-space:nowrap}
+.price-name{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;margin-bottom:4px}
+.price-users{font-size:12px;color:var(--gray);margin-bottom:18px}
+.price-amount{font-family:'Syne',sans-serif;font-size:42px;font-weight:900;color:var(--cyan);margin-bottom:3px}
+.price-period{font-size:12px;color:var(--gray);margin-bottom:20px}
+.price-divider{height:1px;background:rgba(255,255,255,.07);margin-bottom:18px}
+.price-feat{display:flex;align-items:center;gap:9px;font-size:13px;padding:5px 0;color:var(--lightG)}
+.price-feat .ck{color:var(--green);font-size:14px;flex-shrink:0}
+.price-cta{display:block;text-align:center;margin-top:22px;padding:12px;border-radius:9px;font-weight:600;font-size:14px;text-decoration:none;transition:.2s}
+.price-cta.solid{background:var(--blue);color:#fff}
+.price-cta.solid:hover{background:#2d5fff}
+.price-cta.outline{border:1px solid rgba(255,255,255,.18);color:#fff}
+.price-cta.outline:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:44px}
+.how-card{background:var(--card);border-radius:14px;padding:24px;text-align:center;position:relative}
+.how-num{width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin:0 auto 14px}
+.how-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px}
+.how-desc{font-size:12px;color:var(--lightG);line-height:1.65}
+
+/* DEMO FORM */
+.demo-sec{position:relative;overflow:hidden}
+.demo-sec::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:var(--blue);border-radius:50%;opacity:.06;pointer-events:none}
+.demo-inner{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1200px;margin:0 auto;position:relative;z-index:2}
+@media(max-width:900px){.demo-inner{grid-template-columns:1fr}}
+.demo-benefits{display:flex;flex-direction:column;gap:14px;margin-top:28px}
+.demo-benefit{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--lightG)}
+.demo-benefit-ico{width:34px;height:34px;border-radius:8px;background:rgba(27,79,255,.18);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.demo-form{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:34px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--lightG);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.form-input,.form-select{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:11px 13px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s}
+.form-input:focus,.form-select:focus{border-color:var(--blue);background:rgba(27,79,255,.08)}
+.form-select option{background:var(--navy)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-submit{width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.2s;margin-top:4px}
+.form-submit:hover{background:#2d5fff;transform:translateY(-1px)}
+.form-note{font-size:11px;color:var(--gray);text-align:center;margin-top:10px}
+.success-msg{display:none;text-align:center;padding:18px;background:rgba(16,185,129,.1);border:1px solid var(--green);border-radius:9px;color:var(--green);font-weight:600}
+
+/* EN SECTION */
+.en-sec{background:var(--dark);padding:70px 5%}
+.en-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:28px 0}
+.en-card{background:var(--card);border-radius:12px;padding:20px;border-left:3px solid var(--blue)}
+
+/* FOOTER */
+footer{background:var(--dark);border-top:1px solid var(--border);padding:44px 5% 28px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:36px;margin-bottom:36px;max-width:1200px;margin-left:auto;margin-right:auto}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr}}
+.footer-brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:10px}
+.footer-brand span{color:var(--cyan)}
+.footer-tagline{font-size:13px;color:var(--gray);line-height:1.6;max-width:220px}
+.footer-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray);margin-bottom:12px}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:8px}
+.footer-links a{color:var(--lightG);text-decoration:none;font-size:13px;transition:.2s}
+.footer-links a:hover{color:var(--cyan)}
+.footer-bottom{border-top:1px solid var(--border);padding-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;max-width:1200px;margin:0 auto}
+.footer-copy{font-size:12px;color:var(--gray)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.f1{animation:fadeUp .7s ease both}
+.f2{animation:fadeUp .7s .12s ease both}
+.f3{animation:fadeUp .7s .24s ease both}
+.f4{animation:fadeUp .7s .36s ease both}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-box">VX</div>
+    <span class="nav-brand">Vex<span>IO</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#modules">Modüller</a></li>
+    <li><a href="#features">Özellikler</a></li>
+    <li><a href="#pricing">Fiyatlar</a></li>
+    <li><a href="#how">Nasıl Çalışır</a></li>
+    <li><a href="#demo">Demo</a></li>
+  </ul>
+  <a href="#demo" class="nav-cta">Ücretsiz Demo →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-badge f1"><span class="hero-dot"></span>KOBİ'ler için Hepsi Bir Arada Platform</div>
+      <h1 class="f2">İşinizi <em>Tek Ekrandan</em> Büyütün.</h1>
+      <p class="hero-sub f3">ERP, CRM, Stok, Proje, Teklif ve Raporlama — tek platformda, sıfır kurulumla. Türkçe & İngilizce.</p>
+      <div class="hero-btns f3">
+        <a href="#demo" class="btn-primary">🚀 Ücretsiz Demo Al</a>
+        <a href="https://denizerkut.github.io/boreaspartners/" target="_blank" class="btn-ghost">Canlı Dene →</a>
+      </div>
+      <div class="hero-stats f4">
+        <div><span class="stat-val">30+</span><span class="stat-lbl">Modül</span></div>
+        <div><span class="stat-val">0</span><span class="stat-lbl">Kurulum</span></div>
+        <div><span class="stat-val">2</span><span class="stat-lbl">Dil</span></div>
+        <div><span class="stat-val">500 ₺</span><span class="stat-lbl">Başlangıç</span></div>
+      </div>
+    </div>
+    <!-- Mockup -->
+    <div class="hero-mockup">
+      <div class="mock-bar">
+        <div class="mock-dot" style="background:#ef4444"></div>
+        <div class="mock-dot" style="background:#f59e0b"></div>
+        <div class="mock-dot" style="background:#10b981"></div>
+        <span class="mock-url">VexIO — Dashboard</span>
+      </div>
+      <div class="mock-body">
+        <div class="mock-sidebar">
+          <div class="mock-item active">📊 Dashboard</div>
+          <div class="mock-item">📁 Projeler</div>
+          <div class="mock-item">👥 Müşteriler</div>
+          <div class="mock-item">📦 Stok</div>
+          <div class="mock-item">💼 Ticari</div>
+          <div class="mock-item">📋 Teklif</div>
+          <div class="mock-item">🎯 Pipeline</div>
+          <div class="mock-item">📊 Raporlar</div>
+        </div>
+        <div class="mock-content">
+          <div class="mock-kpis">
+            <div class="mock-kpi"><div class="mock-kpi-v">12</div><div class="mock-kpi-l">Proje</div></div>
+            <div class="mock-kpi" style="border-left-color:#10B981"><div class="mock-kpi-v">48</div><div class="mock-kpi-l">Müşteri</div></div>
+            <div class="mock-kpi" style="border-left-color:#F59E0B"><div class="mock-kpi-v">5</div><div class="mock-kpi-l">Bekliyor</div></div>
+            <div class="mock-kpi" style="border-left-color:#8B5CF6"><div class="mock-kpi-v">94K</div><div class="mock-kpi-l">Ciro ₺</div></div>
+          </div>
+          <div class="mock-chart">
+            <div style="font-size:8px;color:#64748b;font-weight:600">Aylık Satış Trendi</div>
+            <div class="mock-bars">
+              <div class="mock-bar" style="height:40%"></div>
+              <div class="mock-bar" style="height:60%"></div>
+              <div class="mock-bar" style="height:45%;background:#00C2FF"></div>
+              <div class="mock-bar" style="height:75%"></div>
+              <div class="mock-bar" style="height:55%"></div>
+              <div class="mock-bar" style="height:88%;background:#00C2FF"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<div class="trust">
+  <p class="trust-lbl">Güvenilen Sektörler</p>
+  <div class="trust-items">
+    <span class="trust-item">🏭 İmalat</span>
+    <span class="trust-item">🚢 İhracat</span>
+    <span class="trust-item">🍰 Gıda & FMCG</span>
+    <span class="trust-item">👗 Tekstil</span>
+    <span class="trust-item">🔧 Mühendislik</span>
+    <span class="trust-item">📦 Ticaret</span>
+  </div>
+</div>
+
+<!-- MODULES -->
+<section id="modules">
+  <div class="sec-wrap">
+    <div class="sec-tag">Modüller</div>
+    <h2 class="sec-h">Her İhtiyacınız <em>Tek Yerde</em></h2>
+    <p class="sec-sub">Ayrı yazılımlar, ayrı abonelikler, ayrı öğrenme devri bitti.</p>
+    <div class="mod-grid">
+      <div class="mod-card"><div class="mod-icon">📁</div><div class="mod-name">Projeler & Gantt</div><div class="mod-desc">Proje takibi, görsel zaman çizelgesi, alt görev checklist</div></div>
+      <div class="mod-card"><div class="mod-icon">👥</div><div class="mod-name">CRM & Pipeline</div><div class="mod-desc">Müşteri yönetimi, 5 aşamalı satış pipeline, proje bağlantısı</div></div>
+      <div class="mod-card"><div class="mod-icon">📦</div><div class="mod-name">Stok & Ürünler</div><div class="mod-desc">Giriş/çıkış hareketleri, kritik stok uyarısı, fiyat geçmişi</div></div>
+      <div class="mod-card"><div class="mod-icon">💼</div><div class="mod-name">Ticari Kayıtlar</div><div class="mod-desc">Fatura, teklif, sipariş ve irsaliye — hepsi tek ekranda</div></div>
+      <div class="mod-card"><div class="mod-icon">📋</div><div class="mod-name">Teklif PDF</div><div class="mod-desc">Logo'lu profesyonel PDF teklif tek tıkla, ticari kayda aktar</div></div>
+      <div class="mod-card"><div class="mod-icon">📊</div><div class="mod-name">Canlı Dashboard</div><div class="mod-desc">Gerçek zamanlı KPI'lar, Chart.js grafikler, dönem filtresi</div></div>
+      <div class="mod-card"><div class="mod-icon">🔖</div><div class="mod-name">Barkod & QR</div><div class="mod-desc">SVG barkod ve QR kod üretimi, toplu yazdırma</div></div>
+      <div class="mod-card"><div class="mod-icon">🗺️</div><div class="mod-name">İhracat Haritası</div><div class="mod-desc">Dünya haritasında ihracat müşterileriniz, ülke bazlı analiz</div></div>
+      <div class="mod-card"><div class="mod-icon">✅</div><div class="mod-name">Görev Atama</div><div class="mod-desc">Ekibe görev ata, öncelik belirle, deadline takip et</div></div>
+      <div class="mod-card"><div class="mod-icon">📤</div><div class="mod-name">Excel İçe Aktar</div><div class="mod-desc">6 tablo için şablon, önizleme ve toplu import</div></div>
+      <div class="mod-card"><div class="mod-icon">🌍</div><div class="mod-name">TR / EN Dil</div><div class="mod-desc">Tek tıkla Türkçe ↔ İngilizce geçiş, tercih kaydedilir</div></div>
+      <div class="mod-card"><div class="mod-icon">🛡️</div><div class="mod-name">Rol Yönetimi</div><div class="mod-desc">16 modül × 5 rol izin matrisi, admin onay sistemi</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background:var(--dark)">
+  <div class="sec-wrap">
+    <div class="sec-tag">Neden VexIO?</div>
+    <h2 class="sec-h">Rakiplerden <em>Fark Yaratan</em> Özellikler</h2>
+    <p class="sec-sub">Logo GO, Mikro ve Netsis'ten farklı: kurulum yok, ekstra modül fiyatı yok, gizli ücret yok.</p>
+    <div class="feat-grid">
+      <div class="feat-card"><div class="feat-icon">☁️</div><div class="feat-title">Sıfır Kurulum</div><div class="feat-desc">Tarayıcıdan açılır, anında çalışır. Sunucu, IT veya yazılım gerektirmez.</div></div>
+      <div class="feat-card g"><div class="feat-icon">📱</div><div class="feat-title">Telefona Kurulur</div><div class="feat-desc">PWA teknolojisi ile ana ekrana ekle. Sahada, toplantıda, yolda çalışır.</div></div>
+      <div class="feat-card a"><div class="feat-icon">🌍</div><div class="feat-title">Çoklu Para Birimi</div><div class="feat-desc">TRY, EUR ve USD desteği. İhracat ve yurt içi satışlar ayrı, KDV otomatik.</div></div>
+      <div class="feat-card c"><div class="feat-icon">📄</div><div class="feat-title">Anında PDF Teklif</div><div class="feat-desc">Firma logo'lu profesyonel teklif PDF'i tek tıkla, müşteriye hemen gönder.</div></div>
+      <div class="feat-card"><div class="feat-icon">📥</div><div class="feat-title">Tam Veri Kontrolü</div><div class="feat-desc">Excel/CSV export, JSON yedek. Veriniz sizin — istediğiniz zaman çıkarın.</div></div>
+      <div class="feat-card g"><div class="feat-icon">🔐</div><div class="feat-title">Detaylı Yetkilendirme</div><div class="feat-desc">16 modül × 5 rol. Muhasebe sadece kayıtlara, satış sadece CRM'e erişsin.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="sec-wrap">
+    <div class="sec-tag">Başlamak Kolay</div>
+    <h2 class="sec-h">4 Adımda <em>Hazırsınız</em></h2>
+    <p class="sec-sub">Kurulum yok, uzun eğitim yok. Bugün başlayın, yarın tam verimle çalışın.</p>
+    <div class="how-grid">
+      <div class="how-card"><div class="how-num">1</div><div class="how-title">Demo Talep Et</div><div class="how-desc">30 dakikalık ücretsiz demo seansı — sistemi canlı görün, sorularınızı sorun.</div></div>
+      <div class="how-card"><div class="how-num" style="background:var(--green)">2</div><div class="how-title">Paketi Seç</div><div class="how-desc">İhtiyacınıza uygun paketi belirleyin. Başlangıç: 500 ₺/ay.</div></div>
+      <div class="how-card"><div class="how-num" style="background:var(--amber)">3</div><div class="how-title">Verileri Aktar</div><div class="how-desc">Excel şablonları ile mevcut verilerinizi (müşteri, ürün, stok) içe aktarın.</div></div>
+      <div class="how-card"><div class="how-num" style="background:var(--cyan)">4</div><div class="how-title">Başlayın!</div><div class="how-desc">Tarayıcıyı açın, giriş yapın — ekibinizle birlikte hemen kullanmaya başlayın.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" style="background:var(--dark)">
+  <div class="sec-wrap">
+    <div class="sec-tag">Fiyatlandırma</div>
+    <h2 class="sec-h">Şeffaf, <em>Adil</em> Fiyatlandırma</h2>
+    <p class="sec-sub">Gizli ücret yok. Paketinizi seçin, hemen başlayın.</p>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-users">1–3 Kullanıcı</div>
+        <div class="price-amount">500 ₺</div>
+        <div class="price-period">/ay · KDV hariç</div>
+        <div class="price-divider"></div>
+        <div class="price-feat"><span class="ck">✓</span>Tüm temel modüller</div>
+        <div class="price-feat"><span class="ck">✓</span>10 GB depolama</div>
+        <div class="price-feat"><span class="ck">✓</span>E-posta desteği</div>
+        <div class="price-feat"><span style="color:var(--gray)">–</span><span style="color:var(--gray)">PDF & Excel export</span></div>
+        <a href="#demo" class="price-cta outline">Başlayın →</a>
+      </div>
+      <div class="price-card pop">
+        <div class="pop-badge">🔥 En Popüler</div>
+        <div class="price-name">Business</div>
+        <div class="price-users">4–10 Kullanıcı</div>
+        <div class="price-amount" style="color:#fff">1.200 ₺</div>
+        <div class="price-period">/ay · KDV hariç</div>
+        <div class="price-divider"></div>
+        <div class="price-feat"><span class="ck">✓</span>Tüm modüller</div>
+        <div class="price-feat"><span class="ck">✓</span>50 GB depolama</div>
+        <div class="price-feat"><span class="ck">✓</span>Öncelikli destek</div>
+        <div class="price-feat"><span class="ck">✓</span>PDF & Excel export</div>
+        <a href="#demo" class="price-cta solid">Demo Talep Et →</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Enterprise</div>
+        <div class="price-users">Sınırsız Kullanıcı</div>
+        <div class="price-amount">2.500 ₺</div>
+        <div class="price-period">/ay · KDV hariç</div>
+        <div class="price-divider"></div>
+        <div class="price-feat"><span class="ck">✓</span>Tüm modüller</div>
+        <div class="price-feat"><span class="ck">✓</span>Sınırsız depolama</div>
+        <div class="price-feat"><span class="ck">✓</span>7/24 destek</div>
+        <div class="price-feat"><span class="ck">✓</span>Özel entegrasyon</div>
+        <a href="#demo" class="price-cta outline">Teklif Alın →</a>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--gray)">* Kurulum ücreti: 2.000–5.000 ₺ (tek seferlik, özelleştirme dahil)</p>
+  </div>
+</section>
+
+<!-- DEMO FORM -->
+<section id="demo" class="demo-sec">
+  <div class="demo-inner">
+    <div>
+      <div class="sec-tag">Ücretsiz Demo</div>
+      <h2 class="sec-h" style="max-width:420px">30 Dakikada <em>Sistemi</em> Keşfedin</h2>
+      <p style="color:var(--lightG);font-size:15px;line-height:1.7;margin-bottom:8px">Ekibinizle birlikte ücretsiz demo seansı düzenleyelim. Sektörünüze özel kullanım senaryolarını gösterelim.</p>
+      <div class="demo-benefits">
+        <div class="demo-benefit"><div class="demo-benefit-ico">⚡</div><span>30 dakikalık kişisel demo</span></div>
+        <div class="demo-benefit"><div class="demo-benefit-ico">🎯</div><span>Sektörünüze özel senaryolar</span></div>
+        <div class="demo-benefit"><div class="demo-benefit-ico">💬</div><span>Tüm sorularınıza yanıt</span></div>
+        <div class="demo-benefit"><div class="demo-benefit-ico">🆓</div><span>Tamamen ücretsiz, taahhüt yok</span></div>
+      </div>
+    </div>
+    <div class="demo-form">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Ad Soyad *</label><input type="text" class="form-input" id="fname" placeholder="Adınız Soyadınız"></div>
+        <div class="form-group"><label class="form-label">Firma *</label><input type="text" class="form-input" id="fcompany" placeholder="Şirket adı"></div>
+      </div>
+      <div class="form-group"><label class="form-label">E-posta *</label><input type="email" class="form-input" id="femail" placeholder="isim@sirket.com"></div>
+      <div class="form-group"><label class="form-label">Telefon</label><input type="tel" class="form-input" id="fphone" placeholder="+90 5xx xxx xx xx"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Sektör</label>
+          <select class="form-select" id="fsector">
+            <option value="">Seçin...</option>
+            <option>İmalat / Üretim</option><option>İthalat / İhracat</option>
+            <option>Gıda & FMCG</option><option>Tekstil & Kozmetik</option>
+            <option>Mühendislik & Proje</option><option>Ticaret & Dağıtım</option><option>Diğer</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Kullanıcı Sayısı</label>
+          <select class="form-select" id="fusers">
+            <option>1–3 kişi</option><option>4–10 kişi</option><option>10+ kişi</option>
+          </select>
+        </div>
+      </div>
+      <button class="form-submit" onclick="submitDemo()">🚀 Demo Talep Et</button>
+      <div class="success-msg" id="successMsg">✅ Talebiniz alındı! En kısa sürede size ulaşacağız.</div>
+      <p class="form-note">Bilgileriniz gizli tutulur. Spam göndermeyiz.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ENGLISH -->
+<section class="en-sec">
+  <div class="sec-wrap">
+    <div class="sec-tag" style="background:rgba(0,194,255,.1);border-color:rgba(0,194,255,.28);color:var(--cyan)">English</div>
+    <h2 class="sec-h">Manage Your Business <em>From One Screen.</em></h2>
+    <p class="sec-sub" style="margin-bottom:0">VexIO is an all-in-one business management platform built for growing SMEs — ERP, CRM, Projects, Stock and Commercial Records. Zero setup, cloud-based, TR/EN bilingual.</p>
+    <div class="en-grid">
+      <div class="en-card"><div style="font-size:20px;margin-bottom:8px">☁️</div><div style="font-weight:700;margin-bottom:6px;font-size:14px">Zero Setup</div><div style="font-size:12px;color:var(--gray)">Opens in any browser. No installation required.</div></div>
+      <div class="en-card" style="border-left-color:var(--green)"><div style="font-size:20px;margin-bottom:8px">📱</div><div style="font-weight:700;margin-bottom:6px;font-size:14px">Mobile Ready</div><div style="font-size:12px;color:var(--gray)">Install as PWA. Works in the field, anywhere.</div></div>
+      <div class="en-card" style="border-left-color:var(--amber)"><div style="font-size:20px;margin-bottom:8px">🌍</div><div style="font-weight:700;margin-bottom:6px;font-size:14px">Multi-Currency</div><div style="font-size:12px;color:var(--gray)">TRY, EUR, USD. Export map included.</div></div>
+      <div class="en-card" style="border-left-color:var(--cyan)"><div style="font-size:20px;margin-bottom:8px">📊</div><div style="font-weight:700;margin-bottom:6px;font-size:14px">Live Analytics</div><div style="font-size:12px;color:var(--gray)">Real-time dashboard, P&L analysis, CSV export.</div></div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a href="#demo" class="btn-primary">Request Free Demo →</a>
+      <a href="mailto:kdenizerkut@gmail.com" class="btn-ghost">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-brand">Vex<span>IO</span></div>
+      <p class="footer-tagline">KOBİ'ler için hepsi bir arada iş yönetim platformu.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Ürün</div>
+      <ul class="footer-links">
+        <li><a href="#modules">Modüller</a></li>
+        <li><a href="#features">Özellikler</a></li>
+        <li><a href="#pricing">Fiyatlar</a></li>
+        <li><a href="https://denizerkut.github.io/boreaspartners/" target="_blank">Canlı Demo</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Sektörler</div>
+      <ul class="footer-links">
+        <li><a href="#">İmalat</a></li>
+        <li><a href="#">İhracat</a></li>
+        <li><a href="#">Gıda & FMCG</a></li>
+        <li><a href="#">Tekstil</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">İletişim</div>
+      <ul class="footer-links">
+        <li><a href="mailto:kdenizerkut@gmail.com">kdenizerkut@gmail.com</a></li>
+        <li><a href="https://denizerkut.github.io/boreaspartners/" target="_blank">Canlı Demo</a></li>
+        <li><a href="#demo">Demo Talep</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2025 VexIO · Tüm hakları saklıdır</span>
+    <span class="footer-copy">Türkiye'de tasarlandı ve geliştirildi 🇹🇷</span>
+  </div>
+</footer>
+
+<script>
+function submitDemo() {
+  const n=document.getElementById('fname').value.trim();
+  const c=document.getElementById('fcompany').value.trim();
+  const e=document.getElementById('femail').value.trim();
+  if(!n||!c||!e){alert('Lütfen Ad Soyad, Firma ve E-posta alanlarını doldurun.');return;}
+  const btn=document.querySelector('.form-submit');
+  btn.textContent='⏳ Gönderiliyor...';btn.disabled=true;
+  setTimeout(()=>{
+    document.getElementById('successMsg').style.display='block';btn.style.display='none';
+    const sub=encodeURIComponent('VexIO Demo Talebi — '+c);
+    const body=encodeURIComponent(`Ad: ${n}\nFirma: ${c}\nE-posta: ${e}\nTelefon: ${document.getElementById('fphone').value}\nSektör: ${document.getElementById('fsector').value}\nKullanıcı: ${document.getElementById('fusers').value}`);
+    window.open(`mailto:kdenizerkut@gmail.com?subject=${sub}&body=${body}`,'_blank');
+  },900);
+}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth'});}
+  });
+});
+window.addEventListener('scroll',()=>{
+  document.querySelector('nav').style.boxShadow=window.scrollY>50?'0 4px 24px rgba(0,0,0,.4)':'none';
+});
+</script>
+</body>
+</html>
