@@ -1338,13 +1338,18 @@ function renderProjectsTable(rows) {
       <td>${p.budget?fmtCurrency(p.budget,p.currency):'–'}</td>
       <td><span class="status s-${p.status}">${STATUS_TR[p.status]||p.status}</span></td>
       <td><div class="progress" style="width:90px"><div class="progress-bar" style="width:${p.progress||0}%;background:var(--accent)"></div></div><span class="text-xs" style="margin-left:4px">${p.progress||0}%</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="editProject('${p.id}')">✏️</button></td>
+      <td style="display:flex;gap:4px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="editProject('${p.id}')">✏️</button>
+        ${p.attachments?`<span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)" title="Ekler var">📎${JSON.parse(p.attachments).length}</span>`:''}
+      </td>
     </tr>`).join('')}</tbody>
   </table></div>`;
 }
 
 async function saveProject() {
   const id = document.getElementById('pId').value;
+  // Collect uploaded file URLs
+  const fileUrls = (uploadedFiles['pFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
   const d = {
     name: document.getElementById('pName').value,
     customer_id: document.getElementById('pCustomer').value || null,
@@ -1355,10 +1360,12 @@ async function saveProject() {
     status: document.getElementById('pStatus').value,
     progress: parseInt(document.getElementById('pProgress').value) || 0,
     description: document.getElementById('pDesc').value,
+    attachments: fileUrls.length ? JSON.stringify(fileUrls) : null,
   };
   if (!d.name) return showNotif('Proje adı zorunlu', 'err');
   const res = id ? await dbUpdate('projects', id, d) : await dbInsert('projects', d);
   if (res.error) return showNotif('Hata: ' + (res.error.message||''), 'err');
+  clearFileList('pFileList');
   closeModal('project'); loadProjects(); showNotif(id?'Proje güncellendi!':'Proje oluşturuldu!', 'ok');
 }
 
@@ -1625,6 +1632,17 @@ function renderMeetings(list){
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px">Aksiyonlar</div>
         <div style="font-size:12px;white-space:pre-line;color:var(--text2)">${m.action_items}</div>
       </div>`:''}
+      ${m.attachments ? `<div style="margin-top:8px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px">📎 Ekler</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${JSON.parse(m.attachments).map(f=>`
+          <div style="display:flex;align-items:center;gap:5px;background:var(--surface2);border-radius:6px;padding:4px 8px">
+            <span style="font-size:13px">${f.name.endsWith('.pdf')?'📄':f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)?'🖼️':'📎'}</span>
+            <span style="font-size:11px;color:var(--text)">${f.name}</span>
+            <a href="${f.url}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none">👁</a>
+            <a href="${f.url}" download="${f.name}" style="font-size:10px;color:var(--success);text-decoration:none">⬇</a>
+          </div>`).join('')}
+        </div>
+      </div>` : ''}
       <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px">
         <button class="btn btn-ghost btn-sm" onclick="editMeeting('${m.id}')">✏️</button>
         <button class="btn btn-danger btn-sm" onclick="deleteMeeting('${m.id}')">🗑</button>
@@ -1648,6 +1666,7 @@ async function saveMeeting(){
   if(allMUrls.length) d.attachments = JSON.stringify(allMUrls);
   const res=id?await dbUpdate('meetings',id,d):await dbInsert('meetings',d);
   if(res.error) return showNotif('Hata','err');
+  clearFileList('meetFileList');
   closeModal('meeting'); loadMeetings(); showNotif('Toplantı notu kaydedildi!','ok');
 }
 async function editMeeting(id){
@@ -1721,6 +1740,7 @@ async function saveCustomer(){
   if(!d.company_name) return showNotif('Firma adı zorunlu','err');
   const res=id?await dbUpdate('customers',id,d):await dbInsert('customers',d);
   if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  clearFileList('custFileList');
   closeModal('customer'); loadCustomers(); showNotif('Müşteri kaydedildi!','ok');
 }
 async function editCustomer(id){
@@ -1795,6 +1815,7 @@ async function saveCommercial(){
   if(allCUrls.length) d.attachments = JSON.stringify(allCUrls);
   const res=id?await dbUpdate('commercial_records',id,d):await dbInsert('commercial_records',d);
   if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  clearFileList('commFileList');
   closeModal('commercial'); loadCommercial(); showNotif('Kayıt oluşturuldu!','ok');
 }
 async function editCommercial(id){
