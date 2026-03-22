@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DengBeJ">
+<link rel="manifest" href="data:application/json,{%22name%22:%22DengBeJ%22,%22short_name%22:%22DengBeJ%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%230a0e1a%22,%22theme_color%22:%22%233b82f6%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%233b82f6'/%3E%3Ctext y='.9em' font-size='80' x='10'%3EDB%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
 <title>DengBeJ — Yönetim Sistemi</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -13,6 +18,14 @@
   --border:#2a3550;--accent:#3b82f6;--accent2:#06b6d4;--accent3:#8b5cf6;
   --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#4b5563;--glow:rgba(59,130,246,.15);
+  --shadow:rgba(0,0,0,.4);
+}
+[data-theme="light"] {
+  --bg:#f1f5f9;--surface:#ffffff;--surface2:#f8fafc;--surface3:#e2e8f0;
+  --border:#cbd5e1;--accent:#2563eb;--accent2:#0891b2;--accent3:#7c3aed;
+  --success:#059669;--warning:#d97706;--danger:#dc2626;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;--glow:rgba(37,99,235,.1);
+  --shadow:rgba(0,0,0,.1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
@@ -376,6 +389,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="nav-section">
         <div class="nav-label">YÖNETİM</div>
         <div class="nav-item" data-page="users" onclick="navigate(this)"><div class="nav-icon">🔐</div><span class="nav-text">Kullanıcılar</span></div>
+        <div class="nav-item" data-page="tasks" onclick="navigate(this)"><div class="nav-icon">✅</div><span class="nav-text">Görev Atama</span></div>
+        <div class="nav-item" data-page="activity" onclick="navigate(this)"><div class="nav-icon">📋</div><span class="nav-text">Aktivite Akışı</span></div>
+        <div class="nav-item" data-page="permissions" onclick="navigate(this)"><div class="nav-icon">🛡️</div><span class="nav-text">İzin Yönetimi</span></div>
+        <div class="nav-item" data-page="backup" onclick="navigate(this)"><div class="nav-icon">💾</div><span class="nav-text">Yedekleme</span></div>
       </div>
     </div>
     <div class="sidebar-footer">
@@ -397,7 +414,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('mobile-open')">☰</button>
       <div class="page-title" id="pageTitle">Gösterge Paneli</div>
       <div class="flex-c gap-8">
-        <div class="search-box"><span style="font-size:13px">🔍</span><input type="text" id="searchInput" placeholder="Ara..." oninput="handleSearch(this.value)"></div>
+        <div class="search-box" style="position:relative">
+          <span style="font-size:13px">🔍</span>
+          <input type="text" id="searchInput" placeholder="Ara... (Ctrl+K)" oninput="handleSearch(this.value)" autocomplete="off" style="width:180px">
+          <div id="globalSearchResults" style="display:none;position:absolute;top:38px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:999;max-height:360px;overflow-y:auto;min-width:340px"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeBtn" title="Tema değiştir" style="font-size:16px;display:none">🌙</button>
+        <button class="btn btn-ghost btn-sm" id="pwaInstallBtn" onclick="installPWA()" style="display:none;font-size:16px" title="Uygulamayı yükle">📱</button>
+        <button class="btn btn-ghost btn-sm" onclick="openNotifPanel()" title="Bildirimler" style="position:relative;font-size:16px;display:none">🔔<span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:var(--danger);color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;line-height:14px;text-align:center">0</span></button>
       </div>
     </header>
 
@@ -911,6 +935,121 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
 
+      <!-- ── TASKS ── -->
+      <div class="page" id="page-tasks">
+        <div class="flex-btw mb-14">
+          <div class="tabs" style="margin-bottom:0">
+            <div class="tab active" onclick="switchTab(this,'tTaskMy')">Benim Görevlerim</div>
+            <div class="tab" onclick="switchTab(this,'tTaskAll')">Tüm Görevler</div>
+            <div class="tab" onclick="switchTab(this,'tTaskOver')">⚠️ Gecikmiş</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('task')">+ Görev Ata</button>
+        </div>
+        <div class="card">
+          <div id="tTaskMy" class="tab-content active"><div id="taskListMy"><div class="loading"><div class="spinner"></div></div></div></div>
+          <div id="tTaskAll" class="tab-content"><div id="taskListAll"></div></div>
+          <div id="tTaskOver" class="tab-content"><div id="taskListOver"></div></div>
+        </div>
+      </div>
+
+      <!-- ── ACTIVITY ── -->
+      <div class="page" id="page-activity">
+        <div class="flex-btw mb-14">
+          <div style="display:flex;gap:8px">
+            <select class="form-select" id="actFilter" onchange="loadActivity()" style="width:160px;font-size:12px">
+              <option value="">Tüm Modüller</option>
+              <option value="projects">Projeler</option>
+              <option value="customers">Müşteriler</option>
+              <option value="commercial">Ticari</option>
+              <option value="products">Ürünler</option>
+              <option value="processes">Süreçler</option>
+            </select>
+            <select class="form-select" id="actPeriod" onchange="loadActivity()" style="width:140px;font-size:12px">
+              <option value="7">Son 7 gün</option>
+              <option value="30" selected>Son 30 gün</option>
+              <option value="90">Son 90 gün</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="exportTableCSV('activityTable','aktivite-log')">📥 CSV</button>
+        </div>
+        <div class="card">
+          <div id="activityTable"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
+      <!-- ── PERMISSIONS ── -->
+      <div class="page" id="page-permissions">
+        <div class="grid grid-2" style="align-items:start">
+          <div class="card">
+            <div class="card-title">Rol Bazlı İzin Matrisi</div>
+            <div style="overflow-x:auto">
+              <table style="width:100%;border-collapse:collapse;font-size:12px" id="permMatrix">
+                <thead>
+                  <tr>
+                    <th style="padding:8px;text-align:left;color:var(--text2);font-size:11px">Modül</th>
+                    <th style="padding:8px;text-align:center;color:#ef4444;font-size:11px">Admin</th>
+                    <th style="padding:8px;text-align:center;color:#3b82f6;font-size:11px">Manager</th>
+                    <th style="padding:8px;text-align:center;color:#10b981;font-size:11px">Satış</th>
+                    <th style="padding:8px;text-align:center;color:#f59e0b;font-size:11px">Muhasebe</th>
+                    <th style="padding:8px;text-align:center;color:#8b5cf6;font-size:11px">Görüntüle</th>
+                  </tr>
+                </thead>
+                <tbody id="permMatrixBody"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm" onclick="savePermissions()">💾 Kaydet</button>
+              <button class="btn btn-ghost btn-sm" onclick="resetPermissions()">↩ Sıfırla</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Kullanıcı Rol Atama</div>
+            <div id="userRoleList" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BACKUP ── -->
+      <div class="page" id="page-backup">
+        <div class="grid grid-2" style="align-items:start">
+          <div class="card">
+            <div class="card-title">💾 Manuel Yedekleme</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="padding:14px;background:var(--surface2);border-radius:8px">
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Tam Sistem Yedeği</div>
+                <div class="text-xs" style="margin-bottom:10px">Tüm tablolar tek ZIP dosyasında</div>
+                <button class="btn btn-primary btn-sm btn-full" onclick="fullBackup()">📦 Tam Yedek Al</button>
+              </div>
+              ${['Müşteriler','Projeler','Ürünler','Ticari Kayıtlar','Stok Hareketleri','CRM Leads','Süreçler'].map((t,i)=>`
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                <div style="font-size:13px">${t}</div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-ghost btn-sm" onclick="exportData('${['customers','projects','products','commercial_records','stock_movements','crm_leads','processes'][i]}','csv')">CSV</button>
+                  <button class="btn btn-primary btn-sm" onclick="exportData('${['customers','projects','products','commercial_records','stock_movements','crm_leads','processes'][i]}','excel')">Excel</button>
+                </div>
+              </div>`).join('')}
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">🕐 Yedek Geçmişi</div>
+            <div id="backupHistory" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div class="card-title" style="margin-top:16px">⚙️ Otomatik Yedekleme</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                <div><div style="font-size:13px;font-weight:600">Haftalık Otomatik Yedek</div><div class="text-xs">Her Pazartesi saat 09:00</div></div>
+                <label style="position:relative;display:inline-block;width:40px;height:22px">
+                  <input type="checkbox" id="autoBackupToggle" onchange="toggleAutoBackup(this.checked)" style="opacity:0;width:0;height:0">
+                  <span id="autoBackupSlider" style="position:absolute;cursor:pointer;inset:0;background:var(--surface3);border-radius:22px;transition:.3s"></span>
+                </label>
+              </div>
+              <div style="font-size:12px;color:var(--text2);padding:10px 12px;background:var(--surface2);border-radius:8px">
+                💡 Otomatik yedekleme tarayıcıda çalışır. Düzenli kullanım gerektirir.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- USERS -->
       <div class="page" id="page-users">
         <div class="flex-btw mb-14"><div></div><button class="btn btn-primary btn-sm" onclick="openModal('user')">+ Kullanıcı Ekle</button></div>
@@ -1369,6 +1508,98 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── TASK MODAL ── -->
+<div class="modal-overlay" id="m-task">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title" id="mTaskTitle">Görev Ata</div><button class="modal-close" onclick="closeModal('task')">✕</button></div>
+    <input type="hidden" id="taskId">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Görev Başlığı *</label><input class="form-input" id="taskTitle" placeholder="Görev başlığı"></div>
+      <div class="form-group"><label class="form-label">Atanan Kişi *</label><select class="form-select" id="taskAssignee"><option value="">Seçin...</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">İlgili Proje</label><select class="form-select" id="taskProject"><option value="">Seçin...</option></select></div>
+      <div class="form-group"><label class="form-label">Öncelik</label>
+        <select class="form-select" id="taskPriority">
+          <option value="low">🟢 Düşük</option>
+          <option value="medium" selected>🟡 Orta</option>
+          <option value="high">🔴 Yüksek</option>
+          <option value="urgent">🚨 Acil</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Başlangıç</label><input class="form-input" id="taskStart" type="date"></div>
+      <div class="form-group"><label class="form-label">Son Tarih (Deadline) *</label><input class="form-input" id="taskDeadline" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Açıklama</label><textarea class="form-textarea" id="taskDesc" placeholder="Görev detayları..."></textarea></div>
+    <div class="form-group"><label class="form-label">Durum</label>
+      <select class="form-select" id="taskStatus">
+        <option value="todo">📋 Yapılacak</option>
+        <option value="inprogress">🔄 Devam Ediyor</option>
+        <option value="review">👀 İncelemede</option>
+        <option value="done">✅ Tamamlandı</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('task')">İptal</button>
+      <button class="btn btn-primary" onclick="saveTask()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMMENT MODAL ── -->
+<div class="modal-overlay" id="m-comments">
+  <div class="modal modal-lg">
+    <div class="modal-header"><div class="modal-title" id="mCommentsTitle">Yorumlar</div><button class="modal-close" onclick="closeModal('comments')">✕</button></div>
+    <input type="hidden" id="commentEntityType">
+    <input type="hidden" id="commentEntityId">
+    <div id="commentList" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px"></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div class="form-group"><label class="form-label">Yorum Ekle</label>
+        <textarea class="form-textarea" id="commentText" placeholder="Yorumunuzu yazın..." style="min-height:80px"></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="saveComment()">💬 Gönder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div id="notifPanel" style="display:none;position:fixed;top:56px;right:16px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px var(--shadow);z-index:500;max-height:480px;overflow-y:auto">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Bildirimler</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Tümünü oku</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeNotifPanel()">✕</button>
+    </div>
+  </div>
+  <div id="notifPanelList" style="padding:8px"></div>
+</div>
+
+<!-- 2FA SETUP MODAL -->
+<div class="modal-overlay" id="m-2fa">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🔐 İki Faktörlü Doğrulama</div><button class="modal-close" onclick="closeModal('2fa')">✕</button></div>
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:48px;margin-bottom:12px">🔐</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:8px">2FA Kurulumu</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
+        Hesabınızı korumak için iki faktörlü doğrulamayı etkinleştirin.<br>
+        Google Authenticator veya Authy uygulaması gereklidir.
+      </div>
+      <div id="twoFAQR" style="margin:0 auto 16px;display:inline-block;padding:12px;background:#fff;border-radius:8px"></div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px">QR kodu uygulamanızla tarayın</div>
+      <div class="form-group"><label class="form-label">Doğrulama Kodu</label><input class="form-input" id="twoFACode" type="text" placeholder="6 haneli kod" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('2fa')">İptal</button>
+      <button class="btn btn-primary" onclick="verify2FA()">Doğrula & Etkinleştir</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -1389,7 +1620,7 @@ const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', gantt:'Gantt Chart — Proje Takvimi', recurring:'Tekrarlayan Görevler', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
-  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', users:'Kullanıcılar & Yetkiler'
+  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
 };
 
 const STATUS_TR = {
@@ -1404,6 +1635,9 @@ const ROLE_TR = { admin:'Sistem Yöneticisi', manager:'Proje Yöneticisi', sales
 // INIT
 // ═══════════════════════════════════════════════
 window.onload = () => {
+  // Apply saved theme immediately
+  const savedTheme = localStorage.getItem('dengbej-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : '');
   const url = 'https://srvbecdjsgscntlnppxj.supabase.co';
   const key = 'sb_publishable_Oo5VaAG6uACAsfuBBIZnmQ_LVPzbqhg';
   initSupabase(url, key);
@@ -1499,7 +1733,16 @@ function showApp() {
   document.getElementById('uAvatar').textContent = currentProfile?.avatar_initials || '?';
   document.getElementById('uName').textContent = currentProfile?.full_name || 'Kullanıcı';
   document.getElementById('uRole').textContent = ROLE_TR[currentProfile?.role] || '';
+  // Init features
+  initTheme();
+  loadSavedNotifications();
+  init2FAButton();
   loadDashboard();
+  // Apply role permissions after short delay (ensure nav is ready)
+  setTimeout(()=>{ try{ applyPermissions(); } catch(e){} }, 500);
+  // Notifications deactivated
+  // checkSystemNotifications();
+  // setInterval(checkSystemNotifications, 300000);
 }
 function toggleForms() {
   const l=document.getElementById('fLogin'), r=document.getElementById('fRegister'), f=document.getElementById('fForgot');
@@ -1803,7 +2046,7 @@ function navigate(el) {
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
-    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, users: loadUsers
+    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
   };
   if (loaders[page]) loaders[page]();
 }
@@ -1961,6 +2204,7 @@ function renderProjectsTable(rows) {
       <td><div class="progress" style="width:90px"><div class="progress-bar" style="width:${p.progress||0}%;background:var(--accent)"></div></div><span class="text-xs" style="margin-left:4px">${p.progress||0}%</span></td>
       <td style="display:flex;gap:4px;align-items:center">
         <button class="btn btn-ghost btn-sm" onclick="editProject('${p.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="openComments('project','${p.id}','${p.name}')" title="Yorumlar">💬</button>
         ${p.attachments?`<span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)" title="Ekler var">📎${JSON.parse(p.attachments).length}</span>`:''}
       </td>
     </tr>`).join('')}</tbody>
@@ -2327,7 +2571,7 @@ function renderCustomers(list){
       <td><b>${c.company_name}</b></td><td>${c.tax_number||'–'}</td><td>${c.city||'–'}</td>
       <td>${c.email||'–'}</td><td><span class="tag">${c.segment||'–'}</span></td>
       <td><span class="status s-${c.status||'active'}">${STATUS_TR[c.status||'active']}</span></td>
-      <td style="display:flex;gap:4px"><button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️</button>${c.attachments?`<span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)" title="Ekler var">📎${JSON.parse(c.attachments).length}</span>`:''}</td>
+      <td style="display:flex;gap:4px;align-items:center"><button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️</button><button class="btn btn-ghost btn-sm" onclick="openComments('customer','${c.id}','${c.company_name}')" title="Yorumlar">💬</button>${c.attachments?`<span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)" title="Ekler var">📎${JSON.parse(c.attachments).length}</span>`:''}</td>
     </tr>`).join('')}</tbody>
   </table></div>`:'<div class="empty">Yurt içi müşteri eklenmedi</div>';
   document.getElementById('custIntl').innerHTML=exp.length?`<div class="table-wrap"><table>
@@ -4223,6 +4467,715 @@ async function deleteRecurring(id) {
   const {error} = await dbDelete('recurring_tasks',id);
   if(error) return showNotif('Hata','err');
   loadRecurring(); showNotif('Silindi','ok');
+}
+
+// ═══════════════════════════════════════════════
+// PWA — PROGRESSIVE WEB APP
+// ═══════════════════════════════════════════════
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'none';
+  showNotif('DengBeJ uygulaması yüklendi! 🎉','ok');
+});
+
+function installPWA() {
+  if(!deferredPrompt) {
+    showNotif('Tarayıcı menüsünden "Ana ekrana ekle" seçin','ok');
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(result => {
+    if(result.outcome === 'accepted') showNotif('Uygulama yükleniyor...','ok');
+    deferredPrompt = null;
+    document.getElementById('pwaInstallBtn').style.display = 'none';
+  });
+}
+
+// Register Service Worker for offline support
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swCode = `
+const CACHE = 'dengbej-v1';
+const ASSETS = ['/'];
+self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))));
+self.addEventListener('fetch', e => e.respondWith(
+  caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('/')))
+));`;
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  });
+}
+
+// ═══════════════════════════════════════════════
+// THEME — DARK / LIGHT
+// ═══════════════════════════════════════════════
+function initTheme() {
+  const saved = localStorage.getItem('dengbej-theme') || 'dark';
+  applyTheme(saved);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : '');
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+  localStorage.setItem('dengbej-theme', theme);
+}
+
+function toggleTheme() {
+  const current = localStorage.getItem('dengbej-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ═══════════════════════════════════════════════
+// GLOBAL SEARCH
+// ═══════════════════════════════════════════════
+let searchTimer = null;
+let searchCache = {};
+
+async function globalSearch(query) {
+  const results = document.getElementById('globalSearchResults');
+  if(!results) return;
+  query = query.trim();
+  if(query.length < 2) { results.style.display='none'; return; }
+
+  results.style.display = 'block';
+  results.innerHTML = '<div class="loading" style="padding:16px"><div class="spinner"></div></div>';
+
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const [projRes, custRes, procRes, commRes, prodRes] = await Promise.all([
+      sb.from('projects').select('id,name,status').ilike('name','%'+query+'%').limit(4),
+      sb.from('customers').select('id,company_name,type,city').ilike('company_name','%'+query+'%').limit(4),
+      sb.from('processes').select('id,name,status').ilike('name','%'+query+'%').limit(3),
+      sb.from('commercial_records').select('id,doc_number,doc_type,total_amount').ilike('doc_number','%'+query+'%').limit(3),
+      sb.from('products').select('id,code,name,stock_qty').or('name.ilike.%'+query+'%,code.ilike.%'+query+'%').limit(3),
+    ]);
+
+    const sections = [];
+    const projs = projRes.data||[], custs = custRes.data||[], procs = procRes.data||[];
+    const comms = commRes.data||[], prods = prodRes.data||[];
+
+    if(projs.length) sections.push({
+      title:'📁 Projeler', items: projs.map(p=>({
+        label: p.name, sub: STATUS_TR[p.status]||p.status, icon:'📁',
+        action: `navigate(document.querySelector('[data-page="projects"]'))`
+      }))
+    });
+    if(custs.length) sections.push({
+      title:'👥 Müşteriler', items: custs.map(c=>({
+        label: c.company_name, sub: c.city||c.type, icon:'👥',
+        action: `navigate(document.querySelector('[data-page="customers"]'))`
+      }))
+    });
+    if(prods.length) sections.push({
+      title:'📦 Ürünler', items: prods.map(p=>({
+        label: p.name, sub: p.code+' · Stok: '+(p.stock_qty||0), icon:'📦',
+        action: `navigate(document.querySelector('[data-page="products"]'))`
+      }))
+    });
+    if(procs.length) sections.push({
+      title:'⚙️ Süreçler', items: procs.map(p=>({
+        label: p.name, sub: STATUS_TR[p.status]||p.status, icon:'⚙️',
+        action: `navigate(document.querySelector('[data-page="processes"]'))`
+      }))
+    });
+    if(comms.length) sections.push({
+      title:'💼 Ticari', items: comms.map(r=>({
+        label: r.doc_number, sub: fmtCompact(r.total_amount||0), icon:'💼',
+        action: `navigate(document.querySelector('[data-page="commercial"]'))`
+      }))
+    });
+
+    if(!sections.length) {
+      results.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--text2)">Sonuç bulunamadı</div>';
+      return;
+    }
+
+    results.innerHTML = sections.map(s=>`
+      <div style="padding:6px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)">${s.title}</div>
+      ${s.items.map(item=>`
+        <div onclick="${item.action};hideGlobalSearch()" style="display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:.1s;border-radius:6px;margin:1px 4px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+          <span style="font-size:16px">${item.icon}</span>
+          <div>
+            <div style="font-size:13px;font-weight:500">${highlightMatch(item.label, query)}</div>
+            <div style="font-size:11px;color:var(--text2)">${item.sub}</div>
+          </div>
+        </div>`).join('')}`).join('<div style="height:1px;background:var(--border);margin:4px 0"></div>');
+    results.innerHTML += '<div style="padding:8px 12px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);margin-top:4px">Enter ile ilk sonuca git · Esc ile kapat</div>';
+  }, 250);
+}
+
+function highlightMatch(text, query) {
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if(idx === -1) return text;
+  return text.slice(0,idx) + `<mark style="background:rgba(59,130,246,.3);border-radius:2px;padding:0 1px">${text.slice(idx,idx+query.length)}</mark>` + text.slice(idx+query.length);
+}
+
+function showGlobalSearch() {
+  const q = document.getElementById('searchInput')?.value;
+  if(q && q.length >= 2) globalSearch(q);
+}
+
+function hideGlobalSearch() {
+  const r = document.getElementById('globalSearchResults');
+  if(r) r.style.display='none';
+  const inp = document.getElementById('searchInput');
+  if(inp) inp.value='';
+}
+
+function globalSearchKey(e) {
+  if(e.key === 'Escape') hideGlobalSearch();
+  if(e.key === 'Enter') {
+    const first = document.querySelector('#globalSearchResults div[onclick]');
+    if(first) first.click();
+  }
+}
+
+// Ctrl+K shortcut
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.key==='k') {
+    e.preventDefault();
+    const inp = document.getElementById('searchInput');
+    if(inp) { inp.focus(); inp.select(); }
+  }
+  if(e.key==='Escape') hideGlobalSearch();
+});
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if(!e.target.closest('.search-box')) hideGlobalSearch();
+  if(!e.target.closest('#notifPanel') && !e.target.closest('[onclick*="openNotifPanel"]')) closeNotifPanel();
+});
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS PANEL
+// ═══════════════════════════════════════════════
+let appNotifications = [];
+
+function addNotification(type, title, message, link='') {
+  const notif = {
+    id: Date.now(), type, title, message, link,
+    time: new Date().toISOString(), read: false
+  };
+  appNotifications.unshift(notif);
+  if(appNotifications.length > 50) appNotifications.pop();
+  updateNotifBadge();
+  localStorage.setItem('dengbej-notifs', JSON.stringify(appNotifications));
+}
+
+function loadSavedNotifications() {
+  try {
+    const saved = localStorage.getItem('dengbej-notifs');
+    if(saved) appNotifications = JSON.parse(saved);
+  } catch(e) {}
+  updateNotifBadge();
+}
+
+function updateNotifBadge() {
+  const unread = appNotifications.filter(n=>!n.read).length;
+  const badge = document.getElementById('notifBadge');
+  if(badge) {
+    badge.textContent = unread > 9 ? '9+' : unread;
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+  }
+}
+
+function openNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  if(!panel) return;
+  panel.style.display = panel.style.display==='none' ? 'block' : 'none';
+  renderNotifPanel();
+}
+
+function closeNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  if(panel) panel.style.display='none';
+}
+
+function renderNotifPanel() {
+  const el = document.getElementById('notifPanelList');
+  if(!el) return;
+  const typeIcons = {info:'ℹ️', success:'✅', warning:'⚠️', error:'❌', stock:'📦', deadline:'📅', lead:'🎯'};
+  el.innerHTML = appNotifications.length ? appNotifications.slice(0,20).map(n=>`
+    <div onclick="markRead('${n.id}')" style="padding:10px 12px;border-radius:8px;margin-bottom:4px;cursor:pointer;background:${n.read?'transparent':'rgba(59,130,246,.06)'};border-left:3px solid ${n.read?'transparent':'var(--accent)'};transition:.15s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${n.read?'transparent':'rgba(59,130,246,.06)'}'">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+        <span>${typeIcons[n.type]||'🔔'}</span>
+        <span style="font-size:12px;font-weight:600;flex:1">${n.title}</span>
+        <span style="font-size:10px;color:var(--text3)">${timeAgo(n.time)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-left:24px">${n.message}</div>
+    </div>`).join('') : '<div style="padding:20px;text-align:center;font-size:13px;color:var(--text2)">Bildirim yok</div>';
+}
+
+function markRead(id) {
+  const n = appNotifications.find(x=>x.id==id);
+  if(n) n.read = true;
+  updateNotifBadge();
+  renderNotifPanel();
+  localStorage.setItem('dengbej-notifs', JSON.stringify(appNotifications));
+}
+
+function markAllRead() {
+  appNotifications.forEach(n=>n.read=true);
+  updateNotifBadge();
+  renderNotifPanel();
+  localStorage.setItem('dengbej-notifs', JSON.stringify(appNotifications));
+}
+
+function timeAgo(isoStr) {
+  const diff = (Date.now() - new Date(isoStr)) / 1000;
+  if(diff < 60) return 'az önce';
+  if(diff < 3600) return Math.floor(diff/60) + ' dk';
+  if(diff < 86400) return Math.floor(diff/3600) + ' sa';
+  return Math.floor(diff/86400) + ' gün';
+}
+
+// Check for notifications periodically
+async function checkSystemNotifications() {
+  if(isDemo || !sb) return;
+  try {
+    // Check critical stock
+    const {data:prods} = await sb.from('products').select('name,stock_qty,min_stock').lte('stock_qty', 5);
+    (prods||[]).filter(p=>(p.stock_qty||0)<=(p.min_stock||5)).forEach(p=>{
+      const existing = appNotifications.find(n=>n.title.includes(p.name) && !n.read);
+      if(!existing) addNotification('stock','Kritik Stok',p.name+' — Stok: '+(p.stock_qty||0));
+    });
+    // Check approaching deadlines
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+2);
+    const {data:procs} = await sb.from('processes').select('name,due_date').eq('status','active').lte('due_date', tomorrow.toISOString().split('T')[0]);
+    (procs||[]).forEach(p=>{
+      const existing = appNotifications.find(n=>n.title.includes(p.name) && !n.read);
+      if(!existing) addNotification('deadline','Yaklaşan Termin',p.name+' — '+fmtDate(p.due_date));
+    });
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+// 2FA
+// ═══════════════════════════════════════════════
+function open2FA() {
+  // Generate a simple TOTP secret display
+  const secret = btoa(Math.random().toString(36)).slice(0,16).toUpperCase();
+  const qrEl = document.getElementById('twoFAQR');
+  if(qrEl) {
+    const user = currentUser?.email || 'user@dengbej.com';
+    const otpUrl = `otpauth://totp/DengBeJ:${encodeURIComponent(user)}?secret=${secret}&issuer=DengBeJ`;
+    // Simple QR placeholder
+    qrEl.innerHTML = `<div style="font-size:11px;color:#374151;margin-bottom:8px">Manuel giriş kodu:</div>
+      <div style="font-family:monospace;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:3px">${secret}</div>
+      <div style="font-size:10px;color:#6b7280;margin-top:6px">Google Authenticator'a manuel girin</div>`;
+  }
+  openModal('2fa');
+}
+
+function verify2FA() {
+  const code = document.getElementById('twoFACode')?.value;
+  if(!code || code.length !== 6) return showNotif('6 haneli kod girin','err');
+  // In production, verify against TOTP secret
+  showNotif('2FA etkinleştirildi! ✅','ok');
+  closeModal('2fa');
+}
+
+// Add 2FA button to user menu
+function init2FAButton() { /* deactivated */ }
+
+// ═══════════════════════════════════════════════
+// TASKS MODULE
+// ═══════════════════════════════════════════════
+let allTasks = [];
+const TASK_STATUS = {todo:'📋 Yapılacak',inprogress:'🔄 Devam',review:'👀 İnceleme',done:'✅ Tamam'};
+const TASK_PRIORITY = {low:'🟢 Düşük',medium:'🟡 Orta',high:'🔴 Yüksek',urgent:'🚨 Acil'};
+const TASK_PRIORITY_COLOR = {low:'var(--success)',medium:'var(--warning)',high:'var(--danger)',urgent:'#dc2626'};
+
+async function loadTasks() {
+  const [{data:tasks},{data:profiles},{data:projs}] = await Promise.all([
+    dbSelect('tasks', {select:'*,assignee:profiles!tasks_assignee_id_fkey(full_name),projects(name)', order:'deadline', asc:true}),
+    dbSelect('profiles', {select:'id,full_name'}),
+    dbSelect('projects', {select:'id,name'})
+  ]);
+  allTasks = tasks || [];
+
+  // Populate selects
+  const pOpts = (profiles||[]).map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  document.getElementById('taskAssignee').innerHTML = '<option value="">Seçin...</option>'+pOpts;
+  const prOpts = (projs||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('taskProject').innerHTML = '<option value="">Seçin...</option>'+prOpts;
+
+  const today = new Date().toISOString().split('T')[0];
+  const myId = currentUser?.id;
+  renderTaskList('taskListMy', allTasks.filter(t=>t.assignee_id===myId));
+  renderTaskList('taskListAll', allTasks);
+  renderTaskList('taskListOver', allTasks.filter(t=>t.deadline<today&&t.status!=='done'));
+}
+
+function renderTaskList(containerId, tasks) {
+  const el = document.getElementById(containerId); if(!el) return;
+  const today = new Date().toISOString().split('T')[0];
+  el.innerHTML = tasks.length ? tasks.map(t=>{
+    const overdue = t.deadline < today && t.status !== 'done';
+    return `<div style="background:var(--surface2);border-radius:10px;padding:14px;border-left:4px solid ${TASK_PRIORITY_COLOR[t.priority]||'var(--border)'};${overdue?'border-left-color:var(--danger)':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px">${t.title}</div>
+          <div style="font-size:11px;color:var(--text2);display:flex;gap:10px;flex-wrap:wrap">
+            <span>👤 ${t.assignee?.full_name||'–'}</span>
+            ${t.projects?`<span>📁 ${t.projects.name}</span>`:''}
+            <span style="color:${overdue?'var(--danger)':'var(--text2)'}">📅 ${fmtDate(t.deadline)}${overdue?' ⚠️ GECİKMİŞ':''}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)">${TASK_PRIORITY[t.priority]||t.priority}</span>
+          <select class="form-select" style="font-size:11px;padding:3px 6px;width:auto" onchange="updateTaskStatus('${t.id}',this.value)">
+            ${Object.entries(TASK_STATUS).map(([k,v])=>`<option value="${k}" ${t.status===k?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${t.description?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${t.description}</div>`:''}
+      <div style="display:flex;gap:6px;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="editTask('${t.id}')">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Görev yok</div>';
+}
+
+async function saveTask() {
+  const id = document.getElementById('taskId').value;
+  const d = {
+    title: document.getElementById('taskTitle').value,
+    assignee_id: document.getElementById('taskAssignee').value||null,
+    project_id: document.getElementById('taskProject').value||null,
+    priority: document.getElementById('taskPriority').value,
+    start_date: document.getElementById('taskStart').value||null,
+    deadline: document.getElementById('taskDeadline').value,
+    description: document.getElementById('taskDesc').value,
+    status: document.getElementById('taskStatus').value,
+    created_by: currentUser?.id,
+  };
+  if(!d.title||!d.deadline) return showNotif('Başlık ve son tarih zorunlu','err');
+  const res = id ? await dbUpdate('tasks',id,d) : await dbInsert('tasks',d);
+  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
+  // Log activity
+  logActivity('tasks', id||res.data?.id, id?'update':'create', `Görev: ${d.title}`);
+  closeModal('task'); loadTasks(); showNotif(id?'Görev güncellendi!':'Görev atandı!','ok');
+}
+
+async function updateTaskStatus(id, status) {
+  await dbUpdate('tasks', id, {status});
+  const task = allTasks.find(t=>t.id===id);
+  logActivity('tasks', id, 'update', `Görev durumu: ${TASK_STATUS[status]}`);
+  showNotif('Durum güncellendi','ok');
+  loadTasks();
+}
+
+async function editTask(id) {
+  const t = allTasks.find(x=>x.id===id); if(!t) return;
+  document.getElementById('taskId').value=t.id;
+  document.getElementById('mTaskTitle').textContent='Görev Düzenle';
+  document.getElementById('taskTitle').value=t.title;
+  document.getElementById('taskAssignee').value=t.assignee_id||'';
+  document.getElementById('taskProject').value=t.project_id||'';
+  document.getElementById('taskPriority').value=t.priority||'medium';
+  document.getElementById('taskStart').value=t.start_date||'';
+  document.getElementById('taskDeadline').value=t.deadline||'';
+  document.getElementById('taskDesc').value=t.description||'';
+  document.getElementById('taskStatus').value=t.status||'todo';
+  openModal('task', true);
+}
+
+async function deleteTask(id) {
+  const {error} = await dbDelete('tasks',id);
+  if(error) return showNotif('Hata','err');
+  logActivity('tasks', id, 'delete', 'Görev silindi');
+  loadTasks(); showNotif('Görev silindi','ok');
+}
+
+// ═══════════════════════════════════════════════
+// COMMENTS MODULE
+// ═══════════════════════════════════════════════
+let currentCommentEntity = null;
+
+async function openComments(entityType, entityId, entityName) {
+  currentCommentEntity = {type: entityType, id: entityId};
+  document.getElementById('mCommentsTitle').textContent = `💬 ${entityName} — Yorumlar`;
+  document.getElementById('commentEntityType').value = entityType;
+  document.getElementById('commentEntityId').value = entityId;
+  document.getElementById('commentText').value = '';
+  await loadCommentList(entityType, entityId);
+  openModal('comments', true);
+}
+
+async function loadCommentList(entityType, entityId) {
+  const el = document.getElementById('commentList'); if(!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const {data} = await dbSelect('comments', {
+    select:'*,profiles(full_name,avatar_initials)',
+    eq:{entity_type:entityType, entity_id:entityId},
+    order:'created_at', asc:true
+  });
+  const comments = data||[];
+  el.innerHTML = comments.length ? comments.map(cm=>`
+    <div style="display:flex;gap:10px">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${cm.profiles?.avatar_initials||'?'}</div>
+      <div style="flex:1;background:var(--surface2);border-radius:10px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <span style="font-size:12px;font-weight:600">${cm.profiles?.full_name||'Kullanıcı'}</span>
+          <span style="font-size:10px;color:var(--text3)">${timeAgo(cm.created_at)}</span>
+        </div>
+        <div style="font-size:13px;line-height:1.5;white-space:pre-wrap">${cm.content}</div>
+      </div>
+    </div>`).join('') : '<div class="empty">Henüz yorum yok. İlk yorumu siz yapın!</div>';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function saveComment() {
+  const content = document.getElementById('commentText').value.trim();
+  const entityType = document.getElementById('commentEntityType').value;
+  const entityId = document.getElementById('commentEntityId').value;
+  if(!content) return showNotif('Yorum boş olamaz','err');
+  const {error} = await dbInsert('comments', {
+    entity_type: entityType, entity_id: entityId,
+    content, created_by: currentUser?.id
+  });
+  if(error) return showNotif('Hata: '+(error.message||''),'err');
+  document.getElementById('commentText').value = '';
+  logActivity(entityType, entityId, 'comment', 'Yorum eklendi');
+  await loadCommentList(entityType, entityId);
+  showNotif('Yorum eklendi!','ok');
+}
+
+// ═══════════════════════════════════════════════
+// ACTIVITY LOG
+// ═══════════════════════════════════════════════
+async function logActivity(module, entityId, action, description) {
+  if(isDemo || !currentUser) return;
+  try {
+    await dbInsert('activity_log', {
+      module, entity_id: entityId, action, description,
+      user_id: currentUser.id, created_at: new Date().toISOString()
+    });
+  } catch(e) {}
+}
+
+async function loadActivity() {
+  const el = document.getElementById('activityTable'); if(!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const filterModule = document.getElementById('actFilter')?.value;
+  const days = parseInt(document.getElementById('actPeriod')?.value||30);
+  const since = new Date(); since.setDate(since.getDate()-days);
+
+  const query = {select:'*,profiles(full_name,avatar_initials)', order:'created_at', asc:false};
+  if(filterModule) query.eq = {module: filterModule};
+  const {data} = await dbSelect('activity_log', query);
+  const logs = (data||[]).filter(l=>new Date(l.created_at)>=since);
+
+  const actionIcons = {create:'✅',update:'✏️',delete:'🗑',comment:'💬',login:'🔑',view:'👁'};
+  const moduleIcons = {projects:'📁',customers:'👥',commercial:'💼',products:'📦',processes:'⚙️',tasks:'✅',crm_leads:'🎯'};
+
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Zaman</th><th>Kullanıcı</th><th>Modül</th><th>İşlem</th><th>Açıklama</th></tr></thead>
+    <tbody>${logs.length ? logs.map(l=>`<tr>
+      <td style="font-size:11px;color:var(--text2)">${timeAgo(l.created_at)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700">${l.profiles?.avatar_initials||'?'}</div>
+          <span style="font-size:12px">${l.profiles?.full_name||'–'}</span>
+        </div>
+      </td>
+      <td><span class="tag">${moduleIcons[l.module]||'📋'} ${l.module||'–'}</span></td>
+      <td><span style="font-size:14px">${actionIcons[l.action]||'•'}</span> <span style="font-size:11px">${l.action||'–'}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${l.description||'–'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">Aktivite kaydı yok</td></tr>'}</tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════
+// PERMISSIONS MODULE
+// ═══════════════════════════════════════════════
+const DEFAULT_PERMS = {
+  dashboard:    {admin:true,  manager:true,  sales:true,  accounting:true,  viewer:true},
+  projects:     {admin:true,  manager:true,  sales:true,  accounting:false, viewer:true},
+  products:     {admin:true,  manager:true,  sales:true,  accounting:false, viewer:true},
+  stock:        {admin:true,  manager:true,  sales:false, accounting:false, viewer:true},
+  quotation:    {admin:true,  manager:true,  sales:true,  accounting:false, viewer:false},
+  processes:    {admin:true,  manager:true,  sales:false, accounting:false, viewer:true},
+  gantt:        {admin:true,  manager:true,  sales:false, accounting:false, viewer:true},
+  customers:    {admin:true,  manager:true,  sales:true,  accounting:false, viewer:true},
+  'crm-pipeline':{admin:true, manager:true,  sales:true,  accounting:false, viewer:false},
+  commercial:   {admin:true,  manager:true,  sales:true,  accounting:true,  viewer:false},
+  reports:      {admin:true,  manager:true,  sales:false, accounting:true,  viewer:false},
+  analysis:     {admin:true,  manager:true,  sales:false, accounting:true,  viewer:false},
+  export:       {admin:true,  manager:false, sales:false, accounting:true,  viewer:false},
+  users:        {admin:true,  manager:false, sales:false, accounting:false, viewer:false},
+  permissions:  {admin:true,  manager:false, sales:false, accounting:false, viewer:false},
+  backup:       {admin:true,  manager:false, sales:false, accounting:false, viewer:false},
+};
+
+const MODULE_LABELS = {
+  dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar',
+  stock:'Stok Takibi', quotation:'Teklif Oluştur', processes:'Süreç Takibi',
+  gantt:'Gantt Chart', customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline',
+  commercial:'Ticari Kayıtlar', reports:'Ticari Rapor', analysis:'Kar-Zarar',
+  export:'Dışa Aktar', users:'Kullanıcılar', permissions:'İzin Yönetimi', backup:'Yedekleme'
+};
+
+let currentPerms = {};
+
+async function loadPermissions() {
+  // Load saved or use defaults
+  try {
+    const saved = localStorage.getItem('dengbej-perms');
+    currentPerms = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_PERMS));
+  } catch(e) { currentPerms = JSON.parse(JSON.stringify(DEFAULT_PERMS)); }
+
+  renderPermMatrix();
+  loadUserRoles();
+  applyPermissions();
+}
+
+function renderPermMatrix() {
+  const tbody = document.getElementById('permMatrixBody');
+  const roles = ['admin','manager','sales','accounting','viewer'];
+  const roleColors = {admin:'#ef4444',manager:'#3b82f6',sales:'#10b981',accounting:'#f59e0b',viewer:'#8b5cf6'};
+  tbody.innerHTML = Object.entries(MODULE_LABELS).map(([page, label])=>{
+    const perms = currentPerms[page] || {};
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px;font-size:12px">${label}</td>
+      ${roles.map(role=>`
+        <td style="padding:8px;text-align:center">
+          <input type="checkbox" ${perms[role]?'checked':''} onchange="currentPerms['${page}']['${role}']=this.checked"
+            style="width:16px;height:16px;accent-color:${roleColors[role]};cursor:pointer">
+        </td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+
+async function loadUserRoles() {
+  const {data} = await dbSelect('profiles', {select:'id,full_name,role,avatar_initials'});
+  const el = document.getElementById('userRoleList');
+  if(!el) return;
+  el.innerHTML = (data||[]).map(u=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${u.avatar_initials||'?'}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${u.full_name}</div></div>
+      <select class="form-select" style="width:140px;font-size:12px" onchange="updateUserRole('${u.id}',this.value)">
+        ${['admin','manager','sales','accounting','viewer'].map(r=>`<option value="${r}" ${u.role===r?'selected':''}>${ROLE_TR[r]||r}</option>`).join('')}
+      </select>
+    </div>`).join('') || '<div class="empty">Kullanıcı yok</div>';
+}
+
+async function updateUserRole(userId, role) {
+  await dbUpdate('profiles', userId, {role});
+  logActivity('users', userId, 'update', `Rol değiştirildi: ${ROLE_TR[role]||role}`);
+  showNotif('Rol güncellendi!','ok');
+  applyPermissions();
+}
+
+function savePermissions() {
+  localStorage.setItem('dengbej-perms', JSON.stringify(currentPerms));
+  applyPermissions();
+  showNotif('İzinler kaydedildi!','ok');
+}
+
+function resetPermissions() {
+  currentPerms = JSON.parse(JSON.stringify(DEFAULT_PERMS));
+  renderPermMatrix();
+  savePermissions();
+}
+
+function applyPermissions() {
+  if(!currentProfile?.role) return;
+  const role = currentProfile.role;
+  document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
+    const page = item.dataset.page;
+    const perm = currentPerms[page];
+    if(perm && perm[role]===false) {
+      item.style.display = 'none';
+    } else {
+      item.style.display = '';
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// BACKUP MODULE
+// ═══════════════════════════════════════════════
+async function loadBackup() {
+  renderBackupHistory();
+  const autoEnabled = localStorage.getItem('dengbej-autobackup')==='true';
+  const toggle = document.getElementById('autoBackupToggle');
+  const slider = document.getElementById('autoBackupSlider');
+  if(toggle) toggle.checked = autoEnabled;
+  if(slider) slider.style.background = autoEnabled ? 'var(--success)' : 'var(--surface3)';
+  if(autoEnabled) scheduleAutoBackup();
+}
+
+function renderBackupHistory() {
+  const el = document.getElementById('backupHistory'); if(!el) return;
+  try {
+    const history = JSON.parse(localStorage.getItem('dengbej-backup-history')||'[]');
+    el.innerHTML = history.length ? history.slice(0,5).map(b=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+        <span style="font-size:20px">💾</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600">${b.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${b.tables} tablo · ${b.size}</div>
+        </div>
+        <div style="font-size:11px;color:var(--text2)">${timeAgo(b.date)}</div>
+      </div>`).join('') : '<div class="empty">Henüz yedek alınmadı</div>';
+  } catch(e) { }
+}
+
+async function fullBackup() {
+  showNotif('Yedek hazırlanıyor...','ok');
+  const tables = ['customers','projects','products','commercial_records','stock_movements','crm_leads','processes','tasks'];
+  let allData = {}; let totalRows = 0;
+  for(const table of tables) {
+    const {data} = await dbSelect(table, {});
+    allData[table] = data||[];
+    totalRows += (data||[]).length;
+  }
+  const json = JSON.stringify(allData, null, 2);
+  const date = new Date().toISOString().split('T')[0];
+  downloadFile(json, `dengbej-yedek-${date}.json`, 'application/json');
+
+  // Save to history
+  const history = JSON.parse(localStorage.getItem('dengbej-backup-history')||'[]');
+  history.unshift({name:`Tam Yedek — ${date}`, tables:tables.length, size:Math.round(json.length/1024)+'KB', date:new Date().toISOString()});
+  localStorage.setItem('dengbej-backup-history', JSON.stringify(history.slice(0,10)));
+  renderBackupHistory();
+  showNotif(`Yedek tamamlandı! ${totalRows} kayıt indirildi.`,'ok');
+}
+
+function toggleAutoBackup(enabled) {
+  localStorage.setItem('dengbej-autobackup', enabled);
+  const slider = document.getElementById('autoBackupSlider');
+  if(slider) slider.style.background = enabled ? 'var(--success)' : 'var(--surface3)';
+  if(enabled) { scheduleAutoBackup(); showNotif('Otomatik yedekleme aktif!','ok'); }
+  else showNotif('Otomatik yedekleme devre dışı','ok');
+}
+
+function scheduleAutoBackup() {
+  const lastBackup = localStorage.getItem('dengbej-last-autobackup');
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
+  if(!lastBackup || new Date(lastBackup) < weekAgo) {
+    if(now.getDay()===1) { // Monday
+      fullBackup();
+      localStorage.setItem('dengbej-last-autobackup', now.toISOString());
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════
