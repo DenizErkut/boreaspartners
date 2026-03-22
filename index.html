@@ -466,10 +466,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <!-- PRODUCTS -->
       <div class="page" id="page-products">
         <div class="flex-btw mb-14">
-          <div class="tabs" style="margin-bottom:0;flex:none">
+          <div class="tabs" style="margin-bottom:0;flex:none;flex-wrap:wrap">
             <div class="tab active" onclick="switchTab(this,'tRetail')">Perakende</div>
             <div class="tab" onclick="switchTab(this,'tWholesale')">Toptan</div>
             <div class="tab" onclick="switchTab(this,'tExport')">İhracat</div>
+            <div class="tab" onclick="switchTab(this,'tProdByProject')">📁 Proje Bazlı</div>
+            <div class="tab" onclick="switchTab(this,'tProducerPrices')">🏭 Üretici Fiyatları</div>
+            <div class="tab" onclick="switchTab(this,'tBrokerPrices')">🤝 Broker Fiyatları</div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openModal('product')">+ Yeni Ürün</button>
         </div>
@@ -477,6 +480,31 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div id="tRetail" class="tab-content active"><div id="prodRetail"><div class="loading"><div class="spinner"></div></div></div></div>
           <div id="tWholesale" class="tab-content"><div id="prodWholesale"></div></div>
           <div id="tExport" class="tab-content"><div id="prodExport"></div></div>
+          <div id="tProdByProject" class="tab-content">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+              <select class="form-select" id="prodProjectFilter" onchange="loadProductsByProject(this.value)" style="width:220px;font-size:13px">
+                <option value="">Tüm Projeler</option>
+              </select>
+              <span style="font-size:12px;color:var(--text2)" id="prodProjectCount"></span>
+            </div>
+            <div id="prodByProject"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+          <div id="tProducerPrices" class="tab-content">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+              <select class="form-select" id="prodProducerFilter" onchange="loadProducerPrices(this.value)" style="width:220px;font-size:13px">
+                <option value="">Tüm Üreticiler</option>
+              </select>
+            </div>
+            <div id="producerPriceList"><div class="empty">Üretici seçin</div></div>
+          </div>
+          <div id="tBrokerPrices" class="tab-content">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+              <select class="form-select" id="prodBrokerFilter" onchange="loadBrokerPrices(this.value)" style="width:220px;font-size:13px">
+                <option value="">Tüm Brokerlar</option>
+              </select>
+            </div>
+            <div id="brokerPriceList"><div class="empty">Broker seçin</div></div>
+          </div>
         </div>
       </div>
 
@@ -530,13 +558,19 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="page" id="page-customers">
         <div class="flex-btw mb-14">
           <div class="tabs" style="margin-bottom:0;flex:none">
-            <div class="tab active" onclick="switchTab(this,'tDomestic')">🇹🇷 Yurt İçi</div>
+            <div class="tab active" onclick="switchTab(this,'tCustCustomer')">🛒 Müşteri</div>
+            <div class="tab" onclick="switchTab(this,'tCustProducer')">🏭 Üretici</div>
+            <div class="tab" onclick="switchTab(this,'tCustBroker')">🤝 Broker</div>
+            <div class="tab" onclick="switchTab(this,'tDomestic')">🇹🇷 Yurt İçi</div>
             <div class="tab" onclick="switchTab(this,'tIntl')">🌍 Yurt Dışı</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="openModal('customer')">+ Müşteri Ekle</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('customer')">+ Ekle</button>
         </div>
         <div class="card">
-          <div id="tDomestic" class="tab-content active"><div id="custDomestic"><div class="loading"><div class="spinner"></div></div></div></div>
+          <div id="tCustCustomer" class="tab-content active"><div id="custListCustomer"><div class="loading"><div class="spinner"></div></div></div></div>
+          <div id="tCustProducer" class="tab-content"><div id="custListProducer"></div></div>
+          <div id="tCustBroker" class="tab-content"><div id="custListBroker"></div></div>
+          <div id="tDomestic" class="tab-content"><div id="custDomestic"></div></div>
           <div id="tIntl" class="tab-content"><div id="custIntl"></div></div>
         </div>
       </div>
@@ -758,7 +792,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div class="kpi purple"><div class="kpi-label">Stok Dışı</div><div class="kpi-value" id="stKpi4">–</div><div class="kpi-icon">❌</div></div>
         </div>
         <div class="flex-btw mb-14">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Stok Hareketleri</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Stok Hareketleri</div>
+            <select class="form-select" id="stockProjectFilter" onchange="filterStockByProject(this.value)" style="width:200px;font-size:12px">
+              <option value="">Tüm Projeler</option>
+            </select>
+          </div>
           <button class="btn btn-primary btn-sm" onclick="openModal('stockMove')">+ Stok Hareketi</button>
         </div>
         <div class="grid grid-2">
@@ -1233,7 +1272,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="modal-header"><div class="modal-title" id="mCustTitle">Müşteri Ekle</div><button class="modal-close" onclick="closeModal('customer')">✕</button></div>
     <input type="hidden" id="custId">
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Tür</label><select class="form-select" id="custType"><option value="domestic">Yurt İçi</option><option value="export">Yurt Dışı</option></select></div>
+      <div class="form-group"><label class="form-label">Tür</label>
+  <select class="form-select" id="custType">
+    <option value="customer">🛒 Müşteri</option>
+    <option value="producer">🏭 Üretici</option>
+    <option value="broker">🤝 Broker</option>
+    <option value="domestic">🇹🇷 Yurt İçi</option>
+    <option value="export">🌍 Yurt Dışı</option>
+  </select>
+</div>
       <div class="form-group"><label class="form-label">Segment</label><select class="form-select" id="custSegment"><option value="OEM">OEM</option><option value="Tier1">Tier1</option><option value="Distributor">Distribütör</option><option value="Retail">Perakende</option><option value="Other">Diğer</option></select></div>
     </div>
     <div class="form-row">
@@ -1578,6 +1625,35 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div style="display:flex;justify-content:flex-end">
         <button class="btn btn-primary btn-sm" onclick="saveComment()">💬 Gönder</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PARTNER PRICE MODAL ── -->
+<div class="modal-overlay" id="m-partnerPrice">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Fiyat Listesi Ekle</div><button class="modal-close" onclick="closeModal('partnerPrice')">✕</button></div>
+    <input type="hidden" id="ppPartnerId">
+    <div class="form-group"><label class="form-label">Ürün *</label>
+      <select class="form-select" id="ppProduct"><option value="">Seçin...</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Alış Fiyatı *</label><input class="form-input" id="ppPrice" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="form-group"><label class="form-label">Para Birimi</label>
+        <select class="form-select" id="ppCurrency"><option value="TRY">TRY ₺</option><option value="EUR">EUR €</option><option value="USD">USD $</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Min. Sipariş Miktarı</label><input class="form-input" id="ppMinQty" type="number" value="1" min="1"></div>
+      <div class="form-group"><label class="form-label">Geçerlilik Tarihi</label><input class="form-input" id="ppValidUntil" type="date"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Bağlı Proje</label>
+      <select class="form-select" id="ppProject"><option value="">Proje seçin (isteğe bağlı)</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Not</label><input class="form-input" id="ppNote" placeholder="Ek notlar..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('partnerPrice')">İptal</button>
+      <button class="btn btn-primary" onclick="savePartnerPrice()">Kaydet</button>
     </div>
   </div>
 </div>
@@ -5276,6 +5352,226 @@ async function rejectUser(userId, name) {
   if(error) return showNotif('Hata','err');
   loadUsers();
   showNotif('Kullanıcı reddedildi','ok');
+}
+
+// ═══════════════════════════════════════════════
+// ENHANCED CUSTOMER RENDERING
+// ═══════════════════════════════════════════════
+function renderCustomers(list) {
+  const dom = list.filter(c=>c.type==='domestic');
+  const exp = list.filter(c=>c.type==='export');
+  const customers = list.filter(c=>c.type==='customer'||(!['domestic','export','producer','broker'].includes(c.type)));
+  const producers = list.filter(c=>c.type==='producer');
+  const brokers = list.filter(c=>c.type==='broker');
+
+  // Render by type
+  renderCustomerTable('custListCustomer', customers, '🛒 Müşteri');
+  renderCustomerTable('custListProducer', producers, '🏭 Üretici', true);
+  renderCustomerTable('custListBroker', brokers, '🤝 Broker', true);
+
+  // Legacy domestic/export tabs
+  const domesticAll = list.filter(c=>c.type==='domestic'||c.country===''||(!c.country&&c.type!=='export'&&c.type!=='producer'&&c.type!=='broker'));
+  const exportAll = list.filter(c=>c.type==='export'||(c.country&&c.country!=='Türkiye'));
+
+  document.getElementById('custDomestic').innerHTML = dom.length ? buildCustTable(dom) : '<div class="empty">Yurt içi kayıt yok</div>';
+  document.getElementById('custIntl').innerHTML = exp.length ? buildCustTable(exp) : '<div class="empty">Yurt dışı kayıt yok</div>';
+}
+
+function renderCustomerTable(containerId, list, label, showStockBtn) {
+  const el = document.getElementById(containerId); if(!el) return;
+  el.innerHTML = list.length ? buildCustTable(list, showStockBtn) : `<div class="empty">${label} kaydı yok</div>`;
+}
+
+function buildCustTable(list, showStockBtn) {
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Firma</th><th>Şehir / Ülke</th><th>Segment</th><th>Tür</th><th>Para Birimi</th><th>Vade</th><th></th></tr></thead>
+    <tbody>${list.map(c=>`<tr>
+      <td><b>${c.company_name}</b>${c.tax_number?`<div class="text-xs">${c.tax_number}</div>`:''}</td>
+      <td>${c.city||'–'}${c.country&&c.country!=='Türkiye'?` / ${c.country}`:''}</td>
+      <td><span class="tag">${c.segment||'–'}</span></td>
+      <td><span class="status s-active" style="font-size:10px">${{customer:'🛒 Müşteri',producer:'🏭 Üretici',broker:'🤝 Broker',domestic:'🇹🇷 Yurt İçi',export:'🌍 Yurt Dışı'}[c.type]||c.type}</span></td>
+      <td>${c.currency||'TRY'}</td>
+      <td>${c.payment_terms||30} gün</td>
+      <td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="openComments('customer','${c.id}','${c.company_name}')" title="Yorumlar">💬</button>
+        ${showStockBtn?`<button class="btn btn-ghost btn-sm" onclick="openPartnerPriceList('${c.id}','${c.company_name}','${c.type}')" title="Stok & Fiyat">📋</button>`:''}
+        ${c.attachments?`<span class="tag" style="background:rgba(59,130,246,.1);color:var(--accent)" title="Ekler var">📎${JSON.parse(c.attachments).length}</span>`:''}
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════
+// PRODUCT — PROJECT LINK
+// ═══════════════════════════════════════════════
+async function loadProductsByProject(projectId) {
+  const el = document.getElementById('prodByProject');
+  const countEl = document.getElementById('prodProjectCount');
+  if(!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+  const query = projectId ? {eq:{project_id:projectId}} : {};
+  const {data} = await dbSelect('products', {...query, order:'name'});
+  const prods = data || [];
+  if(countEl) countEl.textContent = prods.length + ' ürün';
+
+  el.innerHTML = prods.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>Kod</th><th>Ürün Adı</th><th>Birim</th><th>Stok</th><th>Perakende</th><th>Toptan</th><th>İhracat</th><th>Proje</th></tr></thead>
+    <tbody>${prods.map(p=>`<tr>
+      <td><span class="tag">${p.code}</span></td>
+      <td><b>${p.name}</b>${p.category?`<div class="text-xs">${p.category}</div>`:''}</td>
+      <td>${p.unit||'Adet'}</td>
+      <td style="color:${(p.stock_qty||0)<=(p.min_stock||5)?'var(--warning)':'var(--success)'};font-weight:700">${p.stock_qty||0}</td>
+      <td>${p.retail_price?fmtCurrency(p.retail_price,'TRY'):'–'}</td>
+      <td>${p.wholesale_price?fmtCurrency(p.wholesale_price,'TRY'):'–'}</td>
+      <td>${p.export_eur?fmtCurrency(p.export_eur,'EUR'):'–'}</td>
+      <td>${p.project_name?`<span class="tag">📁 ${p.project_name}</span>`:'<span style="color:var(--text3)">–</span>'}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<div class="empty">Bu projede ürün yok</div>';
+}
+
+// Populate project filters when products page loads
+const _origLoadProducts = loadProducts;
+async function loadProducts() {
+  await _origLoadProducts();
+  // Populate project dropdowns
+  const {data:projs} = await dbSelect('projects', {select:'id,name', order:'name'});
+  const opts = (projs||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  ['prodProjectFilter','stockProjectFilter'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = '<option value="">Tüm Projeler</option>'+opts;
+  });
+  // Load producer/broker selects
+  const {data:custs} = await dbSelect('customers', {order:'company_name'});
+  const producers = (custs||[]).filter(c=>c.type==='producer');
+  const brokers = (custs||[]).filter(c=>c.type==='broker');
+  const prodOpts = producers.map(p=>`<option value="${p.id}">${p.company_name}</option>`).join('');
+  const brkOpts = brokers.map(b=>`<option value="${b.id}">${b.company_name}</option>`).join('');
+  const ppf = document.getElementById('prodProducerFilter');
+  const pbf = document.getElementById('prodBrokerFilter');
+  if(ppf) ppf.innerHTML='<option value="">Tüm Üreticiler</option>'+prodOpts;
+  if(pbf) pbf.innerHTML='<option value="">Tüm Brokerlar</option>'+brkOpts;
+  // Also populate product modal project select
+  const prodProjSel = document.getElementById('prodProject');
+  if(prodProjSel) prodProjSel.innerHTML='<option value="">Proje seçin (isteğe bağlı)</option>'+opts;
+  // Load all products by project initially
+  loadProductsByProject('');
+}
+
+// ═══════════════════════════════════════════════
+// PRODUCER / BROKER PRICE LISTS
+// ═══════════════════════════════════════════════
+async function savePartnerPrice() {
+  const partnerId = document.getElementById('ppPartnerId').value;
+  const productId = document.getElementById('ppProduct').value;
+  const price = parseFloat(document.getElementById('ppPrice').value);
+  if(!partnerId||!productId||!price) return showNotif('Ürün ve fiyat zorunlu','err');
+  const projSel = document.getElementById('ppProject');
+  const projName = projSel.options[projSel.selectedIndex]?.text||'';
+  const {error} = await dbInsert('partner_price_lists',{
+    partner_id:partnerId, product_id:productId, price,
+    currency:document.getElementById('ppCurrency').value,
+    min_qty:parseInt(document.getElementById('ppMinQty').value)||1,
+    valid_until:document.getElementById('ppValidUntil').value||null,
+    project_id:document.getElementById('ppProject').value||null,
+    project_name:projName==='Proje seçin (isteğe bağlı)'?null:projName,
+    notes:document.getElementById('ppNote').value
+  });
+  if(error) return showNotif('Hata: '+(error.message||''),'err');
+  closeModal('partnerPrice');
+  showNotif('Fiyat eklendi!','ok');
+  // Reload the correct list
+  const {data:partner} = await dbSelect('customers',{eq:{id:partnerId}});
+  const type = (partner?.data||partner)?.[0]?.type||'producer';
+  if(type==='producer') loadProducerPrices(partnerId);
+  else loadBrokerPrices(partnerId);
+}
+
+// Populate partner price modal selects on open
+const _origOpenModal = openModal;
+function openModal(name, isEdit=false) {
+  _origOpenModal(name, isEdit);
+  if(name==='partnerPrice') {
+    dbSelect('products',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
+      document.getElementById('ppProduct').innerHTML='<option value="">Seçin...</option>'+opts;
+    });
+    dbSelect('projects',{order:'name'}).then(({data})=>{
+      const opts=(data||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+      document.getElementById('ppProject').innerHTML='<option value="">Proje seçin (isteğe bağlı)</option>'+opts;
+    });
+  }
+}
+
+async function loadProducerPrices(partnerId) {
+  await loadPartnerPrices(partnerId, 'producerPriceList', 'producer');
+}
+async function loadBrokerPrices(partnerId) {
+  await loadPartnerPrices(partnerId, 'brokerPriceList', 'broker');
+}
+
+async function loadPartnerPrices(partnerId, containerId, type) {
+  const el = document.getElementById(containerId); if(!el) return;
+  if(!partnerId) { el.innerHTML='<div class="empty">'+(type==='producer'?'Üretici':'Broker')+' seçin</div>'; return; }
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const {data} = await dbSelect('partner_price_lists', {
+    select:'*,products(name,code,unit)',
+    eq:{partner_id:partnerId},
+    order:'created_at', asc:false
+  });
+  const list = data||[];
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+      <button class="btn btn-primary btn-sm" onclick="openModal('partnerPrice');document.getElementById('ppPartnerId').value='${partnerId}'">+ Fiyat Ekle</button>
+    </div>
+    ${list.length?`<div class="table-wrap"><table>
+      <thead><tr><th>Ürün</th><th>Alış Fiyatı</th><th>Para Birimi</th><th>Min. Miktar</th><th>Geçerlilik</th><th>Proje</th><th></th></tr></thead>
+      <tbody>${list.map(r=>`<tr>
+        <td><b>${r.products?.name||'–'}</b><div class="text-xs">${r.products?.code||''}</div></td>
+        <td style="font-weight:700;color:var(--accent)">${fmtNum(r.price)} ${r.currency||'TRY'}</td>
+        <td>${r.currency||'TRY'}</td>
+        <td>${r.min_qty||1} ${r.products?.unit||'Adet'}</td>
+        <td>${r.valid_until?fmtDate(r.valid_until):'Süresiz'}</td>
+        <td>${r.project_name?`<span class="tag">📁 ${r.project_name}</span>`:'–'}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deletePartnerPrice('${r.id}','${partnerId}','${type}')">🗑</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>` : '<div class="empty">Fiyat listesi boş. "+ Fiyat Ekle" ile başlayın.</div>'}`;
+}
+
+async function openPartnerPriceList(partnerId, partnerName, type) {
+  // Switch to correct tab and set filter
+  if(type==='producer') {
+    document.querySelector('[onclick*="tProducerPrices"]')?.click();
+    setTimeout(()=>{
+      const sel = document.getElementById('prodProducerFilter');
+      if(sel) { sel.value=partnerId; loadProducerPrices(partnerId); }
+    }, 100);
+  } else {
+    document.querySelector('[onclick*="tBrokerPrices"]')?.click();
+    setTimeout(()=>{
+      const sel = document.getElementById('prodBrokerFilter');
+      if(sel) { sel.value=partnerId; loadBrokerPrices(partnerId); }
+    }, 100);
+  }
+  navigate(document.querySelector('[data-page="products"]'));
+}
+
+async function deletePartnerPrice(id, partnerId, type) {
+  const {error} = await dbDelete('partner_price_lists', id);
+  if(error) return showNotif('Hata','err');
+  if(type==='producer') loadProducerPrices(partnerId);
+  else loadBrokerPrices(partnerId);
+  showNotif('Silindi','ok');
+}
+
+// ═══════════════════════════════════════════════
+// STOCK — PROJECT FILTER
+// ═══════════════════════════════════════════════
+async function filterStockByProject(projectId) {
+  if(!projectId) { renderStockTable(allProductsCache); return; }
+  const filtered = allProductsCache.filter(p=>p.project_id===projectId);
+  renderStockTable(filtered);
 }
 
 // ═══════════════════════════════════════════════
