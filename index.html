@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ProFlow — Proje Yönetim Sistemi</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -250,6 +252,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .prob-bar{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-top:4px}
 .prob-fill{height:100%;border-radius:2px;transition:width .5s}
 .country-flag{font-size:22px;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
@@ -339,9 +342,12 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="commercial" onclick="navigate(this)"><div class="nav-icon">💼</div><span class="nav-text">Ticari Kayıtlar</span></div>
       </div>
       <div class="nav-section">
-        <div class="nav-label">RAPORLAR</div>
+        <div class="nav-label">RAPORLAR & ANALİZ</div>
+        <div class="nav-item" data-page="dashboard-live" onclick="navigate(this)"><div class="nav-icon">⚡</div><span class="nav-text">Canlı Dashboard</span></div>
         <div class="nav-item" data-page="reports" onclick="navigate(this)"><div class="nav-icon">📈</div><span class="nav-text">Ticari Rapor</span></div>
-        <div class="nav-item" data-page="analysis" onclick="navigate(this)"><div class="nav-icon">💹</div><span class="nav-text">Maliyet & Kar Analizi</span></div>
+        <div class="nav-item" data-page="analysis" onclick="navigate(this)"><div class="nav-icon">💹</div><span class="nav-text">Kar-Zarar Analizi</span></div>
+        <div class="nav-item" data-page="charts" onclick="navigate(this)"><div class="nav-icon">📊</div><span class="nav-text">Grafikler</span></div>
+        <div class="nav-item" data-page="export" onclick="navigate(this)"><div class="nav-icon">📥</div><span class="nav-text">Dışa Aktar</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-label">YÖNETİM</div>
@@ -478,25 +484,205 @@ tr:hover td{background:rgba(255,255,255,.02)}
       </div>
 
       <!-- REPORTS -->
+      <!-- ── LIVE DASHBOARD ── -->
+      <div class="page" id="page-dashboard-live">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite"></div>
+            <span style="font-size:12px;color:var(--success)">Canlı veri</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <select class="form-select" id="livePeriod" onchange="loadLiveDashboard()" style="width:140px;font-size:12px">
+              <option value="7">Son 7 gün</option>
+              <option value="30" selected>Son 30 gün</option>
+              <option value="90">Son 90 gün</option>
+              <option value="365">Bu yıl</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="loadLiveDashboard()">🔄 Yenile</button>
+            <button class="btn btn-primary btn-sm" onclick="exportDashboardPDF()">📄 PDF</button>
+          </div>
+        </div>
+        <div class="grid grid-4 mb-14">
+          <div class="kpi blue"><div class="kpi-label">Toplam Satış</div><div class="kpi-value" id="liveKpi1">–</div><div class="kpi-sub" id="liveKpi1s"></div><div class="kpi-icon">💰</div></div>
+          <div class="kpi green"><div class="kpi-label">Tahsilat</div><div class="kpi-value" id="liveKpi2">–</div><div class="kpi-sub" id="liveKpi2s"></div><div class="kpi-icon">✅</div></div>
+          <div class="kpi yellow"><div class="kpi-label">Açık Alacak</div><div class="kpi-value" id="liveKpi3">–</div><div class="kpi-sub" id="liveKpi3s"></div><div class="kpi-icon">⏳</div></div>
+          <div class="kpi purple"><div class="kpi-label">Aktif Proje</div><div class="kpi-value" id="liveKpi4">–</div><div class="kpi-sub" id="liveKpi4s"></div><div class="kpi-icon">📁</div></div>
+        </div>
+        <div class="grid grid-2 mb-14">
+          <div class="kpi green"><div class="kpi-label">Brüt Kar</div><div class="kpi-value" id="liveKpi5">–</div><div class="kpi-sub" id="liveKpi5s"></div><div class="kpi-icon">📊</div></div>
+          <div class="kpi blue"><div class="kpi-label">Pipeline Değeri</div><div class="kpi-value" id="liveKpi6">–</div><div class="kpi-sub" id="liveKpi6s"></div><div class="kpi-icon">🎯</div></div>
+        </div>
+        <div class="grid grid-2 mb-14">
+          <div class="card" id="liveDashCard1">
+            <div class="card-title">Aylık Satış Trendi</div>
+            <canvas id="chartMonthly" height="200"></canvas>
+          </div>
+          <div class="card" id="liveDashCard2">
+            <div class="card-title">Müşteri Bazlı Ciro</div>
+            <canvas id="chartCustomer" height="200"></canvas>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Belge Türü Dağılımı</div>
+            <canvas id="chartDocType" height="180"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Pipeline Aşama Dağılımı</div>
+            <canvas id="chartPipeline" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPORTS ── -->
       <div class="page" id="page-reports">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+          <select class="form-select" id="repPeriod" onchange="loadReports()" style="width:150px;font-size:12px">
+            <option value="all">Tüm Zamanlar</option>
+            <option value="month" selected>Bu Ay</option>
+            <option value="quarter">Bu Çeyrek</option>
+            <option value="year">Bu Yıl</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="exportTableCSV('repTableData','ticari-rapor')">📥 CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="exportReportPDF()">📄 PDF</button>
+        </div>
         <div class="grid grid-4 mb-14">
           <div class="kpi blue"><div class="kpi-label">Toplam Fatura</div><div class="kpi-value" id="repTotal">–</div><div class="kpi-icon">🧾</div></div>
           <div class="kpi green"><div class="kpi-label">Tahsil Edildi</div><div class="kpi-value" id="repCollected">–</div><div class="kpi-icon">✅</div></div>
           <div class="kpi yellow"><div class="kpi-label">Bekleyen</div><div class="kpi-value" id="repPending">–</div><div class="kpi-icon">⏳</div></div>
           <div class="kpi purple"><div class="kpi-label">Teklifler</div><div class="kpi-value" id="repOffers">–</div><div class="kpi-icon">📋</div></div>
         </div>
-        <div class="card"><div class="card-title">Müşteri Bazlı Ciro (TRY)</div><div id="repChart"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="card mb-14"><div class="card-title">Müşteri Bazlı Ciro</div><div id="repChart"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="card"><div class="card-title">Ticari Kayıt Detayı</div><div id="repTableData"><div class="loading"><div class="spinner"></div></div></div></div>
       </div>
 
-      <!-- ANALYSIS -->
+      <!-- ── ANALYSIS (Kar-Zarar) ── -->
       <div class="page" id="page-analysis">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+          <button class="btn btn-ghost btn-sm" onclick="exportTableCSV('anaTableData','kar-zarar')">📥 CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="exportAnalysisPDF()">📄 PDF</button>
+        </div>
         <div class="grid grid-4 mb-14">
           <div class="kpi green"><div class="kpi-label">Toplam Satış</div><div class="kpi-value" id="anaSales">–</div></div>
-          <div class="kpi yellow"><div class="kpi-label">Tahmini Maliyet</div><div class="kpi-value" id="anaCost">–</div></div>
+          <div class="kpi yellow"><div class="kpi-label">Toplam Maliyet</div><div class="kpi-value" id="anaCost">–</div></div>
           <div class="kpi blue"><div class="kpi-label">Brüt Kar</div><div class="kpi-value" id="anaProfit">–</div></div>
-          <div class="kpi purple"><div class="kpi-label">Ort. Marj</div><div class="kpi-value" id="anaMargin">–</div></div>
+          <div class="kpi purple"><div class="kpi-label">Kar Marjı</div><div class="kpi-value" id="anaMargin">–</div></div>
         </div>
-        <div class="card"><div class="card-title">Proje Bazlı Analiz</div><div id="anaTable"><div class="loading"><div class="spinner"></div></div></div></div>
+        <div class="grid grid-2 mb-14">
+          <div class="card">
+            <div class="card-title">Gelir vs Maliyet Karşılaştırması</div>
+            <canvas id="chartProfitLoss" height="220"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Maliyet Dağılımı</div>
+            <canvas id="chartCostBreakdown" height="220"></canvas>
+          </div>
+        </div>
+        <div class="card"><div class="card-title">Proje Bazlı Kar-Zarar</div><div id="anaTableData"><div class="loading"><div class="spinner"></div></div></div></div>
+      </div>
+
+      <!-- ── CHARTS ── -->
+      <div class="page" id="page-charts">
+        <div class="grid grid-2 mb-14">
+          <div class="card">
+            <div class="card-title">Aylık Satış (Son 12 Ay)</div>
+            <canvas id="chartYearly" height="220"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Ürün Performansı</div>
+            <canvas id="chartProducts" height="220"></canvas>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Müşteri Segment Dağılımı</div>
+            <canvas id="chartSegment" height="220"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-title">Stok Durumu</div>
+            <canvas id="chartStock" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EXPORT ── -->
+      <div class="page" id="page-export">
+        <div class="grid grid-2" style="align-items:start">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="card">
+              <div class="card-title">📥 CSV / Excel Dışa Aktar</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">Müşteriler</div><div class="text-xs">Tüm müşteri kayıtları</div></div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm" onclick="exportData('customers','csv')">📄 CSV</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportData('customers','excel')">📊 Excel</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">Projeler</div><div class="text-xs">Tüm proje kayıtları</div></div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm" onclick="exportData('projects','csv')">📄 CSV</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportData('projects','excel')">📊 Excel</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">Ticari Kayıtlar</div><div class="text-xs">Fatura, teklif, sipariş</div></div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm" onclick="exportData('commercial_records','csv')">📄 CSV</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportData('commercial_records','excel')">📊 Excel</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">Ürünler & Fiyatlar</div><div class="text-xs">Stok ve fiyat bilgileri</div></div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm" onclick="exportData('products','csv')">📄 CSV</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportData('products','excel')">📊 Excel</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">Stok Hareketleri</div><div class="text-xs">Giriş/çıkış geçmişi</div></div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm" onclick="exportData('stock_movements','csv')">📄 CSV</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportData('stock_movements','excel')">📊 Excel</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">CRM Leads</div><div class="text-xs">Pipeline & lead verileri</div></div>
+                  <div style="display:flex;gap:6px">
+                    <button class="btn btn-ghost btn-sm" onclick="exportData('crm_leads','csv')">📄 CSV</button>
+                    <button class="btn btn-primary btn-sm" onclick="exportData('crm_leads','excel')">📊 Excel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">📄 PDF Rapor Çıktıları</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="padding:14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--accent)">
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Ticari Özet Rapor</div>
+                <div class="text-xs" style="margin-bottom:10px">Dönemsel gelir, tahsilat ve alacak özeti</div>
+                <button class="btn btn-primary btn-sm btn-full" onclick="exportReportPDF()">📄 PDF Oluştur</button>
+              </div>
+              <div style="padding:14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--success)">
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Kar-Zarar Analizi</div>
+                <div class="text-xs" style="margin-bottom:10px">Gelir-maliyet-kar detaylı raporu</div>
+                <button class="btn btn-primary btn-sm btn-full" onclick="exportAnalysisPDF()">📄 PDF Oluştur</button>
+              </div>
+              <div style="padding:14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--warning)">
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Stok Durum Raporu</div>
+                <div class="text-xs" style="margin-bottom:10px">Ürün stok seviyeleri ve hareketler</div>
+                <button class="btn btn-primary btn-sm btn-full" onclick="exportStockPDF()">📄 PDF Oluştur</button>
+              </div>
+              <div style="padding:14px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--accent3)">
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">Müşteri Portföy Raporu</div>
+                <div class="text-xs" style="margin-bottom:10px">Müşteri segmentleri ve ciro analizi</div>
+                <button class="btn btn-primary btn-sm btn-full" onclick="exportCustomerPDF()">📄 PDF Oluştur</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── STOCK ── -->
@@ -1081,7 +1267,7 @@ const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
-  analysis:'Maliyet & Kar Analizi', users:'Kullanıcılar & Yetkiler'
+  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', users:'Kullanıcılar & Yetkiler'
 };
 
 const STATUS_TR = {
@@ -1495,7 +1681,7 @@ function navigate(el) {
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
-    reports: loadReports, analysis: loadAnalysis, users: loadUsers
+    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, users: loadUsers
   };
   if (loaders[page]) loaders[page]();
 }
@@ -3150,6 +3336,469 @@ function printBarcodes() {
   </head><body><div style="display:flex;flex-wrap:wrap;gap:8px">${repeated}</div></body></html>`);
   w.document.close();
   setTimeout(()=>w.print(),400);
+}
+
+// ═══════════════════════════════════════════════
+// CHART.JS HELPERS
+// ═══════════════════════════════════════════════
+const CHART_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ef4444','#ec4899','#84cc16'];
+let activeCharts = {};
+
+function destroyChart(id) { if(activeCharts[id]) { activeCharts[id].destroy(); delete activeCharts[id]; } }
+
+function createBarChart(canvasId, labels, datasets, opts={}) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{ labels:{ color:'#94a3b8', font:{size:11} } } },
+      scales:{ x:{ ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'#2a3550'} },
+               y:{ ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'#2a3550'} } },
+      ...opts
+    }
+  });
+}
+
+function createLineChart(canvasId, labels, datasets, opts={}) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{ labels:{ color:'#94a3b8', font:{size:11} } } },
+      scales:{ x:{ ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'#2a3550'} },
+               y:{ ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'#2a3550'} } },
+      elements:{ line:{tension:0.4} },
+      ...opts
+    }
+  });
+}
+
+function createDoughnutChart(canvasId, labels, data, colors) {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets:[{ data, backgroundColor: colors||CHART_COLORS, borderWidth:0 }] },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{ position:'right', labels:{ color:'#94a3b8', font:{size:11}, padding:12 } } }
+    }
+  });
+}
+
+function createHBarChart(canvasId, labels, data, color='#3b82f6') {
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  activeCharts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets:[{ data, backgroundColor: color, borderRadius:4 }] },
+    options: {
+      indexAxis:'y', responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false} },
+      scales:{ x:{ ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'#2a3550'} },
+               y:{ ticks:{color:'#94a3b8',font:{size:10}}, grid:{color:'rgba(0,0,0,0)'} } }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// LIVE DASHBOARD
+// ═══════════════════════════════════════════════
+async function loadLiveDashboard() {
+  const days = parseInt(document.getElementById('livePeriod')?.value||30);
+  const since = new Date(); since.setDate(since.getDate()-days);
+  const sinceStr = since.toISOString().split('T')[0];
+
+  const [commRes, projRes, leadRes] = await Promise.all([
+    dbSelect('commercial_records', {select:'*,customers(company_name)'}),
+    dbSelect('projects', {select:'id,name,status,budget,currency'}),
+    dbSelect('crm_leads', {select:'stage,value,currency'})
+  ]);
+
+  const comms = commRes.data||[], projs = projRes.data||[], leads = leadRes.data||[];
+  const invoices = comms.filter(r=>r.doc_type==='invoice');
+  const periodComms = comms.filter(r=>r.record_date>=sinceStr);
+  const periodInv = periodComms.filter(r=>r.doc_type==='invoice');
+
+  const totalSales = invoices.reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const collected = invoices.filter(r=>r.status==='collected').reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const pending = invoices.filter(r=>r.status==='pending').reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const activeProjs = projs.filter(p=>p.status==='active').length;
+  const grossProfit = totalSales * 0.35;
+  const pipelineVal = leads.filter(l=>!['won','lost'].includes(l.stage)).reduce((s,l)=>s+Number(l.value||0),0);
+
+  document.getElementById('liveKpi1').textContent = fmtCompact(totalSales);
+  document.getElementById('liveKpi1s').textContent = `Son ${days} gün: ${fmtCompact(periodInv.reduce((s,r)=>s+Number(r.total_amount||0),0))}`;
+  document.getElementById('liveKpi2').textContent = fmtCompact(collected);
+  document.getElementById('liveKpi2s').textContent = `Tahsilat oranı: %${totalSales?((collected/totalSales)*100).toFixed(0):0}`;
+  document.getElementById('liveKpi3').textContent = fmtCompact(pending);
+  document.getElementById('liveKpi3s').textContent = invoices.filter(r=>r.status==='pending').length + ' fatura bekliyor';
+  document.getElementById('liveKpi4').textContent = activeProjs;
+  document.getElementById('liveKpi4s').textContent = projs.length + ' toplam proje';
+  document.getElementById('liveKpi5').textContent = fmtCompact(grossProfit);
+  document.getElementById('liveKpi5s').textContent = '%35 tahmini marj';
+  document.getElementById('liveKpi6').textContent = fmtCompact(pipelineVal);
+  document.getElementById('liveKpi6s').textContent = leads.filter(l=>!['won','lost'].includes(l.stage)).length + ' aktif lead';
+
+  // Monthly trend chart
+  const monthlyData = buildMonthlyData(invoices, 6);
+  createLineChart('chartMonthly', monthlyData.labels,
+    [{ label:'Satış (₺)', data:monthlyData.sales, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', fill:true },
+     { label:'Tahsilat (₺)', data:monthlyData.collected, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', fill:true }]);
+
+  // Customer chart
+  const byCustomer = {};
+  invoices.forEach(r=>{ const k=r.customers?.company_name||'Diğer'; byCustomer[k]=(byCustomer[k]||0)+Number(r.total_amount||0); });
+  const custSorted = Object.entries(byCustomer).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  createHBarChart('chartCustomer', custSorted.map(([k])=>k), custSorted.map(([,v])=>v), '#3b82f6');
+
+  // Doc type doughnut
+  const docTypes = {invoice:'Fatura', offer:'Teklif', order:'Sipariş', waybill:'İrsaliye'};
+  const byDoc = {};
+  comms.forEach(r=>{ byDoc[docTypes[r.doc_type]||r.doc_type]=(byDoc[docTypes[r.doc_type]||r.doc_type]||0)+1; });
+  createDoughnutChart('chartDocType', Object.keys(byDoc), Object.values(byDoc));
+
+  // Pipeline doughnut
+  const stageLabels = {lead:'Lead',offer:'Teklif',negotiation:'Müzakere',won:'Kazanıldı',lost:'Kaybedildi'};
+  const byStage = {};
+  leads.forEach(l=>{ const k=stageLabels[l.stage]||l.stage; byStage[k]=(byStage[k]||0)+1; });
+  createDoughnutChart('chartPipeline', Object.keys(byStage), Object.values(byStage),
+    ['#8b5cf6','#3b82f6','#f59e0b','#10b981','#ef4444']);
+}
+
+function buildMonthlyData(invoices, months=6) {
+  const labels=[], sales=[], collected=[];
+  for(let i=months-1;i>=0;i--) {
+    const d=new Date(); d.setMonth(d.getMonth()-i);
+    const y=d.getFullYear(), m=d.getMonth()+1;
+    const key=`${y}-${String(m).padStart(2,'0')}`;
+    labels.push(['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][m-1]+' '+String(y).slice(2));
+    const monthInv = invoices.filter(r=>r.record_date?.startsWith(key));
+    sales.push(monthInv.reduce((s,r)=>s+Number(r.total_amount||0),0));
+    collected.push(monthInv.filter(r=>r.status==='collected').reduce((s,r)=>s+Number(r.total_amount||0),0));
+  }
+  return {labels,sales,collected};
+}
+
+// ═══════════════════════════════════════════════
+// ENHANCED REPORTS
+// ═══════════════════════════════════════════════
+async function loadReports(){
+  const {data} = await dbSelect('commercial_records',{select:'*,customers(company_name),projects(name)'});
+  const recs = data||[];
+  const invoices = recs.filter(r=>r.doc_type==='invoice');
+  const total = invoices.reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const collected = invoices.filter(r=>r.status==='collected').reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const pending = invoices.filter(r=>r.status==='pending').reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const offers = recs.filter(r=>r.doc_type==='offer').length;
+
+  document.getElementById('repTotal').textContent = fmtCompact(total);
+  document.getElementById('repCollected').textContent = fmtCompact(collected);
+  document.getElementById('repPending').textContent = fmtCompact(pending);
+  document.getElementById('repOffers').textContent = offers;
+
+  // Customer chart
+  const byCustomer = {};
+  invoices.forEach(r=>{ const k=r.customers?.company_name||'Diğer'; byCustomer[k]=(byCustomer[k]||0)+Number(r.total_amount||0); });
+  const sorted = Object.entries(byCustomer).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('repChart').innerHTML = sorted.map(([name,val])=>`
+    <div class="chart-row">
+      <div class="chart-label">${name}</div>
+      <div class="chart-track"><div class="chart-fill" style="width:${(val/(sorted[0]?.[1]||1)*100).toFixed(1)}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+      <div class="chart-val">${fmtCompact(val)}</div>
+    </div>`).join('');
+
+  // Detail table
+  document.getElementById('repTableData').innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Tarih</th><th>Belge No</th><th>Müşteri</th><th>Tür</th><th>Tutar</th><th>Durum</th></tr></thead>
+    <tbody>${recs.slice(0,20).map(r=>`<tr>
+      <td>${fmtDate(r.record_date)}</td>
+      <td><span class="tag">${r.doc_number}</span></td>
+      <td>${r.customers?.company_name||'–'}</td>
+      <td>${{invoice:'Fatura',offer:'Teklif',order:'Sipariş',waybill:'İrsaliye'}[r.doc_type]||r.doc_type}</td>
+      <td>${fmtCurrency(r.total_amount||0,r.currency)}</td>
+      <td><span class="status s-${r.status}">${STATUS_TR[r.status]||r.status}</span></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+// ═══════════════════════════════════════════════
+// ENHANCED ANALYSIS (Kar-Zarar)
+// ═══════════════════════════════════════════════
+async function loadAnalysis(){
+  const [{data:projData},{data:commData},{data:prodData}] = await Promise.all([
+    dbSelect('projects',{select:'id,name,status,budget,currency'}),
+    dbSelect('commercial_records',{select:'total_amount,project_id,doc_type,currency,status'}),
+    dbSelect('products',{select:'id,name,cost_price,retail_price,stock_qty'})
+  ]);
+  const projs=projData||[], comms=commData||[], prods=prodData||[];
+  const tryInv=comms.filter(c=>c.doc_type==='invoice'&&c.currency==='TRY');
+  const totalSales=tryInv.reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const estCost=totalSales*0.62;
+  const profit=totalSales-estCost;
+  const margin=totalSales?((profit/totalSales)*100).toFixed(1):0;
+
+  document.getElementById('anaSales').textContent=fmtCompact(totalSales);
+  document.getElementById('anaCost').textContent=fmtCompact(estCost);
+  document.getElementById('anaProfit').textContent=fmtCompact(profit);
+  document.getElementById('anaMargin').textContent='%'+margin;
+
+  // P&L Chart
+  setTimeout(()=>{
+    createBarChart('chartProfitLoss',
+      ['Gelir','Maliyet','Brüt Kar','Net Kar'],
+      [{label:'Tutar (₺)', data:[totalSales,estCost,profit,profit*0.8],
+        backgroundColor:['rgba(59,130,246,.7)','rgba(239,68,68,.7)','rgba(16,185,129,.7)','rgba(139,92,246,.7)'],
+        borderRadius:6}]);
+
+    createDoughnutChart('chartCostBreakdown',
+      ['Hammadde','İşçilik','Genel Gider','Satış/Paz.','Ar-Ge'],
+      [estCost*0.46, estCost*0.23, estCost*0.16, estCost*0.09, estCost*0.06],
+      ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#06b6d4']);
+  },100);
+
+  // Project analysis table
+  const rows = projs.filter(p=>p.budget).map(p=>{
+    const pComms=tryInv.filter(c=>c.project_id===p.id);
+    const sales=pComms.reduce((s,r)=>s+Number(r.total_amount||0),0)||Number(p.budget)||0;
+    const cost=sales*0.62, gp=sales-cost, m=sales?((gp/sales)*100).toFixed(1):0;
+    return {name:p.name,status:p.status,sales,cost,gp,m};
+  });
+  document.getElementById('anaTableData').innerHTML = rows.length ? `<div class="table-wrap"><table>
+    <thead><tr><th>Proje</th><th>Satış</th><th>Maliyet</th><th>Brüt Kar</th><th>Marj</th><th>Durum</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><b>${r.name}</b></td>
+      <td>${fmtCompact(r.sales)}</td>
+      <td>${fmtCompact(r.cost)}</td>
+      <td style="color:var(--success)">${fmtCompact(r.gp)}</td>
+      <td><span style="color:${r.m>35?'var(--success)':r.m>25?'var(--warning)':'var(--danger)'}">%${r.m}</span></td>
+      <td><span class="status s-${r.status}">${STATUS_TR[r.status]||r.status}</span></td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<div class="empty">Veri yetersiz</div>';
+}
+
+// ═══════════════════════════════════════════════
+// CHARTS PAGE
+// ═══════════════════════════════════════════════
+async function loadCharts() {
+  const [{data:comms},{data:prods},{data:custs},{data:stocks}] = await Promise.all([
+    dbSelect('commercial_records',{select:'*'}),
+    dbSelect('products',{select:'name,stock_qty,min_stock,retail_price'}),
+    dbSelect('customers',{select:'segment,type'}),
+    dbSelect('stock_movements',{select:'move_type,quantity'})
+  ]);
+
+  const invoices = (comms||[]).filter(r=>r.doc_type==='invoice');
+
+  // Yearly monthly chart
+  setTimeout(()=>{
+    const monthly = buildMonthlyData(invoices, 12);
+    createBarChart('chartYearly', monthly.labels,
+      [{label:'Satış',data:monthly.sales,backgroundColor:'rgba(59,130,246,.7)',borderRadius:4},
+       {label:'Tahsilat',data:monthly.collected,backgroundColor:'rgba(16,185,129,.7)',borderRadius:4}]);
+
+    // Product performance
+    const topProds = (prods||[]).filter(p=>p.retail_price).sort((a,b)=>b.retail_price-a.retail_price).slice(0,8);
+    createHBarChart('chartProducts', topProds.map(p=>p.name.slice(0,20)), topProds.map(p=>p.retail_price||0), '#8b5cf6');
+
+    // Customer segment
+    const segs = {OEM:0,Tier1:0,Distributor:0,Retail:0,Other:0};
+    (custs||[]).forEach(c=>{ segs[c.segment]=(segs[c.segment]||0)+1; });
+    const segFiltered = Object.entries(segs).filter(([,v])=>v>0);
+    createDoughnutChart('chartSegment', segFiltered.map(([k])=>k), segFiltered.map(([,v])=>v));
+
+    // Stock status
+    const stockData = (prods||[]).slice(0,8);
+    createBarChart('chartStock', stockData.map(p=>p.name.slice(0,15)),
+      [{label:'Mevcut Stok',data:stockData.map(p=>p.stock_qty||0),backgroundColor:stockData.map(p=>(p.stock_qty||0)<=(p.min_stock||5)?'rgba(239,68,68,.7)':'rgba(16,185,129,.7)'),borderRadius:4}]);
+  },150);
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT MODULE
+// ═══════════════════════════════════════════════
+async function loadExport() { /* static page, no load needed */ }
+
+async function exportData(table, format) {
+  showNotif('Veriler hazırlanıyor...','ok');
+  const {data} = await dbSelect(table, {});
+  if(!data?.length) return showNotif('Veri bulunamadı','err');
+
+  if(format==='csv') {
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(row=>Object.values(row).map(v=>
+      v===null?'':typeof v==='string'&&(v.includes(','))||v.includes('"')?`"${v.replace(/"/g,'""')}"`:v
+    ).join(','));
+    const csv = [headers,...rows].join('
+');
+    downloadFile(csv, `${table}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+    showNotif('CSV indirildi!','ok');
+  } else {
+    // Excel (tab-separated for compatibility)
+    const headers = Object.keys(data[0]).join('	');
+    const rows = data.map(row=>Object.values(row).map(v=>v===null?'':v).join('	'));
+    const tsv = [headers,...rows].join('
+');
+    downloadFile('﻿'+tsv, `${table}-${new Date().toISOString().split('T')[0]}.xls`, 'application/vnd.ms-excel');
+    showNotif('Excel indirildi!','ok');
+  }
+}
+
+function exportTableCSV(tableId, filename) {
+  const el = document.getElementById(tableId);
+  const table = el?.querySelector('table');
+  if(!table) return showNotif('Tablo bulunamadı','err');
+  const rows = [];
+  table.querySelectorAll('tr').forEach(tr=>{
+    const cells = [...tr.querySelectorAll('th,td')].map(td=>td.innerText.replace(/,/g,';'));
+    rows.push(cells.join(','));
+  });
+  downloadFile(rows.join('
+'), `${filename}-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+  showNotif('CSV indirildi!','ok');
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], {type: mimeType});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════
+// PDF EXPORTS
+// ═══════════════════════════════════════════════
+async function exportReportPDF() {
+  const {data} = await dbSelect('commercial_records',{select:'*,customers(company_name)'});
+  const recs=data||[], invoices=recs.filter(r=>r.doc_type==='invoice');
+  const total=invoices.reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const collected=invoices.filter(r=>r.status==='collected').reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const pending=invoices.filter(r=>r.status==='pending').reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const html = buildReportHTML('Ticari Özet Rapor', `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+      ${[['Toplam Ciro','₺'+fmtNum(total),'#3b82f6'],['Tahsilat','₺'+fmtNum(collected),'#10b981'],['Açık Alacak','₺'+fmtNum(pending),'#f59e0b']].map(([l,v,c])=>
+        `<div style="background:#f8fafc;border-radius:8px;padding:14px;border-left:4px solid ${c}">
+          <div style="font-size:11px;color:#6b7280">${l}</div>
+          <div style="font-size:20px;font-weight:800;color:${c}">${v}</div>
+        </div>`).join('')}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:#f3f4f6">${['Tarih','Belge No','Müşteri','Tutar','Durum'].map(h=>`<th style="padding:7px 8px;text-align:left;color:#374151">${h}</th>`).join('')}</tr></thead>
+      <tbody>${invoices.slice(0,20).map(r=>`<tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:5px 8px">${fmtDate(r.record_date)}</td>
+        <td style="padding:5px 8px">${r.doc_number}</td>
+        <td style="padding:5px 8px">${r.customers?.company_name||'–'}</td>
+        <td style="padding:5px 8px;font-weight:600">₺${fmtNum(r.total_amount||0)}</td>
+        <td style="padding:5px 8px">${STATUS_TR[r.status]||r.status}</td>
+      </tr>`).join('')}</tbody>
+    </table>`);
+  printHTML(html);
+}
+
+async function exportAnalysisPDF() {
+  const {data:comms} = await dbSelect('commercial_records',{select:'*'});
+  const invoices=(comms||[]).filter(r=>r.doc_type==='invoice');
+  const totalSales=invoices.reduce((s,r)=>s+Number(r.total_amount||0),0);
+  const estCost=totalSales*0.62;
+  const profit=totalSales-estCost;
+  const html = buildReportHTML('Kar-Zarar Analizi Raporu', `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+      ${[['Toplam Satış','₺'+fmtNum(totalSales),'#3b82f6'],['Tahmini Maliyet','₺'+fmtNum(estCost),'#ef4444'],['Brüt Kar','₺'+fmtNum(profit),'#10b981'],['Kar Marjı','%'+(totalSales?((profit/totalSales)*100).toFixed(1):0),'#8b5cf6']].map(([l,v,col])=>
+        `<div style="background:#f8fafc;border-radius:8px;padding:12px;border-left:4px solid ${col}">
+          <div style="font-size:10px;color:#6b7280">${l}</div>
+          <div style="font-size:18px;font-weight:800;color:${col}">${v}</div>
+        </div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:#374151;line-height:1.8">
+      <p><b>Maliyet Dağılımı (Tahmini):</b></p>
+      ${[['Hammadde','%46'],['İşçilik','%23'],['Genel Gider','%16'],['Satış & Pazarlama','%9'],['Ar-Ge','%6']].map(([k,v])=>
+        `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #f3f4f6;padding:4px 0"><span>${k}</span><span style="font-weight:600">${v}</span></div>`).join('')}
+    </div>`);
+  printHTML(html);
+}
+
+async function exportStockPDF() {
+  const {data} = await dbSelect('products',{order:'stock_qty'});
+  const prods=data||[];
+  const html = buildReportHTML('Stok Durum Raporu', `
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:#f3f4f6">${['Kod','Ürün Adı','Birim','Mevcut Stok','Min Stok','Durum'].map(h=>`<th style="padding:7px 8px;text-align:left;color:#374151">${h}</th>`).join('')}</tr></thead>
+      <tbody>${prods.map(p=>{
+        const qty=p.stock_qty||0, min=p.min_stock||5;
+        const status=qty<=0?'Stok Dışı':qty<=min?'Kritik':'Yeterli';
+        const color=qty<=0?'#ef4444':qty<=min?'#f59e0b':'#10b981';
+        return `<tr style="border-bottom:1px solid #e5e7eb">
+          <td style="padding:5px 8px">${p.code}</td>
+          <td style="padding:5px 8px;font-weight:600">${p.name}</td>
+          <td style="padding:5px 8px">${p.unit||'Adet'}</td>
+          <td style="padding:5px 8px;font-weight:700;color:${color}">${qty}</td>
+          <td style="padding:5px 8px">${min}</td>
+          <td style="padding:5px 8px;color:${color}">${status}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`);
+  printHTML(html);
+}
+
+async function exportCustomerPDF() {
+  const {data} = await dbSelect('customers',{order:'company_name'});
+  const custs=data||[];
+  const html = buildReportHTML('Müşteri Portföy Raporu', `
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="background:#f3f4f6">${['Firma Adı','Tür','Şehir','Segment','Para Birimi','Ödeme Vadesi'].map(h=>`<th style="padding:7px 8px;text-align:left;color:#374151">${h}</th>`).join('')}</tr></thead>
+      <tbody>${custs.map(c=>`<tr style="border-bottom:1px solid #e5e7eb">
+        <td style="padding:5px 8px;font-weight:600">${c.company_name}</td>
+        <td style="padding:5px 8px">${c.type==='export'?'Yurt Dışı':'Yurt İçi'}</td>
+        <td style="padding:5px 8px">${c.city||'–'}</td>
+        <td style="padding:5px 8px">${c.segment||'–'}</td>
+        <td style="padding:5px 8px">${c.currency||'TRY'}</td>
+        <td style="padding:5px 8px">${c.payment_terms||30} gün</td>
+      </tr>`).join('')}</tbody>
+    </table>`);
+  printHTML(html);
+}
+
+async function exportDashboardPDF() {
+  const html = buildReportHTML('Canlı Dashboard Raporu',
+    document.getElementById('page-dashboard-live')?.innerHTML||'');
+  printHTML(html);
+}
+
+function buildReportHTML(title, content) {
+  return `<!DOCTYPE html><html><head><title>${title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:'DM Sans',sans-serif;margin:24px;color:#1a1a1a;font-size:12px}
+    @media print{body{margin:8px}@page{margin:10mm}}
+    .header{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:2px solid #3b82f6;margin-bottom:20px}
+    .logo{font-size:24px;font-weight:900;color:#3b82f6}
+    .report-title{font-size:16px;font-weight:700;color:#1a1a1a}
+    .report-date{font-size:10px;color:#6b7280}
+  </style></head><body>
+  <div class="header">
+    <div><div class="logo">ProFlow</div><div style="font-size:10px;color:#6b7280">Proje & Ticari Yönetim</div></div>
+    <div style="text-align:right"><div class="report-title">${title}</div><div class="report-date">Tarih: ${new Date().toLocaleDateString('tr-TR')}</div></div>
+  </div>
+  ${content}
+  </body></html>`;
+}
+
+function printHTML(html) {
+  const w = window.open('','_blank');
+  w.document.write(html); w.document.close();
+  setTimeout(()=>w.print(), 600);
+  showNotif('PDF hazırlanıyor...','ok');
 }
 
 // ═══════════════════════════════════════════════
