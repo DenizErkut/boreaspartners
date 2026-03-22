@@ -298,6 +298,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
 <!-- ═══ GİRİŞ ═══ -->
 <div id="loginScreen">
+  <div style="position:absolute;top:16px;right:16px">
+    <button onclick="toggleLang()" id="langBtnLogin" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;color:var(--text);cursor:pointer;font-size:15px">🇹🇷</button>
+  </div>
   <div class="login-box">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px">
   <svg width="44" height="44" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -436,6 +439,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <input type="text" id="searchInput" placeholder="Ara... (Ctrl+K)" oninput="globalSearch(this.value)" onfocus="showGlobalSearch()" onkeydown="globalSearchKey(event)" autocomplete="off" style="width:180px">
           <div id="globalSearchResults" style="display:none;position:absolute;top:38px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:999;max-height:360px;overflow-y:auto;min-width:340px"></div>
         </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleLang()" id="langBtn" title="Switch Language" style="font-size:16px">🇹🇷</button>
         <button class="btn btn-ghost btn-sm" onclick="toggleTheme()" id="themeBtn" title="Tema değiştir" style="font-size:16px">🌙</button>
         <button class="btn btn-ghost btn-sm" id="pwaInstallBtn" onclick="installPWA()" style="display:none;font-size:16px" title="Uygulamayı yükle">📱</button>
         <button class="btn btn-ghost btn-sm" onclick="openNotifPanel()" title="Bildirimler" style="position:relative;font-size:16px">🔔<span id="notifBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:var(--danger);color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;line-height:14px;text-align:center">0</span></button>
@@ -1819,6 +1823,12 @@ window.onload = () => {
   // Apply saved theme immediately
   const savedTheme = localStorage.getItem('vexio-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'light' : '');
+  // Apply saved language on login screen too
+  const savedLang = localStorage.getItem('vexio-lang') || 'tr';
+  if(savedLang === 'en') {
+    const lb = document.getElementById('langBtnLogin');
+    if(lb) lb.textContent = '🇬🇧';
+  }
   const url = 'https://srvbecdjsgscntlnppxj.supabase.co';
   const key = 'sb_publishable_Oo5VaAG6uACAsfuBBIZnmQ_LVPzbqhg';
   initSupabase(url, key);
@@ -1916,6 +1926,7 @@ function showApp() {
   document.getElementById('uRole').textContent = ROLE_TR[currentProfile?.role] || '';
   // Init features
   initTheme();
+  initLang();
   loadSavedNotifications();
   init2FAButton();
   loadDashboard();
@@ -2232,6 +2243,8 @@ function navigate(el) {
     reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
   };
   if (loaders[page]) loaders[page]();
+  // Re-apply translations after page switch
+  setTimeout(()=>{ try{ applyTranslations(); } catch(e){} }, 50);
 }
 
 let sideCollapsed = false;
@@ -6046,6 +6059,175 @@ async function runImport() {
     ${errors?'<div style="font-size:11px;color:var(--warning);margin-top:4px">Hatalı satırlar: zorunlu alan eksik veya format yanlış olabilir.</div>':''}
   </div>`;
   if(success>0) showNotif(success+' kayıt içe aktarıldı!','ok');
+}
+
+// ═══════════════════════════════════════════════
+// i18n — LANGUAGE SYSTEM
+// ═══════════════════════════════════════════════
+const TRANSLATIONS = {
+  tr: {
+    // NAV
+    'Gösterge Paneli':'Gösterge Paneli','Projeler':'Projeler','Ürünler & Fiyatlar':'Ürünler & Fiyatlar',
+    'Stok Takibi':'Stok Takibi','Fiyat Geçmişi':'Fiyat Geçmişi','Teklif Oluştur':'Teklif Oluştur',
+    'Barkod & QR':'Barkod & QR','Süreç Takibi':'Süreç Takibi','Gantt Chart':'Gantt Chart',
+    'Tekrarlayan Görevler':'Tekrarlayan Görevler','Takvim':'Takvim','Toplantı Notları':'Toplantı Notları',
+    'Müşteriler':'Müşteriler','Satış Pipeline':'Satış Pipeline','Etkileşim Geçmişi':'Etkileşim Geçmişi',
+    'İhracat Haritası':'İhracat Haritası','Ticari Kayıtlar':'Ticari Kayıtlar',
+    'Canlı Dashboard':'Canlı Dashboard','Ticari Rapor':'Ticari Rapor','Kar-Zarar Analizi':'Kar-Zarar Analizi',
+    'Grafikler':'Grafikler','Dışa Aktar':'Dışa Aktar',"Excel'den İçe Al":"Excel'den İçe Al",
+    'Kullanıcılar':'Kullanıcılar','Görev Atama':'Görev Atama','Aktivite Akışı':'Aktivite Akışı',
+    'İzin Yönetimi':'İzin Yönetimi','Yedekleme':'Yedekleme',
+    // BUTTONS
+    '+ Yeni Proje':'+ Yeni Proje','+ Yeni Ürün':'+ Yeni Ürün','+ Ekle':'+ Ekle',
+    '+ Görev Ata':'+ Görev Ata','+ Kayıt Ekle':'+ Kayıt Ekle',
+    'Kaydet':'Kaydet','İptal':'İptal','Düzenle':'Düzenle','Sil':'Sil',
+    'Çıkış Yap':'Çıkış Yap','Giriş Yap':'Giriş Yap','Kayıt Ol':'Kayıt Ol',
+    // LABELS
+    'E-POSTA':'E-POSTA','ŞİFRE':'ŞİFRE','Ad Soyad':'Ad Soyad',
+    'Hesabınıza giriş yapın':'Hesabınıza giriş yapın',
+    'Hesabınız yok mu?':'Hesabınız yok mu?','Kayıt Olun':'Kayıt Olun',
+    'Şifremi unuttum':'Şifremi unuttum',
+    // STATUS
+    'Aktif':'Aktif','Pasif':'Pasif','Planlama':'Planlama','Tamamlandı':'Tamamlandı',
+    'Bekliyor':'Bekliyor','Devam Ediyor':'Devam Ediyor',
+    // KPI
+    'Toplam Proje':'Toplam Proje','Aktif Süreçler':'Aktif Süreçler',
+    'Müşteriler':'Müşteriler','Ticari Kayıt':'Ticari Kayıt',
+    'Son Projeler':'Son Projeler','Yaklaşan Etkinlikler':'Yaklaşan Etkinlikler',
+    'Henüz proje yok':'Henüz proje yok','Yaklaşan etkinlik yok':'Yaklaşan etkinlik yok',
+    // SECTIONS
+    'ANA MENÜ':'ANA MENÜ','PLANLAMA':'PLANLAMA','MÜŞTERİLER & CRM':'MÜŞTERİLER & CRM',
+    'RAPORLAR & ANALİZ':'RAPORLAR & ANALİZ','YÖNETİM':'YÖNETİM',
+    'Ara... (Ctrl+K)':'Ara... (Ctrl+K)',
+  },
+  en: {
+    // NAV
+    'Gösterge Paneli':'Dashboard','Projeler':'Projects','Ürünler & Fiyatlar':'Products & Prices',
+    'Stok Takibi':'Stock Management','Fiyat Geçmişi':'Price History','Teklif Oluştur':'Create Quote',
+    'Barkod & QR':'Barcode & QR','Süreç Takibi':'Process Tracking','Gantt Chart':'Gantt Chart',
+    'Tekrarlayan Görevler':'Recurring Tasks','Takvim':'Calendar','Toplantı Notları':'Meeting Notes',
+    'Müşteriler':'Customers','Satış Pipeline':'Sales Pipeline','Etkileşim Geçmişi':'Interaction History',
+    'İhracat Haritası':'Export Map','Ticari Kayıtlar':'Commercial Records',
+    'Canlı Dashboard':'Live Dashboard','Ticari Rapor':'Commercial Report','Kar-Zarar Analizi':'P&L Analysis',
+    'Grafikler':'Charts','Dışa Aktar':'Export',"Excel'den İçe Al":'Import from Excel',
+    'Kullanıcılar':'Users','Görev Atama':'Task Assignment','Aktivite Akışı':'Activity Log',
+    'İzin Yönetimi':'Permission Management','Yedekleme':'Backup',
+    // BUTTONS
+    '+ Yeni Proje':'+ New Project','+ Yeni Ürün':'+ New Product','+ Ekle':'+ Add',
+    '+ Görev Ata':'+ Assign Task','+ Kayıt Ekle':'+ Add Record',
+    'Kaydet':'Save','İptal':'Cancel','Düzenle':'Edit','Sil':'Delete',
+    'Çıkış Yap':'Sign Out','Giriş Yap':'Sign In','Kayıt Ol':'Register',
+    // LABELS
+    'E-POSTA':'EMAIL','ŞİFRE':'PASSWORD','Ad Soyad':'Full Name',
+    'Hesabınıza giriş yapın':'Sign in to your account',
+    'Hesabınız yok mu?':"Don't have an account?",'Kayıt Olun':'Sign Up',
+    'Şifremi unuttum':'Forgot password',
+    // STATUS
+    'Aktif':'Active','Pasif':'Inactive','Planlama':'Planning','Tamamlandı':'Completed',
+    'Bekliyor':'Pending','Devam Ediyor':'In Progress',
+    // KPI
+    'Toplam Proje':'Total Projects','Aktif Süreçler':'Active Processes',
+    'Ticari Kayıt':'Commercial Record',
+    'Son Projeler':'Recent Projects','Yaklaşan Etkinlikler':'Upcoming Events',
+    'Henüz proje yok':'No projects yet','Yaklaşan etkinlik yok':'No upcoming events',
+    // SECTIONS
+    'ANA MENÜ':'MAIN MENU','PLANLAMA':'PLANNING','MÜŞTERİLER & CRM':'CUSTOMERS & CRM',
+    'RAPORLAR & ANALİZ':'REPORTS & ANALYTICS','YÖNETİM':'MANAGEMENT',
+    'Ara... (Ctrl+K)':'Search... (Ctrl+K)',
+    // PAGE TITLES
+    'Gösterge Paneli':'Dashboard',
+    'Proje':'Projects','Ürün':'Products','Müşteri':'Customers',
+  }
+};
+
+let currentLang = localStorage.getItem('vexio-lang') || 'tr';
+
+function t(key) {
+  return TRANSLATIONS[currentLang]?.[key] || key;
+}
+
+function applyTranslations() {
+  // Nav items
+  document.querySelectorAll('.nav-text').forEach(el => {
+    const orig = el.dataset.orig || el.textContent;
+    el.dataset.orig = orig;
+    el.textContent = t(orig);
+  });
+  // Nav labels
+  document.querySelectorAll('.nav-label').forEach(el => {
+    const orig = el.dataset.orig || el.textContent;
+    el.dataset.orig = orig;
+    el.textContent = t(orig);
+  });
+  // Buttons with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  // Search placeholder
+  const searchInput = document.getElementById('searchInput');
+  if(searchInput) searchInput.placeholder = t('Ara... (Ctrl+K)');
+  // Login screen
+  const lsub = document.getElementById('lsub');
+  if(lsub && lsub.dataset.orig) lsub.textContent = t(lsub.dataset.orig);
+  // Page title
+  const pageTitle = document.getElementById('pageTitle');
+  if(pageTitle) {
+    const orig = pageTitle.dataset.orig || pageTitle.textContent;
+    pageTitle.dataset.orig = orig;
+    pageTitle.textContent = t(orig) || orig;
+  }
+  // Buttons
+  document.querySelectorAll('.btn').forEach(btn => {
+    const orig = btn.dataset.orig || btn.textContent.trim();
+    if(TRANSLATIONS.tr[orig] || TRANSLATIONS.en[orig]) {
+      btn.dataset.orig = orig;
+      btn.textContent = t(orig);
+    }
+  });
+  // Form labels
+  document.querySelectorAll('.form-label').forEach(el => {
+    const orig = el.dataset.orig || el.textContent.trim();
+    if(TRANSLATIONS.tr[orig] || TRANSLATIONS.en[orig]) {
+      el.dataset.orig = orig;
+      el.textContent = t(orig);
+    }
+  });
+  // Update lang buttons
+  const flag = currentLang === 'tr' ? '🇹🇷' : '🇬🇧';
+  const langBtn = document.getElementById('langBtn');
+  const langBtnLogin = document.getElementById('langBtnLogin');
+  if(langBtn) langBtn.textContent = flag;
+  if(langBtnLogin) langBtnLogin.textContent = flag;
+  // Update page titles map
+  if(typeof PAGE_TITLES !== 'undefined') {
+    PAGE_TITLES.dashboard = t('Gösterge Paneli');
+    PAGE_TITLES.projects = t('Projeler');
+    PAGE_TITLES.products = t('Ürünler & Fiyatlar');
+    PAGE_TITLES.stock = t('Stok Takibi');
+    PAGE_TITLES.customers = t('Müşteriler');
+  }
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'tr' ? 'en' : 'tr';
+  localStorage.setItem('vexio-lang', currentLang);
+  applyTranslations();
+  showNotif(currentLang === 'en' ? '🇬🇧 Switched to English' : '🇹🇷 Türkçeye geçildi', 'ok');
+}
+
+function initLang() {
+  currentLang = localStorage.getItem('vexio-lang') || 'tr';
+  // Store originals before first apply
+  document.querySelectorAll('.nav-text, .nav-label').forEach(el => {
+    if(!el.dataset.orig) el.dataset.orig = el.textContent;
+  });
+  if(currentLang === 'en') applyTranslations();
+  // Update flag button
+  const flag = currentLang === 'tr' ? '🇹🇷' : '🇬🇧';
+  const lb = document.getElementById('langBtn');
+  const lbl = document.getElementById('langBtnLogin');
+  if(lb) lb.textContent = flag;
+  if(lbl) lbl.textContent = flag;
 }
 
 // ═══════════════════════════════════════════════
