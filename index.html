@@ -6,7 +6,6 @@
 <title>ProFlow — Proje Yönetim Sistemi</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -3450,30 +3449,35 @@ async function loadLiveDashboard() {
   document.getElementById('liveKpi6').textContent = fmtCompact(pipelineVal);
   document.getElementById('liveKpi6s').textContent = leads.filter(l=>!['won','lost'].includes(l.stage)).length + ' aktif lead';
 
-  // Monthly trend chart
-  const monthlyData = buildMonthlyData(invoices, 6);
-  createLineChart('chartMonthly', monthlyData.labels,
-    [{ label:'Satış (₺)', data:monthlyData.sales, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', fill:true },
-     { label:'Tahsilat (₺)', data:monthlyData.collected, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', fill:true }]);
+  // Charts - wrapped in try/catch to prevent JS errors
+  try {
+    const monthlyData = buildMonthlyData(invoices, 6);
+    createLineChart('chartMonthly', monthlyData.labels,
+      [{ label:'Satış (₺)', data:monthlyData.sales, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.1)', fill:true },
+       { label:'Tahsilat (₺)', data:monthlyData.collected, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', fill:true }]);
+  } catch(e) { console.warn('Chart error:', e); }
 
-  // Customer chart
-  const byCustomer = {};
-  invoices.forEach(r=>{ const k=r.customers?.company_name||'Diğer'; byCustomer[k]=(byCustomer[k]||0)+Number(r.total_amount||0); });
-  const custSorted = Object.entries(byCustomer).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  createHBarChart('chartCustomer', custSorted.map(([k])=>k), custSorted.map(([,v])=>v), '#3b82f6');
+  try {
+    const byCustomer = {};
+    invoices.forEach(r=>{ const k=r.customers?.company_name||'Diğer'; byCustomer[k]=(byCustomer[k]||0)+Number(r.total_amount||0); });
+    const custSorted = Object.entries(byCustomer).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    createHBarChart('chartCustomer', custSorted.map(([k])=>k), custSorted.map(([,v])=>v), '#3b82f6');
+  } catch(e) { console.warn('Chart error:', e); }
 
-  // Doc type doughnut
-  const docTypes = {invoice:'Fatura', offer:'Teklif', order:'Sipariş', waybill:'İrsaliye'};
-  const byDoc = {};
-  comms.forEach(r=>{ byDoc[docTypes[r.doc_type]||r.doc_type]=(byDoc[docTypes[r.doc_type]||r.doc_type]||0)+1; });
-  createDoughnutChart('chartDocType', Object.keys(byDoc), Object.values(byDoc));
+  try {
+    const docTypes = {invoice:'Fatura', offer:'Teklif', order:'Sipariş', waybill:'İrsaliye'};
+    const byDoc = {};
+    comms.forEach(r=>{ byDoc[docTypes[r.doc_type]||r.doc_type]=(byDoc[docTypes[r.doc_type]||r.doc_type]||0)+1; });
+    createDoughnutChart('chartDocType', Object.keys(byDoc), Object.values(byDoc));
+  } catch(e) { console.warn('Chart error:', e); }
 
-  // Pipeline doughnut
-  const stageLabels = {lead:'Lead',offer:'Teklif',negotiation:'Müzakere',won:'Kazanıldı',lost:'Kaybedildi'};
-  const byStage = {};
-  leads.forEach(l=>{ const k=stageLabels[l.stage]||l.stage; byStage[k]=(byStage[k]||0)+1; });
-  createDoughnutChart('chartPipeline', Object.keys(byStage), Object.values(byStage),
-    ['#8b5cf6','#3b82f6','#f59e0b','#10b981','#ef4444']);
+  try {
+    const stageLabels = {lead:'Lead',offer:'Teklif',negotiation:'Müzakere',won:'Kazanıldı',lost:'Kaybedildi'};
+    const byStage = {};
+    leads.forEach(l=>{ const k=stageLabels[l.stage]||l.stage; byStage[k]=(byStage[k]||0)+1; });
+    createDoughnutChart('chartPipeline', Object.keys(byStage), Object.values(byStage),
+      ['#8b5cf6','#3b82f6','#f59e0b','#10b981','#ef4444']);
+  } catch(e) { console.warn('Chart error:', e); }
 }
 
 function buildMonthlyData(invoices, months=6) {
@@ -3553,18 +3557,13 @@ async function loadAnalysis(){
   document.getElementById('anaProfit').textContent=fmtCompact(profit);
   document.getElementById('anaMargin').textContent='%'+margin;
 
-  // P&L Chart
   setTimeout(()=>{
-    createBarChart('chartProfitLoss',
-      ['Gelir','Maliyet','Brüt Kar','Net Kar'],
-      [{label:'Tutar (₺)', data:[totalSales,estCost,profit,profit*0.8],
-        backgroundColor:['rgba(59,130,246,.7)','rgba(239,68,68,.7)','rgba(16,185,129,.7)','rgba(139,92,246,.7)'],
-        borderRadius:6}]);
-
-    createDoughnutChart('chartCostBreakdown',
-      ['Hammadde','İşçilik','Genel Gider','Satış/Paz.','Ar-Ge'],
-      [estCost*0.46, estCost*0.23, estCost*0.16, estCost*0.09, estCost*0.06],
-      ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#06b6d4']);
+    try { createBarChart('chartProfitLoss',['Gelir','Maliyet','Brüt Kar','Net Kar'],
+      [{label:'Tutar (₺)',data:[totalSales,estCost,profit,profit*0.8],
+        backgroundColor:['rgba(59,130,246,.7)','rgba(239,68,68,.7)','rgba(16,185,129,.7)','rgba(139,92,246,.7)'],borderRadius:6}]); } catch(e){console.warn(e);}
+    try { createDoughnutChart('chartCostBreakdown',['Hammadde','İşçilik','Genel Gider','Satış/Paz.','Ar-Ge'],
+      [estCost*0.46,estCost*0.23,estCost*0.16,estCost*0.09,estCost*0.06],
+      ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#06b6d4']); } catch(e){console.warn(e);}
   },100);
 
   // Project analysis table
@@ -3602,25 +3601,27 @@ async function loadCharts() {
 
   // Yearly monthly chart
   setTimeout(()=>{
-    const monthly = buildMonthlyData(invoices, 12);
-    createBarChart('chartYearly', monthly.labels,
-      [{label:'Satış',data:monthly.sales,backgroundColor:'rgba(59,130,246,.7)',borderRadius:4},
-       {label:'Tahsilat',data:monthly.collected,backgroundColor:'rgba(16,185,129,.7)',borderRadius:4}]);
-
-    // Product performance
-    const topProds = (prods||[]).filter(p=>p.retail_price).sort((a,b)=>b.retail_price-a.retail_price).slice(0,8);
-    createHBarChart('chartProducts', topProds.map(p=>p.name.slice(0,20)), topProds.map(p=>p.retail_price||0), '#8b5cf6');
-
-    // Customer segment
-    const segs = {OEM:0,Tier1:0,Distributor:0,Retail:0,Other:0};
-    (custs||[]).forEach(c=>{ segs[c.segment]=(segs[c.segment]||0)+1; });
-    const segFiltered = Object.entries(segs).filter(([,v])=>v>0);
-    createDoughnutChart('chartSegment', segFiltered.map(([k])=>k), segFiltered.map(([,v])=>v));
-
-    // Stock status
-    const stockData = (prods||[]).slice(0,8);
-    createBarChart('chartStock', stockData.map(p=>p.name.slice(0,15)),
-      [{label:'Mevcut Stok',data:stockData.map(p=>p.stock_qty||0),backgroundColor:stockData.map(p=>(p.stock_qty||0)<=(p.min_stock||5)?'rgba(239,68,68,.7)':'rgba(16,185,129,.7)'),borderRadius:4}]);
+    try {
+      const monthly = buildMonthlyData(invoices, 12);
+      createBarChart('chartYearly', monthly.labels,
+        [{label:'Satış',data:monthly.sales,backgroundColor:'rgba(59,130,246,.7)',borderRadius:4},
+         {label:'Tahsilat',data:monthly.collected,backgroundColor:'rgba(16,185,129,.7)',borderRadius:4}]);
+    } catch(e) { console.warn(e); }
+    try {
+      const topProds = (prods||[]).filter(p=>p.retail_price).sort((a,b)=>b.retail_price-a.retail_price).slice(0,8);
+      createHBarChart('chartProducts', topProds.map(p=>p.name.slice(0,20)), topProds.map(p=>p.retail_price||0), '#8b5cf6');
+    } catch(e) { console.warn(e); }
+    try {
+      const segs = {OEM:0,Tier1:0,Distributor:0,Retail:0,Other:0};
+      (custs||[]).forEach(cu=>{ segs[cu.segment]=(segs[cu.segment]||0)+1; });
+      const segFiltered = Object.entries(segs).filter(([,v])=>v>0);
+      if(segFiltered.length) createDoughnutChart('chartSegment', segFiltered.map(([k])=>k), segFiltered.map(([,v])=>v));
+    } catch(e) { console.warn(e); }
+    try {
+      const stockData = (prods||[]).slice(0,8);
+      createBarChart('chartStock', stockData.map(p=>p.name.slice(0,15)),
+        [{label:'Mevcut Stok',data:stockData.map(p=>p.stock_qty||0),backgroundColor:stockData.map(p=>(p.stock_qty||0)<=(p.min_stock||5)?'rgba(239,68,68,.7)':'rgba(16,185,129,.7)'),borderRadius:4}]);
+    } catch(e) { console.warn(e); }
   },150);
 }
 
