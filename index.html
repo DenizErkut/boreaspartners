@@ -210,6 +210,18 @@ tr:hover td{background:rgba(255,255,255,.02)}
 }
 
 .file-upload-area{border:1.5px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:.2s;margin-top:4px}
+.file-upload-area.dragover{border-color:var(--accent);background:rgba(59,130,246,.08)}
+.upload-progress-wrap{position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;gap:8px;min-width:280px;max-width:340px}
+.upload-progress-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:slideUp .2s ease}
+.upload-progress-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.upload-progress-icon{font-size:16px;flex-shrink:0}
+.upload-progress-name{flex:1;font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-progress-pct{font-size:11px;color:var(--text2);flex-shrink:0}
+.upload-progress-bar-track{height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.upload-progress-bar-fill{height:100%;border-radius:2px;transition:width .3s ease;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.upload-progress-item.done .upload-progress-bar-fill{background:linear-gradient(90deg,var(--success),#34d399)}
+.upload-progress-item.error .upload-progress-bar-fill{background:var(--danger)}
+.upload-progress-status{font-size:11px;color:var(--text2);margin-top:5px}
 .file-upload-area:hover{border-color:var(--accent);background:rgba(59,130,246,.04)}
 .file-upload-area input[type=file]{display:none}
 .file-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
@@ -226,6 +238,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </style>
 </head>
 <body>
+<div class="upload-progress-wrap" id="uploadProgressWrap"></div>
 
 <!-- ═══ GİRİŞ ═══ -->
 <div id="loginScreen">
@@ -986,20 +999,86 @@ function removeFile(listId, id) {
 
 async function uploadFilesToSupabase(listId, folder) {
   if (isDemo) return [];
-  const files = uploadedFiles[listId] || [];
+  const files = (uploadedFiles[listId] || []).filter(f => !f.url && f.file);
+  if (!files.length) return (uploadedFiles[listId]||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
+  
+  const wrap = document.getElementById('uploadProgressWrap');
   const urls = [];
+  
   for (const f of files) {
-    if (f.url) { urls.push({ name: f.name, url: f.url }); continue; }
-    const path = `${folder}/${Date.now()}_${f.name.replace(/\s/g,'_')}`;
-    const { data, error } = await sb.storage.from('proflow-files').upload(path, f.file, { upsert: true });
-    if (!error && data) {
-      const { data: pub } = sb.storage.from('proflow-files').getPublicUrl(path);
-      urls.push({ name: f.name, url: pub.publicUrl });
-      f.url = pub.publicUrl;
+    // Create progress item
+    const pid = 'up_' + Date.now() + Math.random().toString(36).slice(2);
+    const item = document.createElement('div');
+    item.className = 'upload-progress-item';
+    item.id = pid;
+    item.innerHTML = `
+      <div class="upload-progress-header">
+        <span class="upload-progress-icon">${getFileIcon(f.name)}</span>
+        <span class="upload-progress-name">${f.name}</span>
+        <span class="upload-progress-pct" id="${pid}_pct">0%</span>
+      </div>
+      <div class="upload-progress-bar-track">
+        <div class="upload-progress-bar-fill" id="${pid}_bar" style="width:0%"></div>
+      </div>
+      <div class="upload-progress-status" id="${pid}_status">Yükleniyor...</div>`;
+    wrap.appendChild(item);
+    
+    // Animate to 30% immediately
+    setTimeout(() => {
+      const bar = document.getElementById(pid+'_bar');
+      const pct = document.getElementById(pid+'_pct');
+      if(bar) bar.style.width = '30%';
+      if(pct) pct.textContent = '30%';
+    }, 50);
+    
+    try {
+      const path = `${folder}/${Date.now()}_${f.name.replace(/[\s]/g,'_')}`;
+      
+      // Animate to 60%
+      setTimeout(() => {
+        const bar = document.getElementById(pid+'_bar');
+        const pct = document.getElementById(pid+'_pct');
+        if(bar) bar.style.width = '60%';
+        if(pct) pct.textContent = '60%';
+      }, 200);
+      
+      const { data, error } = await sb.storage.from('proflow-files').upload(path, f.file, { upsert: true });
+      
+      const bar = document.getElementById(pid+'_bar');
+      const pct = document.getElementById(pid+'_pct');
+      const status = document.getElementById(pid+'_status');
+      const itemEl = document.getElementById(pid);
+      
+      if (!error && data) {
+        const { data: pub } = sb.storage.from('proflow-files').getPublicUrl(path);
+        urls.push({ name: f.name, url: pub.publicUrl });
+        f.url = pub.publicUrl;
+        if(bar) bar.style.width = '100%';
+        if(pct) pct.textContent = '100%';
+        if(status) status.innerHTML = '✅ Yüklendi';
+        if(itemEl) itemEl.classList.add('done');
+      } else {
+        if(bar) { bar.style.width = '100%'; bar.style.background = 'var(--danger)'; }
+        if(pct) pct.textContent = '❌';
+        if(status) status.innerHTML = `Hata: ${error?.message || 'Bilinmeyen hata'}`;
+        if(itemEl) itemEl.classList.add('error');
+      }
+    } catch(e) {
+      const status = document.getElementById(pid+'_status');
+      if(status) status.innerHTML = '❌ Yükleme başarısız';
     }
+    
+    // Remove progress item after 3 seconds
+    setTimeout(() => {
+      const el = document.getElementById(pid);
+      if(el) { el.style.opacity='0'; el.style.transform='translateX(20px)'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }
+    }, 3000);
   }
+  
   renderFileList(listId);
-  return urls;
+  // Also return already-uploaded files
+  const alreadyUploaded = (uploadedFiles[listId]||[]).filter(f=>f.url && !files.find(nf=>nf.id===f.id)).map(f=>({name:f.name,url:f.url}));
+  return [...alreadyUploaded, ...urls];
 }
 
 function getFileIcon(name) {
@@ -1903,6 +1982,25 @@ function showNotif(msg,type='ok'){
   n.className='notif show '+type;
   setTimeout(()=>n.classList.remove('show'),3000);
 }
+
+// ── DRAG & DROP ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.file-upload-area').forEach(area => {
+    area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+    area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+    area.addEventListener('drop', e => {
+      e.preventDefault();
+      area.classList.remove('dragover');
+      const input = area.querySelector('input[type=file]');
+      if (!input) return;
+      const listId = input.getAttribute('onchange').match(/'([^']+)'\)/)[1];
+      const dt = new DataTransfer();
+      Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+      input.files = dt.files;
+      handleFiles(input, listId);
+    });
+  });
+});
 
 // ═══════════════════════════════════════════════
 // FORMAT HELPERS
