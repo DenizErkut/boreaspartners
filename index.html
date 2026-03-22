@@ -319,6 +319,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item active" data-page="dashboard" onclick="navigate(this)"><div class="nav-icon">📊</div><span class="nav-text">Gösterge Paneli</span></div>
         <div class="nav-item" data-page="projects" onclick="navigate(this)"><div class="nav-icon">📁</div><span class="nav-text">Projeler</span></div>
         <div class="nav-item" data-page="products" onclick="navigate(this)"><div class="nav-icon">📦</div><span class="nav-text">Ürünler & Fiyatlar</span></div>
+        <div class="nav-item" data-page="stock" onclick="navigate(this)"><div class="nav-icon">📊</div><span class="nav-text">Stok Takibi</span></div>
+        <div class="nav-item" data-page="price-history" onclick="navigate(this)"><div class="nav-icon">📈</div><span class="nav-text">Fiyat Geçmişi</span></div>
+        <div class="nav-item" data-page="quotation" onclick="navigate(this)"><div class="nav-icon">📋</div><span class="nav-text">Teklif Oluştur</span></div>
+        <div class="nav-item" data-page="barcode" onclick="navigate(this)"><div class="nav-icon">🔖</div><span class="nav-text">Barkod & QR</span></div>
         <div class="nav-item" data-page="processes" onclick="navigate(this)"><div class="nav-icon">⚙️</div><span class="nav-text">Süreç Takibi</span></div>
       </div>
       <div class="nav-section">
@@ -493,6 +497,117 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div class="kpi purple"><div class="kpi-label">Ort. Marj</div><div class="kpi-value" id="anaMargin">–</div></div>
         </div>
         <div class="card"><div class="card-title">Proje Bazlı Analiz</div><div id="anaTable"><div class="loading"><div class="spinner"></div></div></div></div>
+      </div>
+
+      <!-- ── STOCK ── -->
+      <div class="page" id="page-stock">
+        <div class="grid grid-4 mb-14">
+          <div class="kpi blue"><div class="kpi-label">Toplam Ürün</div><div class="kpi-value" id="stKpi1">–</div><div class="kpi-icon">📦</div></div>
+          <div class="kpi green"><div class="kpi-label">Stokta</div><div class="kpi-value" id="stKpi2">–</div><div class="kpi-icon">✅</div></div>
+          <div class="kpi yellow"><div class="kpi-label">Kritik Stok</div><div class="kpi-value" id="stKpi3">–</div><div class="kpi-icon">⚠️</div></div>
+          <div class="kpi purple"><div class="kpi-label">Stok Dışı</div><div class="kpi-value" id="stKpi4">–</div><div class="kpi-icon">❌</div></div>
+        </div>
+        <div class="flex-btw mb-14">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Stok Hareketleri</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('stockMove')">+ Stok Hareketi</button>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Ürün Stok Durumu</div>
+            <div id="stockTable"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Son Hareketler</div>
+            <div id="stockMoveList" style="display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRICE HISTORY ── -->
+      <div class="page" id="page-price-history">
+        <div class="flex-btw mb-14">
+          <div class="form-group" style="margin:0;width:250px">
+            <select class="form-select" id="phProductSelect" onchange="loadPriceHistoryForProduct(this.value)">
+              <option value="">Ürün seçin...</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('priceUpdate')">+ Fiyat Güncelle</button>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title">Fiyat Geçmişi Grafiği</div>
+            <div id="priceChart" style="min-height:200px"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Değişim Geçmişi</div>
+            <div id="priceHistoryList" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto"><div class="empty">Ürün seçin</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── QUOTATION ── -->
+      <div class="page" id="page-quotation">
+        <div class="grid grid-2" style="align-items:start">
+          <div>
+            <div class="card mb-14">
+              <div class="card-title">Teklif Bilgileri</div>
+              <div class="form-group"><label class="form-label">Müşteri *</label><select class="form-select" id="qtCustomer"><option value="">Seçin...</option></select></div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Teklif No</label><input class="form-input" id="qtNo" placeholder="TEK-2025-001"></div>
+                <div class="form-group"><label class="form-label">Geçerlilik (gün)</label><input class="form-input" id="qtValidity" type="number" value="30"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Tarih</label><input class="form-input" id="qtDate" type="date"></div>
+                <div class="form-group"><label class="form-label">Para Birimi</label><select class="form-select" id="qtCurrency"><option value="TRY">TRY ₺</option><option value="EUR">EUR €</option><option value="USD">USD $</option></select></div>
+              </div>
+              <div class="form-group"><label class="form-label">Fiyat Türü</label>
+                <select class="form-select" id="qtPriceType" onchange="updateQuotationPrices()">
+                  <option value="retail">Perakende</option><option value="wholesale">Toptan</option><option value="export">İhracat</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Not / Özel Koşullar</label><textarea class="form-textarea" id="qtNotes" placeholder="Ödeme koşulları, teslimat süresi..."></textarea></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Ürün Ekle</div>
+              <div style="display:flex;gap:8px;margin-bottom:10px">
+                <select class="form-select" id="qtProductSelect" style="flex:1"><option value="">Ürün seçin...</option></select>
+                <input class="form-input" id="qtQty" type="number" value="1" min="1" style="width:70px">
+                <button class="btn btn-primary btn-sm" onclick="addQuotationItem()">Ekle</button>
+              </div>
+              <div id="qtItemList" style="display:flex;flex-direction:column;gap:6px"></div>
+            </div>
+          </div>
+          <div class="card" style="position:sticky;top:16px">
+            <div class="card-title">Teklif Önizleme</div>
+            <div id="quotationPreview" style="background:#fff;border-radius:8px;padding:20px;min-height:400px;color:#1a1a1a;font-size:12px"></div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn btn-primary btn-sm" style="flex:1" onclick="generateQuotationPDF()">📄 PDF İndir</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveQuotationToCommercial()">💾 Ticari Kayda Aktar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BARCODE ── -->
+      <div class="page" id="page-barcode">
+        <div class="grid grid-2" style="align-items:start">
+          <div class="card">
+            <div class="card-title">Ürün Seç & Etiket Oluştur</div>
+            <div class="form-group"><label class="form-label">Ürün</label><select class="form-select" id="bcProduct" onchange="generateCodes(this.value)"><option value="">Seçin...</option></select></div>
+            <div class="form-group"><label class="form-label">Etiket Sayısı</label><input class="form-input" id="bcCount" type="number" value="1" min="1" max="100"></div>
+            <div class="form-group"><label class="form-label">Özel Metin (isteğe bağlı)</label><input class="form-input" id="bcCustomText" placeholder="Ek bilgi..."></div>
+            <button class="btn btn-primary btn-full" onclick="generateCodes(document.getElementById('bcProduct').value)">🔖 Oluştur</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Önizleme</div>
+            <div id="barcodePreview" style="display:flex;flex-direction:column;gap:12px;align-items:center"></div>
+            <button class="btn btn-ghost btn-full" style="margin-top:12px" onclick="printBarcodes()" id="btnPrintBarcode" disabled>🖨️ Yazdır</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="card-title">Tüm Ürün Barkodları</div>
+          <div id="allBarcodesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
+        </div>
       </div>
 
       <!-- ── CRM PIPELINE ── -->
@@ -895,6 +1010,57 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── STOCK MOVE MODAL ── -->
+<div class="modal-overlay" id="m-stockMove">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Stok Hareketi Ekle</div><button class="modal-close" onclick="closeModal('stockMove')">✕</button></div>
+    <div class="form-group"><label class="form-label">Ürün *</label><select class="form-select" id="smProduct"><option value="">Seçin...</option></select></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Hareket Türü *</label>
+        <select class="form-select" id="smType">
+          <option value="in">📥 Giriş (Satın Alma/Üretim)</option>
+          <option value="out">📤 Çıkış (Satış/Kullanım)</option>
+          <option value="adjust">🔧 Düzeltme</option>
+          <option value="return">↩️ İade</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Miktar *</label><input class="form-input" id="smQty" type="number" min="1" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tarih</label><input class="form-input" id="smDate" type="date"></div>
+      <div class="form-group"><label class="form-label">Birim Maliyet</label><input class="form-input" id="smCost" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Açıklama</label><input class="form-input" id="smNote" placeholder="Hareket açıklaması..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('stockMove')">İptal</button>
+      <button class="btn btn-primary" onclick="saveStockMove()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRICE UPDATE MODAL ── -->
+<div class="modal-overlay" id="m-priceUpdate">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Fiyat Güncelle</div><button class="modal-close" onclick="closeModal('priceUpdate')">✕</button></div>
+    <div class="form-group"><label class="form-label">Ürün *</label><select class="form-select" id="puProduct"><option value="">Seçin...</option></select></div>
+    <div class="form-group"><label class="form-label">Fiyat Türü</label>
+      <select class="form-select" id="puType">
+        <option value="retail">Perakende</option><option value="wholesale">Toptan</option>
+        <option value="export_usd">İhracat USD</option><option value="export_eur">İhracat EUR</option><option value="cost">Maliyet</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Eski Fiyat</label><input class="form-input" id="puOld" type="number" readonly style="opacity:.6" placeholder="Otomatik"></div>
+      <div class="form-group"><label class="form-label">Yeni Fiyat *</label><input class="form-input" id="puNew" type="number" placeholder="0.00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Değişim Sebebi</label><input class="form-input" id="puReason" placeholder="Döviz artışı, maliyet değişimi..."></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('priceUpdate')">İptal</button>
+      <button class="btn btn-primary" onclick="savePriceUpdate()">Güncelle</button>
+    </div>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <script>
@@ -912,7 +1078,7 @@ let allProjects = [];
 let allCustomers = [];
 
 const PAGE_TITLES = {
-  dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar',
+  dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
   analysis:'Maliyet & Kar Analizi', users:'Kullanıcılar & Yetkiler'
@@ -1325,7 +1491,7 @@ function navigate(el) {
   document.getElementById('sidebar').classList.remove('mobile-open');
   currentPage = page;
   const loaders = {
-    projects: loadProjects, products: loadProducts, processes: loadProcesses,
+    projects: loadProjects, products: loadProducts, stock: loadStock, 'price-history': loadPriceHistory, quotation: loadQuotation, barcode: loadBarcode, processes: loadProcesses,
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
@@ -2520,6 +2686,470 @@ function renderCountryList(customers, countries) {
       </div>
     </div>`;
   }).join('') : '<div class="empty">İhracat müşterisi yok</div>';
+}
+
+// ═══════════════════════════════════════════════
+// STOCK MODULE
+// ═══════════════════════════════════════════════
+let allStockMoves = [];
+let allProductsCache = [];
+
+async function loadStock() {
+  const [{data: prods}, {data: moves}] = await Promise.all([
+    dbSelect('products', {order:'name'}),
+    dbSelect('stock_movements', {select:'*,products(name,code,unit)', order:'move_date', asc:false})
+  ]);
+  allProductsCache = prods || [];
+  allStockMoves = moves || [];
+
+  // Populate product select
+  const opts = allProductsCache.map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
+  document.getElementById('smProduct').innerHTML = '<option value="">Seçin...</option>' + opts;
+
+  // KPIs
+  const critical = allProductsCache.filter(p=>(p.stock_qty||0) <= (p.min_stock||5) && p.stock_qty > 0);
+  const outOfStock = allProductsCache.filter(p=>(p.stock_qty||0) <= 0);
+  document.getElementById('stKpi1').textContent = allProductsCache.length;
+  document.getElementById('stKpi2').textContent = allProductsCache.filter(p=>p.stock_qty>0).length;
+  document.getElementById('stKpi3').textContent = critical.length;
+  document.getElementById('stKpi4').textContent = outOfStock.length;
+
+  // Stock table
+  renderStockTable(allProductsCache);
+  renderStockMoves(allStockMoves);
+}
+
+function renderStockTable(prods) {
+  const el = document.getElementById('stockTable');
+  const sorted = [...prods].sort((a,b)=>(a.stock_qty||0)-(b.stock_qty||0));
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Kod</th><th>Ürün</th><th>Birim</th><th>Stok</th><th>Min Stok</th><th>Durum</th><th></th></tr></thead>
+    <tbody>${sorted.map(p => {
+      const qty = p.stock_qty || 0;
+      const min = p.min_stock || 5;
+      const status = qty <= 0 ? {txt:'Stok Dışı', cls:'s-closed', dot:'🔴'} :
+                     qty <= min ? {txt:'Kritik', cls:'s-pending', dot:'🟡'} :
+                     {txt:'Yeterli', cls:'s-active', dot:'🟢'};
+      return `<tr style="${qty<=min?'background:rgba(245,158,11,.04)':''}">
+        <td><span class="tag">${p.code}</span></td>
+        <td><b>${p.name}</b></td>
+        <td>${p.unit||'Adet'}</td>
+        <td style="font-weight:700;font-size:15px;color:${qty<=0?'var(--danger)':qty<=min?'var(--warning)':'var(--success)'}">${qty}</td>
+        <td style="color:var(--text2)">${min}</td>
+        <td><span class="status ${status.cls}">${status.dot} ${status.txt}</span></td>
+        <td><button class="btn btn-ghost btn-sm" onclick="quickStockMove('${p.id}','${p.name}')">± Hareket</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function renderStockMoves(moves) {
+  const el = document.getElementById('stockMoveList');
+  const typeInfo = {
+    in:     {icon:'📥', label:'Giriş',    color:'var(--success)'},
+    out:    {icon:'📤', label:'Çıkış',    color:'var(--danger)'},
+    adjust: {icon:'🔧', label:'Düzeltme', color:'var(--warning)'},
+    return: {icon:'↩️', label:'İade',     color:'var(--accent)'},
+  };
+  el.innerHTML = moves.slice(0,30).map(m => {
+    const t = typeInfo[m.move_type] || typeInfo.in;
+    return `<div style="background:var(--surface2);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">${t.icon}</span>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${m.products?.name||'–'} <span class="tag">${m.products?.code||''}</span></div>
+        <div style="font-size:11px;color:var(--text2)">${fmtDate(m.move_date)} · ${m.notes||t.label}</div>
+      </div>
+      <div style="font-weight:700;font-size:14px;color:${t.color}">${m.move_type==='out'?'-':'+'}<b>${m.quantity}</b> ${m.products?.unit||''}</div>
+    </div>`;
+  }).join('') || '<div class="empty">Hareket kaydı yok</div>';
+}
+
+function quickStockMove(productId, productName) {
+  document.getElementById('smProduct').value = productId;
+  openModal('stockMove');
+}
+
+async function saveStockMove() {
+  const productId = document.getElementById('smProduct').value;
+  const moveType = document.getElementById('smType').value;
+  const qty = parseInt(document.getElementById('smQty').value) || 0;
+  const date = document.getElementById('smDate').value || new Date().toISOString().split('T')[0];
+  const cost = parseFloat(document.getElementById('smCost').value) || null;
+  const note = document.getElementById('smNote').value;
+  if(!productId || !qty) return showNotif('Ürün ve miktar zorunlu','err');
+
+  // Save movement
+  const {error} = await dbInsert('stock_movements', {
+    product_id: productId, move_type: moveType, quantity: qty,
+    move_date: date, unit_cost: cost, notes: note
+  });
+  if(error) return showNotif('Hata: '+(error.message||''),'err');
+
+  // Update product stock qty
+  const prod = allProductsCache.find(p=>p.id===productId);
+  if(prod) {
+    const currentQty = prod.stock_qty || 0;
+    const newQty = ['in','return'].includes(moveType) ? currentQty+qty : currentQty-qty;
+    await dbUpdate('products', productId, {stock_qty: Math.max(0, newQty)});
+  }
+  closeModal('stockMove'); loadStock();
+  showNotif('Stok hareketi kaydedildi!','ok');
+
+  // Check critical stock
+  const prod2 = allProductsCache.find(p=>p.id===productId);
+  if(prod2 && (prod2.stock_qty||0) <= (prod2.min_stock||5)) {
+    setTimeout(()=>showNotif('⚠️ '+prod2.name+' kritik stok seviyesinde!','err'), 1500);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// PRICE HISTORY MODULE
+// ═══════════════════════════════════════════════
+async function loadPriceHistory() {
+  const {data} = await dbSelect('products', {order:'name'});
+  const prods = data || [];
+  const opts = prods.map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
+  document.getElementById('phProductSelect').innerHTML = '<option value="">Ürün seçin...</option>' + opts;
+  document.getElementById('puProduct').innerHTML = '<option value="">Seçin...</option>' + opts;
+}
+
+async function loadPriceHistoryForProduct(productId) {
+  if(!productId) return;
+  const {data} = await dbSelect('price_history', {select:'*,products(name,code)', eq:{product_id:productId}, order:'changed_at', asc:false});
+  const history = data || [];
+
+  // Chart
+  const typeLabels = {retail:'Perakende',wholesale:'Toptan',export_usd:'İhracat USD',export_eur:'İhracat EUR',cost:'Maliyet'};
+  const byType = {};
+  history.forEach(h => { if(!byType[h.price_type]) byType[h.price_type]=[]; byType[h.price_type].push(h); });
+  const maxVal = Math.max(...history.map(h=>h.new_price||0), 1);
+  document.getElementById('priceChart').innerHTML = Object.entries(byType).map(([type, items]) => `
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:600">${typeLabels[type]||type}</div>
+      ${items.slice(0,5).map(h=>`
+        <div class="chart-row">
+          <div class="chart-label">${fmtDate(h.changed_at?.split('T')[0])}</div>
+          <div class="chart-track"><div class="chart-fill" style="width:${(h.new_price/maxVal*100).toFixed(1)}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+          <div class="chart-val">${fmtNum(h.new_price)}</div>
+        </div>`).join('')}
+    </div>`).join('') || '<div class="empty">Fiyat geçmişi yok</div>';
+
+  // List
+  document.getElementById('priceHistoryList').innerHTML = history.map(h=>`
+    <div style="background:var(--surface2);border-radius:8px;padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600">${typeLabels[h.price_type]||h.price_type}</span>
+        <span style="font-size:11px;color:var(--text2)">${fmtDate(h.changed_at?.split('T')[0])}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;color:var(--text3);text-decoration:line-through">${fmtNum(h.old_price||0)}</span>
+        <span style="color:var(--text2)">→</span>
+        <span style="font-size:14px;font-weight:700;color:${(h.new_price||0)>(h.old_price||0)?'var(--danger)':'var(--success)'}">${fmtNum(h.new_price||0)}</span>
+        ${(h.new_price||0)>(h.old_price||0)?'<span style="font-size:10px;color:var(--danger)">▲</span>':'<span style="font-size:10px;color:var(--success)">▼</span>'}
+      </div>
+      ${h.reason?`<div style="font-size:11px;color:var(--text2);margin-top:4px">📝 ${h.reason}</div>`:''}
+    </div>`).join('') || '<div class="empty">Kayıt yok</div>';
+}
+
+async function savePriceUpdate() {
+  const productId = document.getElementById('puProduct').value;
+  const priceType = document.getElementById('puType').value;
+  const newPrice = parseFloat(document.getElementById('puNew').value);
+  const reason = document.getElementById('puReason').value;
+  if(!productId||!newPrice) return showNotif('Ürün ve fiyat zorunlu','err');
+
+  const prod = allProductsCache.find(p=>p.id===productId) || {};
+  const fieldMap = {retail:'retail_price',wholesale:'wholesale_price',export_usd:'export_usd',export_eur:'export_eur',cost:'cost_price'};
+  const oldPrice = prod[fieldMap[priceType]] || 0;
+
+  // Save history
+  await dbInsert('price_history', {product_id:productId, price_type:priceType, old_price:oldPrice, new_price:newPrice, reason});
+  // Update product
+  await dbUpdate('products', productId, {[fieldMap[priceType]]: newPrice});
+
+  closeModal('priceUpdate');
+  const sel = document.getElementById('phProductSelect');
+  if(sel.value) loadPriceHistoryForProduct(sel.value);
+  showNotif('Fiyat güncellendi!','ok');
+}
+
+// Auto-fill old price
+document.addEventListener('change', async (e) => {
+  if(e.target.id==='puProduct'||e.target.id==='puType') {
+    const pid = document.getElementById('puProduct').value;
+    const ptype = document.getElementById('puType').value;
+    if(!pid) return;
+    const {data} = await dbSelect('products',{eq:{id:pid}});
+    const p = (data||[])[0]||{};
+    const fieldMap = {retail:'retail_price',wholesale:'wholesale_price',export_usd:'export_usd',export_eur:'export_eur',cost:'cost_price'};
+    document.getElementById('puOld').value = p[fieldMap[ptype]]||'';
+  }
+});
+
+// ═══════════════════════════════════════════════
+// QUOTATION MODULE
+// ═══════════════════════════════════════════════
+let quotationItems = [];
+
+async function loadQuotation() {
+  const [{data:prods},{data:custs}] = await Promise.all([
+    dbSelect('products',{order:'name'}), dbSelect('customers',{order:'company_name'})
+  ]);
+  allProductsCache = prods||[];
+  const custOpts = (custs||[]).map(c=>`<option value="${c.id}" data-name="${c.company_name}" data-city="${c.city||''}" data-country="${c.country||''}">${c.company_name}</option>`).join('');
+  document.getElementById('qtCustomer').innerHTML = '<option value="">Seçin...</option>'+custOpts;
+  const prodOpts = allProductsCache.map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
+  document.getElementById('qtProductSelect').innerHTML = '<option value="">Ürün seçin...</option>'+prodOpts;
+  // Set default date and number
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('qtDate').value = today;
+  document.getElementById('qtNo').value = 'TEK-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*900)+100);
+  quotationItems = [];
+  renderQuotationItems();
+  updateQuotationPreview();
+}
+
+function addQuotationItem() {
+  const sel = document.getElementById('qtProductSelect');
+  const productId = sel.value;
+  const qty = parseInt(document.getElementById('qtQty').value)||1;
+  if(!productId) return showNotif('Ürün seçin','err');
+  const prod = allProductsCache.find(p=>p.id===productId);
+  if(!prod) return;
+  const priceType = document.getElementById('qtPriceType').value;
+  const currency = document.getElementById('qtCurrency').value;
+  let price = priceType==='retail'?prod.retail_price : priceType==='wholesale'?prod.wholesale_price :
+              currency==='USD'?prod.export_usd : prod.export_eur || prod.retail_price || 0;
+  const existing = quotationItems.find(i=>i.id===productId);
+  if(existing) { existing.qty += qty; }
+  else { quotationItems.push({id:productId, code:prod.code, name:prod.name, unit:prod.unit||'Adet', price:price||0, qty}); }
+  renderQuotationItems();
+  updateQuotationPreview();
+}
+
+function updateQuotationPrices() {
+  const priceType = document.getElementById('qtPriceType').value;
+  const currency = document.getElementById('qtCurrency').value;
+  quotationItems.forEach(item => {
+    const prod = allProductsCache.find(p=>p.id===item.id);
+    if(!prod) return;
+    item.price = priceType==='retail'?prod.retail_price : priceType==='wholesale'?prod.wholesale_price :
+                 currency==='USD'?prod.export_usd : prod.export_eur || prod.retail_price || 0;
+  });
+  renderQuotationItems();
+  updateQuotationPreview();
+}
+
+function renderQuotationItems() {
+  const el = document.getElementById('qtItemList');
+  el.innerHTML = quotationItems.length ? quotationItems.map((item,i)=>`
+    <div style="background:var(--surface2);border-radius:8px;padding:10px;display:flex;align-items:center;gap:8px">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:600">${item.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${item.code} · ${item.unit}</div>
+      </div>
+      <input type="number" value="${item.qty}" min="1" style="width:55px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);font-size:12px" onchange="quotationItems[${i}].qty=parseInt(this.value)||1;updateQuotationPreview()">
+      <input type="number" value="${item.price}" min="0" step="0.01" style="width:80px;background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);font-size:12px" onchange="quotationItems[${i}].price=parseFloat(this.value)||0;updateQuotationPreview()">
+      <button class="btn btn-danger btn-sm" onclick="quotationItems.splice(${i},1);renderQuotationItems();updateQuotationPreview()">✕</button>
+    </div>`).join('') : '<div class="text-xs" style="text-align:center;padding:12px">Ürün ekleyin</div>';
+}
+
+function updateQuotationPreview() {
+  const el = document.getElementById('quotationPreview');
+  const custEl = document.getElementById('qtCustomer');
+  const custName = custEl.options[custEl.selectedIndex]?.dataset?.name || '—';
+  const custCity = custEl.options[custEl.selectedIndex]?.dataset?.city || '';
+  const currency = document.getElementById('qtCurrency').value;
+  const currSymbol = {TRY:'₺',EUR:'€',USD:'$'}[currency];
+  const qtNo = document.getElementById('qtNo').value;
+  const qtDate = document.getElementById('qtDate').value;
+  const qtValidity = document.getElementById('qtValidity').value;
+  const qtNotes = document.getElementById('qtNotes').value;
+  const subtotal = quotationItems.reduce((s,i)=>s+i.price*i.qty,0);
+  const vat = subtotal * 0.20;
+  const total = subtotal + vat;
+
+  el.innerHTML = `
+    <div style="font-family:'DM Sans',sans-serif;color:#1a1a1a">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #3b82f6;margin-bottom:16px">
+        <div>
+          <div style="font-size:22px;font-weight:900;color:#3b82f6;letter-spacing:-0.5px">ProFlow</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px">Proje & Ticari Yönetim Sistemi</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:700;color:#1a1a1a">TEKLİF</div>
+          <div style="font-size:11px;color:#6b7280">${qtNo}</div>
+          <div style="font-size:10px;color:#6b7280">Tarih: ${fmtDate(qtDate)}</div>
+          <div style="font-size:10px;color:#6b7280">Geçerlilik: ${qtValidity} gün</div>
+        </div>
+      </div>
+      <div style="margin-bottom:14px">
+        <div style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:600;margin-bottom:4px">Alıcı</div>
+        <div style="font-size:13px;font-weight:700">${custName}</div>
+        ${custCity?`<div style="font-size:11px;color:#6b7280">${custCity}</div>`:''}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
+        <thead>
+          <tr style="background:#f3f4f6">
+            <th style="padding:6px 8px;text-align:left;color:#374151">Ürün</th>
+            <th style="padding:6px 8px;text-align:center;color:#374151">Miktar</th>
+            <th style="padding:6px 8px;text-align:right;color:#374151">Birim Fiyat</th>
+            <th style="padding:6px 8px;text-align:right;color:#374151">Toplam</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${quotationItems.map((item,i)=>`
+          <tr style="border-bottom:1px solid #e5e7eb">
+            <td style="padding:5px 8px"><div style="font-weight:600">${item.name}</div><div style="color:#9ca3af;font-size:10px">${item.code}</div></td>
+            <td style="padding:5px 8px;text-align:center">${item.qty} ${item.unit}</td>
+            <td style="padding:5px 8px;text-align:right">${currSymbol}${fmtNum(item.price)}</td>
+            <td style="padding:5px 8px;text-align:right;font-weight:600">${currSymbol}${fmtNum(item.price*item.qty)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="border-top:1px solid #e5e7eb;padding-top:10px;text-align:right">
+        <div style="font-size:11px;color:#6b7280">Ara Toplam: <b>${currSymbol}${fmtNum(subtotal)}</b></div>
+        <div style="font-size:11px;color:#6b7280">KDV (%20): <b>${currSymbol}${fmtNum(vat)}</b></div>
+        <div style="font-size:15px;font-weight:800;color:#3b82f6;margin-top:4px">TOPLAM: ${currSymbol}${fmtNum(total)}</div>
+      </div>
+      ${qtNotes?`<div style="margin-top:12px;font-size:10px;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:8px">${qtNotes}</div>`:''}
+      <div style="margin-top:14px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:8px">Bu teklif ProFlow Yönetim Sistemi ile oluşturulmuştur.</div>
+    </div>`;
+}
+
+async function generateQuotationPDF() {
+  updateQuotationPreview();
+  const content = document.getElementById('quotationPreview').innerHTML;
+  const printWindow = window.open('','_blank');
+  printWindow.document.write(`<!DOCTYPE html><html><head><title>Teklif</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>body{font-family:'DM Sans',sans-serif;margin:20px;color:#1a1a1a}@media print{body{margin:0}}</style>
+  </head><body>${content}</body></html>`);
+  printWindow.document.close();
+  setTimeout(()=>{ printWindow.print(); }, 500);
+  showNotif('PDF hazırlanıyor...','ok');
+}
+
+async function saveQuotationToCommercial() {
+  const custEl = document.getElementById('qtCustomer');
+  const custId = custEl.value;
+  const currency = document.getElementById('qtCurrency').value;
+  const subtotal = quotationItems.reduce((s,i)=>s+i.price*i.qty,0);
+  const vat = subtotal * 0.20;
+  const total = subtotal + vat;
+  if(!custId||!quotationItems.length) return showNotif('Müşteri ve ürün ekleyin','err');
+  const {error} = await dbInsert('commercial_records', {
+    doc_type:'offer', doc_number:document.getElementById('qtNo').value,
+    customer_id:custId, record_date:document.getElementById('qtDate').value,
+    amount:subtotal, currency, vat_rate:20, vat_amount:vat, total_amount:total,
+    status:'draft', notes:'Teklif oluşturucudan aktarıldı'
+  });
+  if(error) return showNotif('Hata: '+(error.message||''),'err');
+  showNotif('Ticari kayda aktarıldı!','ok');
+}
+
+// ═══════════════════════════════════════════════
+// BARCODE & QR MODULE
+// ═══════════════════════════════════════════════
+async function loadBarcode() {
+  const {data} = await dbSelect('products',{order:'name'});
+  allProductsCache = data||[];
+  const opts = allProductsCache.map(p=>`<option value="${p.id}">${p.code} — ${p.name}</option>`).join('');
+  document.getElementById('bcProduct').innerHTML = '<option value="">Seçin...</option>'+opts;
+  renderAllBarcodes(allProductsCache.slice(0,12));
+}
+
+function generateCodes(productId) {
+  if(!productId) return;
+  const prod = allProductsCache.find(p=>p.id===productId);
+  if(!prod) return;
+  const customText = document.getElementById('bcCustomText').value;
+  const preview = document.getElementById('barcodePreview');
+  const count = parseInt(document.getElementById('bcCount').value)||1;
+
+  preview.innerHTML = `
+    <div style="background:#fff;border-radius:10px;padding:16px;text-align:center;max-width:220px">
+      <div style="font-size:11px;font-weight:700;color:#1a1a1a;margin-bottom:8px">${prod.name}</div>
+      <!-- QR Code (SVG based) -->
+      <div style="margin-bottom:8px">${generateQRSVG(prod.code)}</div>
+      <!-- Barcode (CSS based) -->
+      <div style="margin-bottom:6px">${generateBarcodeSVG(prod.code)}</div>
+      <div style="font-size:10px;color:#374151;font-weight:600">${prod.code}</div>
+      ${prod.retail_price?`<div style="font-size:11px;color:#3b82f6;font-weight:700">₺${fmtNum(prod.retail_price)}</div>`:''}
+      ${customText?`<div style="font-size:9px;color:#6b7280">${customText}</div>`:''}
+      <div style="font-size:8px;color:#9ca3af;margin-top:4px">${count > 1 ? count+' adet' : ''}</div>
+    </div>`;
+
+  document.getElementById('btnPrintBarcode').disabled = false;
+}
+
+function generateQRSVG(text) {
+  // Simple QR-like pattern (decorative, not scannable - use JsBarcode for real)
+  const size = 80;
+  const cells = 10;
+  const cell = size/cells;
+  let rects = '';
+  // Create a deterministic pattern from text
+  for(let i=0;i<cells;i++) for(let j=0;j<cells;j++) {
+    const hash = (text.charCodeAt(i%text.length)||0) ^ (text.charCodeAt(j%text.length)||0) ^ (i*7+j*13);
+    if(hash%3===0) rects += `<rect x="${j*cell}" y="${i*cell}" width="${cell}" height="${cell}" fill="#1a1a1a"/>`;
+  }
+  // Add finder patterns
+  ['0,0','${size-21},0','0,${size-21}'].forEach(pos=>{});
+  return `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="border:1px solid #e5e7eb;border-radius:4px">
+    <rect width="${size}" height="${size}" fill="white"/>
+    ${rects}
+    <rect x="0" y="0" width="21" height="21" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <rect x="3" y="3" width="15" height="15" fill="#1a1a1a"/>
+    <rect x="6" y="6" width="9" height="9" fill="white"/>
+    <rect x="${size-21}" y="0" width="21" height="21" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <rect x="${size-18}" y="3" width="15" height="15" fill="#1a1a1a"/>
+    <rect x="${size-15}" y="6" width="9" height="9" fill="white"/>
+    <rect x="0" y="${size-21}" width="21" height="21" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <rect x="3" y="${size-18}" width="15" height="15" fill="#1a1a1a"/>
+    <rect x="6" y="${size-15}" width="9" height="9" fill="white"/>
+    <text x="${size/2}" y="${size+12}" text-anchor="middle" font-size="8" fill="#374151">QR: ${text}</text>
+  </svg>`;
+}
+
+function generateBarcodeSVG(text) {
+  // Simple barcode visualization
+  const bars = [];
+  const width = 160, height = 50;
+  const chars = (text+'0000000000').slice(0,12);
+  let x = 4;
+  for(let i=0;i<chars.length;i++) {
+    const code = chars.charCodeAt(i)||48;
+    const w1 = (code%3)+1, w2 = (code%2)+1, w3 = (code%4)+1, w4 = (code%3)+1;
+    bars.push(`<rect x="${x}" y="0" width="${w1}" height="${height}" fill="#1a1a1a"/>`); x+=w1+w2;
+    bars.push(`<rect x="${x}" y="0" width="${w3}" height="${height}" fill="#1a1a1a"/>`); x+=w3+w4;
+  }
+  return `<svg width="${width}" height="${height+14}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${width}" height="${height+14}" fill="white"/>
+    ${bars.join('')}
+    <text x="${width/2}" y="${height+12}" text-anchor="middle" font-size="9" fill="#374151" font-family="monospace">${chars}</text>
+  </svg>`;
+}
+
+function renderAllBarcodes(prods) {
+  document.getElementById('allBarcodesGrid').innerHTML = prods.map(p=>`
+    <div style="background:#fff;border-radius:8px;padding:12px;text-align:center;cursor:pointer;border:1px solid #e5e7eb" onclick="document.getElementById('bcProduct').value='${p.id}';generateCodes('${p.id}')">
+      <div style="font-size:11px;font-weight:700;color:#1a1a1a;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+      ${generateBarcodeSVG(p.code)}
+      <div style="font-size:10px;color:#6b7280;margin-top:4px">${p.code}</div>
+    </div>`).join('');
+}
+
+function printBarcodes() {
+  const content = document.getElementById('barcodePreview').innerHTML;
+  const count = parseInt(document.getElementById('bcCount').value)||1;
+  const repeated = Array(count).fill(content).join('<div style="margin:8px 0;border-top:1px dashed #ccc"></div>');
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Barkod Etiketleri</title>
+  <style>body{margin:10px;font-family:sans-serif}@media print{@page{margin:5mm}}</style>
+  </head><body><div style="display:flex;flex-wrap:wrap;gap:8px">${repeated}</div></body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),400);
 }
 
 // ═══════════════════════════════════════════════
