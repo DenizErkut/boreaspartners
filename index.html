@@ -82,7 +82,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 #sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s;position:relative;z-index:10}
 #sidebar.collapsed{width:64px;min-width:64px}
 .logo{padding:18px 14px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
-.logo-icon{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#fff}
+.logo-icon{width:36px;height:36px;border-radius:0;flex-shrink:0;background:none;display:flex;align-items:center;justify-content:center}
 .logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden}
 .logo-text span{color:var(--accent)}
 #sidebar.collapsed .logo-text{display:none}
@@ -299,7 +299,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- ═══ GİRİŞ ═══ -->
 <div id="loginScreen">
   <div class="login-box">
-    <div class="login-title">Vex<span style="color:var(--accent)">io</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px">
+  <svg width="44" height="44" viewBox="0 0 36 36">
+    <polygon points="18,3 33,12 33,24 18,33 3,24 3,12" fill="#1B4FFF"/>
+    <polygon points="18,3 33,12 18,12" fill="none" stroke="#00C2FF" stroke-width="1.5" stroke-linejoin="round"/>
+    <polygon points="9,12 18,3 27,12" fill="#00C2FF" opacity="0.85"/>
+  </svg>
+  <div class="login-title" style="margin-bottom:0">Vex<span style="color:var(--accent)">io</span></div>
+</div>
     <div class="login-sub" id="lsub">Hesabınıza giriş yapın</div>
     <div class="err" id="lErr"></div>
 
@@ -348,7 +355,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <!-- SIDEBAR -->
   <nav id="sidebar">
     <div class="logo">
-      <div class="logo-icon">VX</div>
+      <div class="logo-icon" style="background:none;padding:0;width:36px;height:36px">
+<svg width="36" height="36" viewBox="0 0 36 36">
+  <polygon points="18,3 33,12 33,24 18,33 3,24 3,12" fill="#1B4FFF"/>
+  <polygon points="18,3 33,12 18,12" fill="none" stroke="#00C2FF" stroke-width="1.5" stroke-linejoin="round"/>
+  <polygon points="9,12 18,3 27,12" fill="#00C2FF" opacity="0.85"/>
+</svg>
+</div>
       <div class="logo-text">Vex<span>io</span></div>
     </div>
     <div class="nav-wrap">
