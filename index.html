@@ -251,6 +251,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .pipeline-col-header{padding:8px 10px;border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
 .pipeline-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:.15s;position:relative}
 .pipeline-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(59,130,246,.15)}
+.pipeline-col.drag-over{background:rgba(27,79,255,.08);border:2px dashed var(--accent);border-radius:10px}
 .pipeline-card-title{font-size:13px;font-weight:600;margin-bottom:5px}
 .pipeline-card-company{font-size:11px;color:var(--text2);margin-bottom:8px}
 .pipeline-card-footer{display:flex;align-items:center;justify-content:space-between}
@@ -3208,18 +3209,22 @@ document.addEventListener('DOMContentLoaded', () => {
 // CRM — PIPELINE
 // ═══════════════════════════════════════════════
 const PIPELINE_STAGES = [
-  { id:'lead',        label:'🎯 Lead',       color:'#8b5cf6' },
-  { id:'offer',       label:'📋 Teklif',      color:'#3b82f6' },
-  { id:'negotiation', label:'🤝 Müzakere',    color:'#f59e0b' },
-  { id:'won',         label:'✅ Kazanıldı',   color:'#10b981' },
-  { id:'lost',        label:'❌ Kaybedildi',  color:'#ef4444' },
+  { id:'lead',        label:'🎯 Lead',       color:'#8b5cf6', next:'offer' },
+  { id:'offer',       label:'📋 Teklif',      color:'#3b82f6', next:'negotiation', prev:'lead' },
+  { id:'negotiation', label:'🤝 Müzakere',    color:'#f59e0b', next:'won',   prev:'offer' },
+  { id:'won',         label:'✅ Kazanıldı',   color:'#10b981', prev:'negotiation' },
+  { id:'lost',        label:'❌ Kaybedildi',  color:'#ef4444', prev:'negotiation' },
 ];
 let allLeads = [];
+let dragLeadId = null;
 
 async function loadPipeline() {
   const board = document.getElementById('pipelineBoard');
   board.innerHTML = PIPELINE_STAGES.map(s=>
-    `<div class="pipeline-col">
+    `<div class="pipeline-col" id="pcolwrap-${s.id}"
+       ondragover="event.preventDefault();this.classList.add('drag-over')"
+       ondragleave="this.classList.remove('drag-over')"
+       ondrop="dropLead(event,'${s.id}')">
       <div class="pipeline-col-header" style="background:${s.color}22;color:${s.color}">
         <span>${s.label}</span>
         <span id="pcnt-${s.id}" style="font-size:10px;opacity:.7">0</span>
@@ -3241,21 +3246,82 @@ function renderPipelineBoard(leads) {
     const items = leads.filter(l=>l.stage===s.id);
     if(cnt) cnt.textContent = items.length;
     if(!col) return;
-    col.innerHTML = items.map(l=>`
-      <div class="pipeline-card" onclick="editLead('${l.id}')">
-        <div style="position:absolute;top:10px;right:10px">
+
+    col.innerHTML = items.map(l=>{
+      const stageObj = PIPELINE_STAGES.find(x=>x.id===l.stage);
+      const nextStage = PIPELINE_STAGES.find(x=>x.id===stageObj?.next);
+      const prevStage = PIPELINE_STAGES.find(x=>x.id===stageObj?.prev);
+
+      // Quick-action buttons
+      let quickBtns = '';
+      if(nextStage && !['won','lost'].includes(l.stage)) {
+        quickBtns += `<button class="btn btn-primary btn-sm" style="font-size:10px;padding:3px 8px"
+          onclick="event.stopPropagation();advanceStage('${l.id}','${nextStage.id}','${nextStage.label}')"
+          title="${nextStage.label} aşamasına taşı">
+          ${nextStage.label} →</button>`;
+      }
+      if(l.stage === 'negotiation') {
+        quickBtns += `<button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:rgba(16,185,129,.2);color:#10b981;border:1px solid #10b981"
+          onclick="event.stopPropagation();advanceStage('${l.id}','won','✅ Kazanıldı')"
+          title="Kazanıldı">✅</button>
+          <button class="btn btn-sm" style="font-size:10px;padding:3px 8px;background:rgba(239,68,68,.15);color:#ef4444;border:1px solid #ef4444"
+          onclick="event.stopPropagation();advanceStage('${l.id}','lost','❌ Kaybedildi')"
+          title="Kaybedildi">❌</button>`;
+      }
+      if(['won','lost'].includes(l.stage) && prevStage) {
+        quickBtns += `<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px"
+          onclick="event.stopPropagation();advanceStage('${l.id}','${prevStage.id}','${prevStage.label}')"
+          title="Geri al">← Geri</button>`;
+      }
+
+      const isWon = l.stage==='won', isLost = l.stage==='lost';
+      const cardBg = isWon ? 'rgba(16,185,129,.08)' : isLost ? 'rgba(239,68,68,.08)' : 'var(--surface)';
+
+      return `<div class="pipeline-card" style="background:${cardBg};cursor:grab"
+          draggable="true"
+          ondragstart="dragLeadId='${l.id}';event.dataTransfer.effectAllowed='move'"
+          ondragend="document.querySelectorAll('.pipeline-col').forEach(c=>c.classList.remove('drag-over'))"
+          onclick="editLead('${l.id}')">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:6px">
+          <div class="pipeline-card-title" style="flex:1;font-size:12px">${l.title}</div>
           <span class="seg-badge seg-${(l.segment||'c').toLowerCase()}">${l.segment||'C'}</span>
         </div>
-        <div class="pipeline-card-title">${l.title}</div>
         <div class="pipeline-card-company">🏢 ${l.customers?.company_name||'–'}</div>
-        ${l.probability!=null?`<div class="prob-bar"><div class="prob-fill" style="width:${l.probability}%;background:${s.color}"></div></div>
-        <div style="font-size:10px;color:var(--text2);margin-top:3px">İhtimal: %${l.probability}</div>`:''}
+        ${l.project_name?`<div style="font-size:10px;color:var(--accent);margin-top:3px">📁 ${l.project_name}</div>`:''}
+        ${l.probability!=null?`<div class="prob-bar" style="margin-top:6px"><div class="prob-fill" style="width:${l.probability}%;background:${s.color}"></div></div>
+        <div style="font-size:10px;color:var(--text2);margin-top:2px">İhtimal: %${l.probability}</div>`:''}
         <div class="pipeline-card-footer" style="margin-top:8px">
           <span class="pipeline-card-value">${l.value?fmtCurrency(l.value,l.currency||'TRY'):'–'}</span>
           ${l.close_date?`<span style="font-size:10px;color:var(--text2)">${fmtDate(l.close_date)}</span>`:''}
         </div>
-      </div>`).join('') || `<div style="text-align:center;padding:20px;font-size:11px;color:var(--text3)">Boş</div>`;
+        ${quickBtns ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;padding-top:6px;border-top:1px solid var(--border)" onclick="event.stopPropagation()">${quickBtns}</div>` : ''}
+      </div>`;
+    }).join('') || `<div style="text-align:center;padding:20px;font-size:11px;color:var(--text3)">Boş</div>`;
   });
+}
+
+// Drag & drop aşama değiştirme
+async function dropLead(event, targetStage) {
+  event.preventDefault();
+  document.querySelectorAll('.pipeline-col').forEach(c=>c.classList.remove('drag-over'));
+  if(!dragLeadId) return;
+  const lead = allLeads.find(l=>l.id===dragLeadId);
+  if(!lead || lead.stage === targetStage) { dragLeadId=null; return; }
+  await advanceStage(dragLeadId, targetStage, null, true);
+  dragLeadId = null;
+}
+
+// Aşama ilerleme — tek merkezi fonksiyon
+async function advanceStage(leadId, newStage, stageLabel, silent=false) {
+  const lead = allLeads.find(l=>l.id===leadId);
+  if(!lead) return;
+  const {error} = await dbUpdate('crm_leads', leadId, { stage: newStage });
+  if(error) return showNotif('Hata: '+error.message, 'err');
+  lead.stage = newStage; // Optimistic update
+  renderPipelineBoard(allLeads);
+  renderPipelineStats(allLeads);
+  logActivity('crm_leads', leadId, 'update', `Aşama: ${stageLabel||newStage}`);
+  if(!silent) showNotif(`"${lead.title}" → ${stageLabel||newStage} ✅`, 'ok');
 }
 
 function renderPipelineStats(leads) {
