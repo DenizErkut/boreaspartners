@@ -397,6 +397,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="crm-interactions" onclick="navigate(this)"><div class="nav-icon">💬</div><span class="nav-text">Etkileşim Geçmişi</span></div>
         <div class="nav-item" data-page="crm-map" onclick="navigate(this)"><div class="nav-icon">🗺️</div><span class="nav-text">İhracat Haritası</span></div>
         <div class="nav-item" data-page="commercial" onclick="navigate(this)"><div class="nav-icon">💼</div><span class="nav-text">Ticari Kayıtlar</span></div>
+        <div class="nav-item" data-page="efatura" onclick="navigate(this)"><div class="nav-icon">🧾</div><span class="nav-text">e-Fatura</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-label">RAPORLAR & ANALİZ</div>
@@ -456,6 +457,22 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <div class="kpi purple"><div class="kpi-label">Aktif Süreçler</div><div class="kpi-value" id="kpi2">–</div><div class="kpi-sub" id="kpi2s"></div><div class="kpi-icon">⚙️</div></div>
           <div class="kpi green"><div class="kpi-label">Müşteriler</div><div class="kpi-value" id="kpi3">–</div><div class="kpi-sub" id="kpi3s"></div><div class="kpi-icon">👥</div></div>
           <div class="kpi yellow"><div class="kpi-label">Ticari Kayıt</div><div class="kpi-value" id="kpi4">–</div><div class="kpi-sub" id="kpi4s"></div><div class="kpi-icon">💼</div></div>
+        </div>
+        <!-- Döviz Kuru Widget -->
+        <div class="card mb-14" id="fxWidget" style="padding:12px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em">💱 Canlı Döviz Kurları</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="fxLastUpdate" style="font-size:10px;color:var(--text3)">Yükleniyor...</span>
+              <button class="btn btn-ghost btn-sm" onclick="fetchExchangeRates(true)" style="font-size:11px;padding:2px 8px">🔄</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap" id="fxRateCards">
+            <div class="fx-card" id="fx-USD"><span class="fx-flag">🇺🇸</span><span class="fx-code">USD</span><span class="fx-rate" id="fxUSD">–</span><span class="fx-change" id="fxUSDchg"></span></div>
+            <div class="fx-card" id="fx-EUR"><span class="fx-flag">🇪🇺</span><span class="fx-code">EUR</span><span class="fx-rate" id="fxEUR">–</span><span class="fx-change" id="fxEURchg"></span></div>
+            <div class="fx-card" id="fx-GBP"><span class="fx-flag">🇬🇧</span><span class="fx-code">GBP</span><span class="fx-rate" id="fxGBP">–</span><span class="fx-change" id="fxGBPchg"></span></div>
+            <div class="fx-card" id="fx-SAR"><span class="fx-flag">🇸🇦</span><span class="fx-code">SAR</span><span class="fx-rate" id="fxSAR">–</span><span class="fx-change" id="fxSARchg"></span></div>
+          </div>
         </div>
         <div class="grid grid-2">
           <div class="card"><div class="card-title">Son Projeler</div><div id="dashProjects"><div class="loading"><div class="spinner"></div></div></div></div>
@@ -853,7 +870,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
               </div>
               <div class="form-row">
                 <div class="form-group"><label class="form-label">Tarih</label><input class="form-input" id="qtDate" type="date"></div>
-                <div class="form-group"><label class="form-label">Para Birimi</label><select class="form-select" id="qtCurrency"><option value="TRY">TRY ₺</option><option value="EUR">EUR €</option><option value="USD">USD $</option></select></div>
+                <div class="form-group"><label class="form-label">Para Birimi</label><select class="form-select" id="qtCurrency" onchange="showFxBadge('qtFxBadge',this.value)"><option value="TRY">TRY ₺</option><option value="EUR">EUR €</option><option value="USD">USD $</option></select><div id="qtFxBadge" style="margin-top:4px"></div></div>
               </div>
               <div class="form-group"><label class="form-label">Fiyat Türü</label>
                 <select class="form-select" id="qtPriceType" onchange="updateQuotationPrices()">
@@ -877,6 +894,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
             <div id="quotationPreview" style="background:#fff;border-radius:8px;padding:20px;min-height:400px;color:#1a1a1a;font-size:12px"></div>
             <div style="display:flex;gap:8px;margin-top:12px">
               <button class="btn btn-primary btn-sm" style="flex:1" onclick="generateQuotationPDF()">📄 PDF İndir</button>
+              <button class="btn btn-sm" style="flex:1;background:rgba(16,185,129,.15);color:#10B981;border:1px solid rgba(16,185,129,.3)" onclick="openSendQuotationModal()">📧 E-posta Gönder</button>
               <button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveQuotationToCommercial()">💾 Ticari Kayda Aktar</button>
             </div>
           </div>
@@ -1183,6 +1201,91 @@ tr:hover td{background:rgba(255,255,255,.02)}
               <div class="card-title">💡 İpuçları</div>
               <div id="importTips" style="font-size:12px;color:var(--text2);line-height:1.7">
                 Tablo seçin, şablonu indirin ve doldurun.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── e-FATURA ── -->
+      <div class="page" id="page-efatura">
+        <div class="grid grid-2" style="align-items:start;gap:16px">
+
+          <!-- Sol: GİB XML Oluşturucu -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title">🧾 e-Arşiv Fatura Oluştur</div>
+              <div class="form-group"><label class="form-label">Ticari Kayıttan Seç</label>
+                <select class="form-select" id="efCommercial" onchange="loadEfaturaFromCommercial(this.value)">
+                  <option value="">Kayıt seçin...</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Fatura No *</label><input class="form-input" id="efNo" placeholder="EAR2025000001"></div>
+                <div class="form-group"><label class="form-label">Tarih *</label><input class="form-input" id="efDate" type="date"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Alıcı Ünvanı *</label><input class="form-input" id="efBuyerName" placeholder="Firma Adı A.Ş."></div>
+                <div class="form-group"><label class="form-label">Alıcı VKN/TCKN *</label><input class="form-input" id="efBuyerTax" placeholder="1234567890"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Satıcı Ünvanı *</label><input class="form-input" id="efSellerName" placeholder="Kendi firma adınız"></div>
+                <div class="form-group"><label class="form-label">Satıcı VKN *</label><input class="form-input" id="efSellerTax" placeholder="9876543210"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Satıcı Adres</label><input class="form-input" id="efSellerAddr" placeholder="İstanbul, Türkiye"></div>
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Matrah (KDV hariç)</label><input class="form-input" id="efMatrah" type="number" step="0.01" placeholder="0.00" oninput="calcEfatura()"></div>
+                <div class="form-group"><label class="form-label">KDV Oranı %</label>
+                  <select class="form-select" id="efKdv" onchange="calcEfatura()">
+                    <option value="20">%20</option><option value="10">%10</option><option value="1">%1</option><option value="0">%0 (İstisna)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">KDV Tutarı:</span><span id="efKdvTutar" style="font-weight:600">–</span></div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="color:var(--text2)">Genel Toplam:</span><span id="efToplam" style="font-weight:800;color:var(--accent)">–</span></div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm" style="flex:1" onclick="generateEfaturaXML()">📥 XML İndir</button>
+                <button class="btn btn-ghost btn-sm" style="flex:1" onclick="generateEfaturaPDF()">📄 PDF Görüntüle</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sağ: Rehber -->
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-title">📖 GİB Portal Yükleme Rehberi</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div style="display:flex;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div>
+                  <div><b>XML İndir</b><br><span style="color:var(--text2)">Sol taraftan fatura bilgilerini doldurun ve "XML İndir" butonuna basın.</span></div>
+                </div>
+                <div style="display:flex;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div>
+                  <div><b>GİB Portal'a Giriş</b><br><span style="color:var(--text2)">earsivportal.efatura.gov.tr adresine gidin, e-Arşiv hesabınızla giriş yapın.</span></div>
+                </div>
+                <div style="display:flex;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</div>
+                  <div><b>Fatura Yükle</b><br><span style="color:var(--text2)">Fatura Oluştur → XML'den Yükle bölümünden indirdiğiniz XML dosyasını seçin.</span></div>
+                </div>
+                <div style="display:flex;gap:10px;padding:10px;background:var(--surface2);border-radius:8px">
+                  <div style="width:24px;height:24px;border-radius:50%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">4</div>
+                  <div><b>Onayla & İmzala</b><br><span style="color:var(--text2)">Bilgileri kontrol edin, mali mühür veya e-imza ile onaylayın.</span></div>
+                </div>
+                <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px;font-size:12px;color:#F59E0B">
+                  ⚠️ VexIO e-Arşiv XML formatında belge üretir. GİB onayı için portal veya entegratör firması gerekmektedir.
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">🏢 Entegratör Firmaları</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Otomatik entegrasyon için bu firmalarla çalışabilirsiniz:</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                ${['Logo Yazılım — logo.com.tr','Mikro Yazılım — mikro.com.tr','Paraşüt — parasut.com','Fatura.One — fatura.one','Natro e-Fatura — natro.com'].map(f=>`
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--surface2);border-radius:6px;font-size:12px">
+                  <span>${f}</span>
+                </div>`).join('')}
               </div>
             </div>
           </div>
@@ -1757,6 +1860,49 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── E-POSTA TEKLİF MODALİ ── -->
+<div class="modal-overlay" id="m-sendQuotation">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📧 Teklif E-posta ile Gönder</div>
+      <button class="modal-close" onclick="closeModal('sendQuotation')">✕</button>
+    </div>
+    <!-- Resend API Key -->
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#F59E0B">
+      💡 İlk kullanımda Resend API anahtarınızı girin. Bir kez girilir, tarayıcıda şifreli saklanır.
+    </div>
+    <div class="form-group" id="apiKeyGroup">
+      <label class="form-label">Resend API Anahtarı</label>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="resendApiKey" type="password" placeholder="re_xxxxxxxxxxxx" style="flex:1">
+        <button class="btn btn-ghost btn-sm" onclick="saveResendKey()">Kaydet</button>
+      </div>
+      <div id="apiKeySaved" style="display:none;font-size:11px;color:#10B981;margin-top:4px">✅ API anahtarı kayıtlı</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Alıcı E-posta *</label>
+        <input class="form-input" id="sqEmail" type="email" placeholder="musteri@firma.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alıcı Adı *</label>
+        <input class="form-input" id="sqName" placeholder="Firma Adı">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ek Not (isteğe bağlı)</label>
+      <textarea class="form-textarea" id="sqNote" placeholder="E-postaya eklenecek özel not..." style="height:70px"></textarea>
+    </div>
+    <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text2);margin-bottom:14px" id="sqSummary">
+      Teklif önizlemesi yüklenecek...
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('sendQuotation')">İptal</button>
+      <button class="btn btn-primary" onclick="sendQuotationEmail()" id="btnSendQuote">📧 Gönder</button>
+    </div>
+  </div>
+</div>
+
 <!-- NOTIFICATION PANEL -->
 <div id="notifPanel" style="display:none;position:fixed;top:56px;right:16px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px var(--shadow);z-index:500;max-height:480px;overflow-y:auto">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
@@ -1811,7 +1957,7 @@ const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', gantt:'Gantt Chart — Proje Takvimi', recurring:'Tekrarlayan Görevler', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
-  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
+  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", efatura:'e-Fatura', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
 };
 
 const STATUS_TR = {
@@ -1836,6 +1982,7 @@ window.onload = () => {
     if(lb) lb.textContent = '🇬🇧';
   }
   const url = 'https://srvbecdjsgscntlnppxj.supabase.co';
+  window.supabaseUrl = url;
   const key = 'sb_publishable_Oo5VaAG6uACAsfuBBIZnmQ_LVPzbqhg';
   initSupabase(url, key);
 };
@@ -2246,7 +2393,7 @@ function navigate(el) {
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
-    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
+    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, efatura: loadEfatura, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
   };
   if (loaders[page]) loaders[page]();
   // Re-apply translations after page switch
@@ -3949,6 +4096,401 @@ async function saveQuotationToCommercial() {
   });
   if(error) return showNotif('Hata: '+(error.message||''),'err');
   showNotif('Ticari kayda aktarıldı!','ok');
+}
+
+// ═══════════════════════════════════════════════
+// DÖVİZ KURU SİSTEMİ — TCMB / exchangerate.host
+// ═══════════════════════════════════════════════
+let fxRates = {};
+let fxLastFetched = null;
+
+async function fetchExchangeRates(force=false) {
+  const CACHE_MIN = 30; // 30 dakika cache
+  const now = Date.now();
+  const cached = localStorage.getItem('vexio-fx');
+  if(!force && cached) {
+    try {
+      const { rates, ts } = JSON.parse(cached);
+      if(now - ts < CACHE_MIN * 60 * 1000) {
+        fxRates = rates;
+        renderFxWidget(rates, false);
+        return rates;
+      }
+    } catch(e) {}
+  }
+
+  try {
+    // exchangerate-api.com (ücretsiz, CORS destekli)
+    const res = await fetch('https://open.er-api.com/v6/latest/TRY');
+    const data = await res.json();
+    if(data.result === 'success') {
+      // TRY bazlı — 1 TRY = x USD şeklinde geliyor, tersine çeviriyoruz
+      const raw = data.rates;
+      const rates = {
+        USD: parseFloat((1/raw.USD).toFixed(4)),
+        EUR: parseFloat((1/raw.EUR).toFixed(4)),
+        GBP: parseFloat((1/raw.GBP).toFixed(4)),
+        SAR: parseFloat((1/raw.SAR).toFixed(4)),
+      };
+      fxRates = rates;
+      localStorage.setItem('vexio-fx', JSON.stringify({ rates, ts: now }));
+      fxLastFetched = new Date();
+      renderFxWidget(rates, true);
+      return rates;
+    }
+  } catch(e) {
+    // Fallback: TCMB benzeri statik değerler
+    const fallback = { USD: 32.50, EUR: 35.10, GBP: 41.20, SAR: 8.67 };
+    fxRates = fallback;
+    renderFxWidget(fallback, false);
+    return fallback;
+  }
+}
+
+function renderFxWidget(rates, fresh) {
+  const prev = JSON.parse(localStorage.getItem('vexio-fx-prev')||'{}');
+  const currencies = [
+    { code:'USD', flag:'🇺🇸', id:'fxUSD' },
+    { code:'EUR', flag:'🇪🇺', id:'fxEUR' },
+    { code:'GBP', flag:'🇬🇧', id:'fxGBP' },
+    { code:'SAR', flag:'🇸🇦', id:'fxSAR' },
+  ];
+  currencies.forEach(({ code, id }) => {
+    const el = document.getElementById(id);
+    const chgEl = document.getElementById(id+'chg');
+    if(!el) return;
+    const rate = rates[code];
+    el.textContent = '₺' + rate.toFixed(2);
+    if(prev[code] && chgEl) {
+      const diff = rate - prev[code];
+      const pct = ((diff/prev[code])*100).toFixed(2);
+      chgEl.textContent = (diff>=0?'▲':'▼') + Math.abs(pct) + '%';
+      chgEl.className = 'fx-change ' + (diff>=0?'fx-up':'fx-down');
+    }
+  });
+  const upd = document.getElementById('fxLastUpdate');
+  if(upd) upd.textContent = fresh ? 'Az önce güncellendi' : 'Önbellekten';
+  if(fresh) localStorage.setItem('vexio-fx-prev', JSON.stringify(prev.USD ? rates : {}));
+}
+
+function getFxRate(currency) {
+  if(currency === 'TRY' || !currency) return 1;
+  return fxRates[currency] || 1;
+}
+
+// Teklif/fatura sayfasında kur göster
+function showFxBadge(containerId, currency) {
+  if(currency === 'TRY' || !fxRates[currency]) return;
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const rate = fxRates[currency];
+  el.innerHTML = `<span style="font-size:11px;color:var(--accent);background:rgba(27,79,255,.1);padding:2px 8px;border-radius:4px">
+    1 ${currency} = ₺${rate.toFixed(2)} <span style="color:var(--text3)">(canlı kur)</span>
+  </span>`;
+}
+
+// ═══════════════════════════════════════════════
+// e-FATURA MODÜLİ
+// ═══════════════════════════════════════════════
+async function loadEfatura() {
+  // Ticari kayıtları yükle
+  const { data } = await dbSelect('commercial_records', {
+    select:'*,customers(company_name,tax_number)',
+    order:'record_date', asc:false
+  });
+  const opts = (data||[]).map(r =>
+    `<option value="${r.id}" data-amount="${r.amount}" data-vat="${r.vat_rate}"
+      data-buyer="${r.customers?.company_name||''}"
+      data-tax="${r.customers?.tax_number||''}"
+      data-no="${r.doc_number||''}">
+      ${r.doc_number||r.id.slice(0,8)} — ${r.customers?.company_name||'–'} — ₺${fmtNum(r.total_amount)}
+    </option>`
+  ).join('');
+  const sel = document.getElementById('efCommercial');
+  if(sel) sel.innerHTML = '<option value="">Kayıt seçin...</option>' + opts;
+  // Bugünün tarihini doldur
+  const dateEl = document.getElementById('efDate');
+  if(dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+  // Fatura no oluştur
+  const noEl = document.getElementById('efNo');
+  if(noEl && !noEl.value) {
+    const yr = new Date().getFullYear();
+    const rnd = String(Math.floor(Math.random()*999999)).padStart(6,'0');
+    noEl.value = `EAR${yr}${rnd}`;
+  }
+  calcEfatura();
+}
+
+function loadEfaturaFromCommercial(id) {
+  if(!id) return;
+  const sel = document.getElementById('efCommercial');
+  const opt = sel.options[sel.selectedIndex];
+  if(!opt) return;
+  document.getElementById('efBuyerName').value = opt.dataset.buyer || '';
+  document.getElementById('efBuyerTax').value  = opt.dataset.tax  || '';
+  document.getElementById('efMatrah').value    = opt.dataset.amount || '';
+  document.getElementById('efKdv').value       = opt.dataset.vat  || '20';
+  // Fatura no oluştur
+  const docNo = opt.dataset.no;
+  if(docNo) document.getElementById('efNo').value = 'EAR-' + docNo;
+  calcEfatura();
+}
+
+function calcEfatura() {
+  const matrah = parseFloat(document.getElementById('efMatrah')?.value)||0;
+  const kdvOran = parseFloat(document.getElementById('efKdv')?.value)||20;
+  const kdvTutar = matrah * kdvOran / 100;
+  const toplam = matrah + kdvTutar;
+  const k = document.getElementById('efKdvTutar');
+  const t = document.getElementById('efToplam');
+  if(k) k.textContent = '₺' + fmtNum(kdvTutar);
+  if(t) t.textContent = '₺' + fmtNum(toplam);
+}
+
+function generateEfaturaXML() {
+  const faturaNo   = document.getElementById('efNo')?.value.trim();
+  const tarih      = document.getElementById('efDate')?.value;
+  const buyerName  = document.getElementById('efBuyerName')?.value.trim();
+  const buyerTax   = document.getElementById('efBuyerTax')?.value.trim();
+  const sellerName = document.getElementById('efSellerName')?.value.trim();
+  const sellerTax  = document.getElementById('efSellerTax')?.value.trim();
+  const sellerAddr = document.getElementById('efSellerAddr')?.value.trim() || 'Türkiye';
+  const matrah     = parseFloat(document.getElementById('efMatrah')?.value)||0;
+  const kdvOran    = parseFloat(document.getElementById('efKdv')?.value)||20;
+  const kdvTutar   = matrah * kdvOran / 100;
+  const toplam     = matrah + kdvTutar;
+
+  if(!faturaNo||!buyerName||!buyerTax||!sellerName||!sellerTax||!matrah) {
+    return showNotif('Zorunlu alanları doldurun', 'err');
+  }
+
+  const tarihParts = tarih ? tarih.split('-') : ['2025','01','01'];
+  const tarihFormatted = tarihParts.join('-') + 'T00:00:00';
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+  xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+  xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+  <cbc:ProfileID>EARSIVFATURA</cbc:ProfileID>
+  <cbc:ID>${faturaNo}</cbc:ID>
+  <cbc:IssueDate>${tarih}</cbc:IssueDate>
+  <cbc:IssueTime>${tarihFormatted.split('T')[1]}</cbc:IssueTime>
+  <cbc:InvoiceTypeCode>SATIS</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>
+  <cbc:LineCountNumeric>1</cbc:LineCountNumeric>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>${sellerName}</cbc:Name></cac:PartyName>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID>${sellerTax}</cbc:CompanyID>
+        <cac:TaxScheme><cbc:Name>VKN</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:PostalAddress><cbc:CityName>${sellerAddr}</cbc:CityName><cac:Country><cbc:Name>Türkiye</cbc:Name></cac:Country></cac:PostalAddress>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyName><cbc:Name>${buyerName}</cbc:Name></cac:PartyName>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID>${buyerTax}</cbc:CompanyID>
+        <cac:TaxScheme><cbc:Name>${buyerTax.length===11?'TCKN':'VKN'}</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="TRY">${kdvTutar.toFixed(2)}</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="TRY">${matrah.toFixed(2)}</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="TRY">${kdvTutar.toFixed(2)}</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:Percent>${kdvOran}</cbc:Percent>
+        <cac:TaxScheme><cbc:Name>KDV</cbc:Name></cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="TRY">${matrah.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="TRY">${matrah.toFixed(2)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="TRY">${toplam.toFixed(2)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="TRY">${toplam.toFixed(2)}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="C62">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="TRY">${matrah.toFixed(2)}</cbc:LineExtensionAmount>
+    <cac:Item><cbc:Name>Hizmet/Mal</cbc:Name></cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="TRY">${matrah.toFixed(2)}</cbc:PriceAmount></cac:Price>
+  </cac:InvoiceLine>
+</Invoice>`;
+
+  downloadFile(xml, faturaNo + '.xml', 'application/xml');
+  showNotif('e-Arşiv XML oluşturuldu: ' + faturaNo, 'ok');
+  logActivity('efatura', null, 'create', 'e-Fatura XML üretildi: ' + faturaNo);
+}
+
+function generateEfaturaPDF() {
+  const faturaNo   = document.getElementById('efNo')?.value || '–';
+  const tarih      = document.getElementById('efDate')?.value || '–';
+  const buyerName  = document.getElementById('efBuyerName')?.value || '–';
+  const buyerTax   = document.getElementById('efBuyerTax')?.value || '–';
+  const sellerName = document.getElementById('efSellerName')?.value || '–';
+  const sellerTax  = document.getElementById('efSellerTax')?.value || '–';
+  const matrah     = parseFloat(document.getElementById('efMatrah')?.value)||0;
+  const kdvOran    = parseFloat(document.getElementById('efKdv')?.value)||20;
+  const kdvTutar   = matrah * kdvOran / 100;
+  const toplam     = matrah + kdvTutar;
+
+  const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+  <style>
+    body{font-family:Arial,sans-serif;margin:30px;color:#111;font-size:13px}
+    .header{display:flex;justify-content:space-between;border-bottom:3px solid #1B4FFF;padding-bottom:16px;margin-bottom:20px}
+    .logo{font-size:24px;font-weight:900;color:#1B4FFF}
+    .badge{background:#e8f0ff;color:#1B4FFF;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;margin-bottom:6px}
+    table{width:100%;border-collapse:collapse}
+    th{background:#f3f4f6;padding:8px 10px;text-align:left;font-size:11px;color:#374151;border:1px solid #e5e7eb}
+    td{padding:8px 10px;border:1px solid #e5e7eb}
+    .total-box{background:#f8f9ff;padding:16px;border-radius:8px;text-align:right;margin-top:16px}
+    .total-main{font-size:18px;font-weight:900;color:#1B4FFF}
+    .watermark{color:#9ca3af;font-size:10px;text-align:center;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:12px}
+    @media print{body{margin:10px}}
+  </style></head><body>
+  <div class="header">
+    <div><div class="logo">VexIO</div><div style="font-size:11px;color:#6b7280">e-Arşiv Fatura</div></div>
+    <div style="text-align:right">
+      <div class="badge">e-ARŞİV FATURA</div>
+      <div style="font-weight:700">${faturaNo}</div>
+      <div style="font-size:11px;color:#6b7280">${fmtDate(tarih)}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div style="background:#f8f9ff;padding:12px;border-radius:8px">
+      <div style="font-size:10px;font-weight:700;color:#6b7280;margin-bottom:6px">SATICI</div>
+      <div style="font-weight:700">${sellerName}</div>
+      <div style="font-size:11px;color:#6b7280">VKN: ${sellerTax}</div>
+    </div>
+    <div style="background:#f8f9ff;padding:12px;border-radius:8px">
+      <div style="font-size:10px;font-weight:700;color:#6b7280;margin-bottom:6px">ALICI</div>
+      <div style="font-weight:700">${buyerName}</div>
+      <div style="font-size:11px;color:#6b7280">VKN/TCKN: ${buyerTax}</div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Açıklama</th><th style="text-align:right">Miktar</th><th style="text-align:right">Birim Fiyat</th><th style="text-align:right">Toplam</th></tr></thead>
+    <tbody><tr><td>Hizmet/Mal</td><td style="text-align:right">1</td><td style="text-align:right">₺${fmtNum(matrah)}</td><td style="text-align:right">₺${fmtNum(matrah)}</td></tr></tbody>
+  </table>
+  <div class="total-box">
+    <div style="color:#6b7280;margin-bottom:4px">Matrah: <b>₺${fmtNum(matrah)}</b></div>
+    <div style="color:#6b7280;margin-bottom:8px">KDV (%${kdvOran}): <b>₺${fmtNum(kdvTutar)}</b></div>
+    <div class="total-main">ÖDENECEK TUTAR: ₺${fmtNum(toplam)}</div>
+  </div>
+  <div class="watermark">Bu belge VexIO ile oluşturulmuştur. GİB onayı için e-Arşiv portalına yükleyin.</div>
+  <scr'+'ipt>window.onload=()=>setTimeout(()=>window.print(),400)</scr'+'ipt>\n`;
+
+  const w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+// ═══════════════════════════════════════════════
+// E-POSTA TEKLİF GÖNDERİMİ — RESEND
+// ═══════════════════════════════════════════════
+
+function saveResendKey() {
+  const key = document.getElementById('resendApiKey').value.trim();
+  if(!key || !key.startsWith('re_')) return showNotif('Geçersiz API anahtarı (re_ ile başlamalı)', 'err');
+  localStorage.setItem('vexio-resend-key', btoa(key));
+  document.getElementById('apiKeySaved').style.display = 'block';
+  document.getElementById('resendApiKey').value = '';
+  document.getElementById('resendApiKey').placeholder = '••••••••••••••••••';
+  showNotif('Resend API anahtarı kaydedildi ✅', 'ok');
+}
+
+function getResendKey() {
+  const stored = localStorage.getItem('vexio-resend-key');
+  return stored ? atob(stored) : null;
+}
+
+function openSendQuotationModal() {
+  if(!quotationItems.length) return showNotif('Önce teklif oluşturun', 'err');
+  const custEl = document.getElementById('qtCustomer');
+  const custId = custEl.value;
+  if(!custId) return showNotif('Önce müşteri seçin', 'err');
+  const cust = allCustomers.find(x=>x.id===custId);
+  if(cust && cust.email) document.getElementById('sqEmail').value = cust.email;
+  if(cust && cust.company_name) document.getElementById('sqName').value = cust.company_name;
+  const currency = document.getElementById('qtCurrency').value;
+  const sym = {TRY:'₺',EUR:'€',USD:'$'}[currency]||'₺';
+  const subtotal = quotationItems.reduce((s,i)=>s+i.price*i.qty,0);
+  const total = subtotal * 1.20;
+  const qtNo = document.getElementById('qtNo').value;
+  document.getElementById('sqSummary').innerHTML =
+    '<b>'+qtNo+'</b> · '+quotationItems.length+' kalem · Toplam: <b style="color:var(--accent)">'+sym+fmtNum(total)+'</b>';
+  const key = getResendKey();
+  if(key) {
+    document.getElementById('apiKeySaved').style.display = 'block';
+    document.getElementById('resendApiKey').placeholder = '••••••••••••••••••';
+  }
+  openModal('sendQuotation');
+}
+
+async function sendQuotationEmail() {
+  const toEmail = document.getElementById('sqEmail').value.trim();
+  const toName  = document.getElementById('sqName').value.trim();
+  if(!toEmail || !toName) return showNotif('E-posta ve isim zorunlu', 'err');
+  const resendKey = getResendKey();
+  if(!resendKey) return showNotif('Önce Resend API anahtarını kaydedin', 'err');
+  const btn = document.getElementById('btnSendQuote');
+  btn.textContent = '⏳ Gönderiliyor...';
+  btn.disabled = true;
+  const currency = document.getElementById('qtCurrency').value;
+  const qtNo = document.getElementById('qtNo').value;
+  const qtDate = document.getElementById('qtDate').value;
+  const qtValidity = document.getElementById('qtValidity') ? document.getElementById('qtValidity').value : '15';
+  const subtotal = quotationItems.reduce((s,i)=>s+i.price*i.qty,0);
+  const vat = subtotal * 0.20;
+  const total = subtotal + vat;
+  try {
+    const sbUrl = (window.supabaseUrl||'').replace(/\/$/, '');
+    const fnUrl = sbUrl + '/functions/v1/send-quotation';
+    const res = await fetch(fnUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + resendKey,
+        'x-resend-key': resendKey,
+      },
+      body: JSON.stringify({
+        to_email: toEmail, to_name: toName,
+        quote_no: qtNo, quote_date: fmtDate(qtDate),
+        validity_days: qtValidity, currency,
+        items: quotationItems, subtotal, vat, total,
+        notes: document.getElementById('sqNote').value,
+        sender_name: (currentUser && currentUser.email) || 'VexIO',
+        portal_link: null,
+      })
+    });
+    const data = await res.json();
+    if(!res.ok || data.error) throw new Error(data.error || 'Gönderim başarısız');
+    closeModal('sendQuotation');
+    showNotif('Teklif ' + toEmail + ' adresine gönderildi! ✅', 'ok');
+    logActivity('commercial_records', null, 'email', 'Teklif gönderildi: ' + toEmail + ' — ' + qtNo);
+    const custEl2 = document.getElementById('qtCustomer');
+    if(custEl2 && custEl2.value) {
+      await dbInsert('crm_interactions', {
+        customer_id: custEl2.value, type: 'email',
+        interaction_date: new Date().toISOString().split('T')[0],
+        summary: 'Teklif e-posta ile gönderildi: ' + qtNo + ' — ' + toEmail,
+        duration_min: 1
+      });
+    }
+  } catch(err) {
+    showNotif('Hata: ' + err.message, 'err');
+  } finally {
+    btn.textContent = '📧 Gönder';
+    btn.disabled = false;
+  }
 }
 
 // ═══════════════════════════════════════════════
