@@ -1379,6 +1379,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="form-group"><label class="form-label">E-posta</label><input class="form-input" id="custEmail" type="email" placeholder="info@firma.com"></div>
       <div class="form-group"><label class="form-label">Telefon</label><input class="form-input" id="custPhone" placeholder="+90 xxx xxx xx xx"></div>
     </div>
+    <div class="form-group"><label class="form-label">Adres</label><input class="form-input" id="custAddress" placeholder="Sokak, mahalle, ilçe..."></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Web Sitesi</label><input class="form-input" id="custWebsite" type="url" placeholder="https://firma.com"></div>
+      <div class="form-group"><label class="form-label">Sektör / Alan</label><input class="form-input" id="custIndustry" placeholder="Gıda, Tekstil, İmalat..."></div>
+    </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Para Birimi</label><select class="form-select" id="custCurrency"><option value="TRY">TRY</option><option value="EUR">EUR</option><option value="USD">USD</option></select></div>
       <div class="form-group"><label class="form-label">Ödeme Vadesi (gün)</label><input class="form-input" id="custPayment" type="number" placeholder="30"></div>
@@ -2817,6 +2822,9 @@ async function saveCustomer(){
     currency:document.getElementById('custCurrency').value,
     payment_terms:parseInt(document.getElementById('custPayment').value)||30,
     notes:document.getElementById('custNotes').value,
+    address:document.getElementById('custAddress')?.value||'',
+    website:document.getElementById('custWebsite')?.value||'',
+    industry:document.getElementById('custIndustry')?.value||'',
     attachments: allUrls.length ? JSON.stringify(allUrls) : null,
     project_ids: custSelectedProjects.length ? JSON.stringify(custSelectedProjects) : null,
   };
@@ -2842,6 +2850,9 @@ async function editCustomer(id){
   document.getElementById('custCurrency').value=c.currency||'TRY';
   document.getElementById('custPayment').value=c.payment_terms||30;
   document.getElementById('custNotes').value=c.notes||'';
+  if(document.getElementById('custAddress')) document.getElementById('custAddress').value=c.address||'';
+  if(document.getElementById('custWebsite')) document.getElementById('custWebsite').value=c.website||'';
+  if(document.getElementById('custIndustry')) document.getElementById('custIndustry').value=c.industry||'';
   // Load project tags
   try { custSelectedProjects = c.project_ids ? JSON.parse(c.project_ids) : []; } catch(e) { custSelectedProjects=[]; }
   loadExistingFiles('custFileList', c.attachments);
@@ -5597,14 +5608,19 @@ function renderCustomerTable(containerId, list, label, showStockBtn) {
 
 function buildCustTable(list, showStockBtn) {
   return `<div class="table-wrap"><table>
-    <thead><tr><th>Firma</th><th>Şehir / Ülke</th><th>Segment</th><th>Tür</th><th>Para Birimi</th><th>Vade</th><th></th></tr></thead>
+    <thead><tr><th>Firma</th><th>Şehir / Ülke</th><th>Sektör</th><th>Segment</th><th>Tür</th><th>Para Birimi</th><th>Web / Adres</th><th></th></tr></thead>
     <tbody>${list.map(c=>`<tr>
       <td><b>${c.company_name}</b>${c.tax_number?`<div class="text-xs">${c.tax_number}</div>`:''}</td>
       <td>${c.city||'–'}${c.country&&c.country!=='Türkiye'?` / ${c.country}`:''}</td>
+      <td style="font-size:12px;color:var(--text2)">${c.industry||'–'}</td>
       <td><span class="tag">${c.segment||'–'}</span></td>
       <td><span class="status s-active" style="font-size:10px">${{customer:'🛒 Müşteri',producer:'🏭 Üretici',broker:'🤝 Broker',domestic:'🇹🇷 Yurt İçi',export:'🌍 Yurt Dışı'}[c.type]||c.type}</span></td>
       <td>${c.currency||'TRY'}</td>
-      <td>${c.payment_terms||30} gün</td>
+      <td>
+        ${c.website?`<a href="${c.website}" target="_blank" style="color:var(--accent);font-size:11px;display:block">🔗 ${c.website.replace('https://','').replace('http://','').split('/')[0]}</a>`:''}
+        ${c.address?`<div style="font-size:10px;color:var(--text2)" title="${c.address}">📍 ${c.address.length>24?c.address.slice(0,24)+'…':c.address}</div>`:''}
+        ${!c.website&&!c.address?'–':''}
+      </td>
       <td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="editCustomer('${c.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="openComments('customer','${c.id}','${c.company_name}')" title="Yorumlar">💬</button>
