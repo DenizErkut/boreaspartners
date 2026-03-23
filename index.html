@@ -397,6 +397,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="crm-interactions" onclick="navigate(this)"><div class="nav-icon">💬</div><span class="nav-text">Etkileşim Geçmişi</span></div>
         <div class="nav-item" data-page="crm-map" onclick="navigate(this)"><div class="nav-icon">🗺️</div><span class="nav-text">İhracat Haritası</span></div>
         <div class="nav-item" data-page="commercial" onclick="navigate(this)"><div class="nav-icon">💼</div><span class="nav-text">Ticari Kayıtlar</span></div>
+        <div class="nav-item" data-page="cari" onclick="navigate(this)"><div class="nav-icon">🏦</div><span class="nav-text">Cari Hesaplar</span></div>
         <div class="nav-item" data-page="efatura" onclick="navigate(this)"><div class="nav-icon">🧾</div><span class="nav-text">e-Fatura</span></div>
         <div class="nav-item" data-page="expenses" onclick="navigate(this)"><div class="nav-icon">💳</div><span class="nav-text">Masraf Takibi</span></div>
       </div>
@@ -1204,6 +1205,103 @@ tr:hover td{background:rgba(255,255,255,.02)}
                 Tablo seçin, şablonu indirin ve doldurun.
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CARİ HESAPLAR ── -->
+      <div class="page" id="page-cari">
+        <!-- KPI -->
+        <div class="grid grid-4 mb-14">
+          <div class="kpi blue"><div class="kpi-label">Toplam Alacak</div><div class="kpi-value" id="cariKpi1">–</div><div class="kpi-icon">📈</div></div>
+          <div class="kpi red"><div class="kpi-label">Toplam Borç</div><div class="kpi-value" id="cariKpi2">–</div><div class="kpi-icon">📉</div></div>
+          <div class="kpi green"><div class="kpi-label">Net Bakiye</div><div class="kpi-value" id="cariKpi3">–</div><div class="kpi-icon">💰</div></div>
+          <div class="kpi yellow"><div class="kpi-label">Vadesi Geçen</div><div class="kpi-value" id="cariKpi4">–</div><div class="kpi-icon">⏰</div></div>
+        </div>
+        <!-- TABS -->
+        <div class="flex-btw mb-14" style="flex-wrap:wrap;gap:8px">
+          <div class="tabs" style="margin-bottom:0;flex-wrap:wrap">
+            <div class="tab active" onclick="switchTab(this,'tCariList')">📋 Cari Listesi</div>
+            <div class="tab" onclick="switchTab(this,'tCariHareketler')">🔄 Hareketler</div>
+            <div class="tab" onclick="switchTab(this,'tCariEkstre')">📄 Ekstre</div>
+            <div class="tab" onclick="switchTab(this,'tCariCek')">📝 Çek / Senet</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('cariBaslangic')">⚙️ Başlangıç Bakiyesi</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('cariHareket')">+ Hareket Ekle</button>
+          </div>
+        </div>
+        <div class="card">
+          <!-- CARİ LİSTESİ -->
+          <div id="tCariList" class="tab-content active">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <select class="form-select" id="cariTypeFilter" onchange="loadCariList()" style="width:160px;font-size:12px">
+                <option value="">Tüm Cariler</option>
+                <option value="customer">🛒 Müşteri</option>
+                <option value="producer">🏭 Üretici/Tedarikçi</option>
+                <option value="broker">🤝 Broker</option>
+                <option value="staff">👤 Personel</option>
+              </select>
+              <input class="form-input" id="cariSearch" placeholder="Cari ara..." oninput="loadCariList()" style="width:200px;font-size:12px">
+            </div>
+            <div id="cariListBody"><div class="loading"><div class="spinner"></div></div></div>
+          </div>
+          <!-- HAREKETLEr -->
+          <div id="tCariHareketler" class="tab-content">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+              <select class="form-select" id="hareketCariFilter" onchange="loadHareketler()" style="width:200px;font-size:12px">
+                <option value="">Tüm Cariler</option>
+              </select>
+              <select class="form-select" id="hareketTypeFilter" onchange="loadHareketler()" style="width:150px;font-size:12px">
+                <option value="">Tüm Türler</option>
+                <option value="tahsilat">💚 Tahsilat</option>
+                <option value="tediye">❤️ Tediye</option>
+                <option value="fatura">🧾 Fatura</option>
+                <option value="iade">↩️ İade</option>
+                <option value="baslangic">⚙️ Başlangıç</option>
+              </select>
+              <input class="form-input" id="hareketDateStart" type="date" style="width:140px;font-size:12px" onchange="loadHareketler()">
+              <input class="form-input" id="hareketDateEnd" type="date" style="width:140px;font-size:12px" onchange="loadHareketler()">
+              <button class="btn btn-ghost btn-sm" onclick="exportHareketlerCSV()">📥 CSV</button>
+            </div>
+            <div id="hareketlerBody"><div class="empty">Cari seçin veya filtre uygulayın</div></div>
+          </div>
+          <!-- EKSTRE -->
+          <div id="tCariEkstre" class="tab-content">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:flex-end">
+              <div>
+                <div class="form-label" style="font-size:10px;margin-bottom:4px">CARİ *</div>
+                <select class="form-select" id="ekstreCari" style="width:220px;font-size:12px">
+                  <option value="">Seçin...</option>
+                </select>
+              </div>
+              <div>
+                <div class="form-label" style="font-size:10px;margin-bottom:4px">BAŞLANGIÇ</div>
+                <input class="form-input" id="ekstreStart" type="date" style="width:140px;font-size:12px">
+              </div>
+              <div>
+                <div class="form-label" style="font-size:10px;margin-bottom:4px">BİTİŞ</div>
+                <input class="form-input" id="ekstreEnd" type="date" style="width:140px;font-size:12px">
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="generateEkstre()">📊 Ekstre Oluştur</button>
+              <button class="btn btn-ghost btn-sm" onclick="printEkstre()">🖨️ PDF / Yazdır</button>
+            </div>
+            <div id="ekstreBody"><div class="empty">Cari ve dönem seçip "Ekstre Oluştur" butonuna basın</div></div>
+          </div>
+          <!-- ÇEK / SENET -->
+          <div id="tCariCek" class="tab-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="display:flex;gap:8px">
+                <select class="form-select" id="cekStatusFilter" onchange="loadCekler()" style="width:150px;font-size:12px">
+                  <option value="">Tüm Durumlar</option>
+                  <option value="bekliyor">⏳ Bekliyor</option>
+                  <option value="tahsil">✅ Tahsil Edildi</option>
+                  <option value="protestolu">❌ Protestolu</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openModal('cek')">+ Çek / Senet Ekle</button>
+            </div>
+            <div id="ceklerBody"><div class="loading"><div class="spinner"></div></div></div>
           </div>
         </div>
       </div>
@@ -2035,6 +2133,171 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── CARİ HAREKET MODAL ── -->
+<div class="modal-overlay" id="m-cariHareket">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="mCariHareketTitle">Hareket Ekle</div>
+      <button class="modal-close" onclick="closeModal('cariHareket')">✕</button>
+    </div>
+    <input type="hidden" id="chId">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Hareket Türü *</label>
+        <select class="form-select" id="chType" onchange="updateCariHareketForm()">
+          <option value="tahsilat">💚 Tahsilat (Müşteriden Para Geldi)</option>
+          <option value="tediye">❤️ Tediye (Ödeme Yapıldı)</option>
+          <option value="fatura">🧾 Borç / Fatura</option>
+          <option value="iade">↩️ İade</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Tarih *</label>
+        <input class="form-input" id="chDate" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Cari *</label>
+        <select class="form-select" id="chCari"><option value="">Seçin...</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Proje</label>
+        <select class="form-select" id="chProject"><option value="">Proje seçin</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tutar *</label>
+        <input class="form-input" id="chAmount" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group"><label class="form-label">Para Birimi</label>
+        <select class="form-select" id="chCurrency">
+          <option value="TRY">TRY ₺</option>
+          <option value="EUR">EUR €</option>
+          <option value="USD">USD $</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Ödeme Yöntemi</label>
+      <select class="form-select" id="chPayMethod">
+        <option value="nakit">💵 Nakit</option>
+        <option value="havale">🏦 Havale / EFT</option>
+        <option value="kredi_karti">💳 Kredi Kartı</option>
+        <option value="cek">📝 Çek</option>
+        <option value="senet">📋 Senet</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Açıklama</label>
+      <input class="form-input" id="chDesc" placeholder="Ödeme açıklaması, fatura no vb.">
+    </div>
+    <div class="form-group"><label class="form-label">Vade Tarihi</label>
+      <input class="form-input" id="chDueDate" type="date">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cariHareket')">İptal</button>
+      <button class="btn btn-primary" onclick="saveCariHareket()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── BAŞLANGIÇ BAKİYESİ MODAL ── -->
+<div class="modal-overlay" id="m-cariBaslangic">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Başlangıç Bakiyesi Tanımla</div>
+      <button class="modal-close" onclick="closeModal('cariBaslangic')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">Cari *</label>
+      <select class="form-select" id="bsCari"><option value="">Seçin...</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Bakiye Türü</label>
+        <select class="form-select" id="bsType">
+          <option value="alacak">📈 Alacak (Bize Borçlu)</option>
+          <option value="borc">📉 Borç (Biz Borçluyuz)</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Tutar *</label>
+        <input class="form-input" id="bsAmount" type="number" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Para Birimi</label>
+        <select class="form-select" id="bsCurrency">
+          <option value="TRY">TRY ₺</option>
+          <option value="EUR">EUR €</option>
+          <option value="USD">USD $</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Tarih</label>
+        <input class="form-input" id="bsDate" type="date">
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Not</label>
+      <input class="form-input" id="bsNote" placeholder="Devir bakiyesi, açılış kaydı vb.">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cariBaslangic')">İptal</button>
+      <button class="btn btn-primary" onclick="saveBaslangicBakiye()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ÇEK / SENET MODAL ── -->
+<div class="modal-overlay" id="m-cek">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="mCekTitle">Çek / Senet Ekle</div>
+      <button class="modal-close" onclick="closeModal('cek')">✕</button>
+    </div>
+    <input type="hidden" id="cekId">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tür *</label>
+        <select class="form-select" id="cekType">
+          <option value="cek_alacak">📥 Alınan Çek</option>
+          <option value="cek_verecek">📤 Verilen Çek</option>
+          <option value="senet_alacak">📋 Alınan Senet</option>
+          <option value="senet_verecek">📋 Verilen Senet</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Cari *</label>
+        <select class="form-select" id="cekCari"><option value="">Seçin...</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Belge No *</label>
+        <input class="form-input" id="cekNo" placeholder="Çek/senet numarası">
+      </div>
+      <div class="form-group"><label class="form-label">Banka / Kurum</label>
+        <input class="form-input" id="cekBanka" placeholder="Garanti, İş Bankası vb.">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tutar *</label>
+        <input class="form-input" id="cekAmount" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group"><label class="form-label">Para Birimi</label>
+        <select class="form-select" id="cekCurrency">
+          <option value="TRY">TRY ₺</option>
+          <option value="EUR">EUR €</option>
+          <option value="USD">USD $</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Düzenlenme Tarihi</label>
+        <input class="form-input" id="cekIssueDate" type="date">
+      </div>
+      <div class="form-group"><label class="form-label">Vade Tarihi *</label>
+        <input class="form-input" id="cekDueDate" type="date">
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Not</label>
+      <input class="form-input" id="cekNote" placeholder="Ek açıklama...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cek')">İptal</button>
+      <button class="btn btn-primary" onclick="saveCek()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <!-- NOTIFICATION PANEL -->
 <div id="notifPanel" style="display:none;position:fixed;top:56px;right:16px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px var(--shadow);z-index:500;max-height:480px;overflow-y:auto">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
@@ -2089,7 +2352,7 @@ const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', gantt:'Gantt Chart — Proje Takvimi', recurring:'Tekrarlayan Görevler', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
-  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", efatura:'e-Fatura', expenses:'Masraf Takibi', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
+  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", efatura:'e-Fatura', cari:'Cari Hesaplar', expenses:'Masraf Takibi', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
 };
 
 const STATUS_TR = {
@@ -2559,7 +2822,7 @@ function navigate(el) {
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
-    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, efatura: loadEfatura, expenses: loadExpenses, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
+    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, efatura: loadEfatura, cari: loadCari, expenses: loadExpenses, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
   };
   if (loaders[page]) loaders[page]();
   // Re-apply translations after page switch
@@ -4262,6 +4525,502 @@ async function saveQuotationToCommercial() {
   });
   if(error) return showNotif('Hata: '+(error.message||''),'err');
   showNotif('Ticari kayda aktarıldı!','ok');
+}
+
+// ═══════════════════════════════════════════════
+// CARİ HESAPLAR MODÜLİ
+// ═══════════════════════════════════════════════
+let allCariHareketler = [];
+let allCekler = [];
+let allCariCustomers = [];
+
+// ── YÜKLEYİCİ ────────────────────────────────
+async function loadCari() {
+  // Tüm cari müşterileri yükle
+  const { data: custs } = await dbSelect('customers', { order:'company_name' });
+  allCariCustomers = custs || [];
+
+  // Tüm hareketleri yükle
+  const { data: hareketler } = await dbSelect('cari_hareketler', {
+    select: '*, customers(company_name,type), projects(name)',
+    order: 'hareket_tarihi', asc: false
+  });
+  allCariHareketler = hareketler || [];
+
+  // Çekleri yükle
+  const { data: cekler } = await dbSelect('cek_senetler', {
+    select: '*, customers(company_name)',
+    order: 'vade_tarihi', asc: true
+  });
+  allCekler = cekler || [];
+
+  // KPI hesapla
+  renderCariKpi(allCariHareketler);
+
+  // Seçim listelerini doldur
+  populateCariSelects();
+
+  // Cari listesini yükle
+  loadCariList();
+  loadCekler();
+}
+
+function populateCariSelects() {
+  // Tüm cari seçim alanları
+  const opts = allCariCustomers.map(c =>
+    `<option value="${c.id}">${c.company_name}</option>`
+  ).join('');
+  const allOpts = '<option value="">Tüm Cariler</option>' + opts;
+  const selOpts = '<option value="">Seçin...</option>' + opts;
+
+  ['hareketCariFilter','ekstreCari'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = allOpts;
+  });
+  ['chCari','bsCari','cekCari'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = selOpts;
+  });
+
+  // Proje seçimi
+  dbSelect('projects', { select:'id,name', order:'name' }).then(({ data }) => {
+    const pOpts = '<option value="">Proje seçin</option>' +
+      (data||[]).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    const chp = document.getElementById('chProject');
+    if(chp) chp.innerHTML = pOpts;
+  });
+}
+
+// ── KPI ──────────────────────────────────────
+function renderCariKpi(hareketler) {
+  let alacak = 0, borc = 0, vadesiGecen = 0;
+  const today = new Date().toISOString().split('T')[0];
+
+  hareketler.forEach(h => {
+    const tutar = Number(h.tutar||0);
+    if(['tahsilat','iade'].includes(h.hareket_turu)) alacak += tutar;
+    if(['tediye','fatura','baslangic_borc'].includes(h.hareket_turu)) borc += tutar;
+    if(['baslangic_alacak'].includes(h.hareket_turu)) alacak += tutar;
+    if(h.vade_tarihi && h.vade_tarihi < today && h.hareket_turu === 'fatura') vadesiGecen += tutar;
+  });
+
+  const net = alacak - borc;
+  const sym = '₺';
+  document.getElementById('cariKpi1').textContent = sym + fmtNum(alacak);
+  document.getElementById('cariKpi2').textContent = sym + fmtNum(borc);
+  document.getElementById('cariKpi3').textContent = (net >= 0 ? '+' : '') + sym + fmtNum(Math.abs(net));
+  document.getElementById('cariKpi3').style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+  document.getElementById('cariKpi4').textContent = sym + fmtNum(vadesiGecen);
+}
+
+// ── CARİ LİSTESİ ─────────────────────────────
+function loadCariList() {
+  const typeFilter = document.getElementById('cariTypeFilter')?.value;
+  const search = document.getElementById('cariSearch')?.value?.toLowerCase();
+  let list = allCariCustomers;
+  if(typeFilter) list = list.filter(c => c.type === typeFilter);
+  if(search) list = list.filter(c => c.company_name.toLowerCase().includes(search));
+
+  const el = document.getElementById('cariListBody');
+  if(!el) return;
+
+  if(!list.length) { el.innerHTML = '<div class="empty">Cari bulunamadı</div>'; return; }
+
+  // Her cari için bakiye hesapla
+  const cariBalances = {};
+  allCariHareketler.forEach(h => {
+    const cid = h.customer_id;
+    if(!cid) return;
+    if(!cariBalances[cid]) cariBalances[cid] = 0;
+    const t = Number(h.tutar||0);
+    if(['tahsilat','iade','baslangic_alacak'].includes(h.hareket_turu)) cariBalances[cid] += t;
+    if(['tediye','fatura','baslangic_borc'].includes(h.hareket_turu)) cariBalances[cid] -= t;
+  });
+
+  const typeIcons = { customer:'🛒', producer:'🏭', broker:'🤝', domestic:'🇹🇷', export:'🌍', staff:'👤' };
+
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Cari</th><th>Tür</th><th>Şehir</th><th>Para Birimi</th><th>Bakiye</th><th></th></tr></thead>
+    <tbody>${list.map(c => {
+      const bal = cariBalances[c.id] || 0;
+      const balColor = bal > 0 ? 'var(--success)' : bal < 0 ? 'var(--danger)' : 'var(--text2)';
+      const balText = (bal > 0 ? '+' : '') + '₺' + fmtNum(Math.abs(bal));
+      return `<tr>
+        <td><b>${c.company_name}</b></td>
+        <td>${typeIcons[c.type]||'👤'} ${c.type}</td>
+        <td>${c.city||'–'}</td>
+        <td>${c.currency||'TRY'}</td>
+        <td style="font-weight:700;color:${balColor}">${balText}</td>
+        <td style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="quickEkstre('${c.id}')" title="Ekstre">📄</button>
+          <button class="btn btn-primary btn-sm" style="font-size:11px" onclick="quickHareket('${c.id}')">+ Hareket</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function quickHareket(custId) {
+  openModal('cariHareket');
+  setTimeout(() => {
+    const el = document.getElementById('chCari');
+    if(el) el.value = custId;
+  }, 100);
+}
+
+function quickEkstre(custId) {
+  // Ekstre tabına geç
+  document.querySelector('[onclick*="tCariEkstre"]')?.click();
+  setTimeout(() => {
+    const el = document.getElementById('ekstreCari');
+    if(el) { el.value = custId; generateEkstre(); }
+  }, 100);
+}
+
+// ── HAREKETLER ────────────────────────────────
+async function loadHareketler() {
+  const cariId  = document.getElementById('hareketCariFilter')?.value;
+  const type    = document.getElementById('hareketTypeFilter')?.value;
+  const dtStart = document.getElementById('hareketDateStart')?.value;
+  const dtEnd   = document.getElementById('hareketDateEnd')?.value;
+
+  let list = allCariHareketler;
+  if(cariId)  list = list.filter(h => h.customer_id === cariId);
+  if(type)    list = list.filter(h => h.hareket_turu === type);
+  if(dtStart) list = list.filter(h => h.hareket_tarihi >= dtStart);
+  if(dtEnd)   list = list.filter(h => h.hareket_tarihi <= dtEnd);
+
+  const el = document.getElementById('hareketlerBody');
+  if(!el) return;
+  if(!list.length) { el.innerHTML = '<div class="empty">Hareket bulunamadı</div>'; return; }
+
+  const turLabel = {
+    tahsilat:'💚 Tahsilat', tediye:'❤️ Tediye', fatura:'🧾 Fatura',
+    iade:'↩️ İade', baslangic_alacak:'⚙️ Açılış Alacak', baslangic_borc:'⚙️ Açılış Borç'
+  };
+  const odemeLabel = {
+    nakit:'💵 Nakit', havale:'🏦 Havale', kredi_karti:'💳 K.Kartı', cek:'📝 Çek', senet:'📋 Senet'
+  };
+
+  // Bakiye koşum toplamı
+  let bakiye = 0;
+  const rows = list.map(h => {
+    const tutar = Number(h.tutar||0);
+    const isAlacak = ['tahsilat','iade','baslangic_alacak'].includes(h.hareket_turu);
+    if(isAlacak) bakiye += tutar; else bakiye -= tutar;
+    const sym = {TRY:'₺',EUR:'€',USD:'$'}[h.para_birimi]||'₺';
+    return `<tr>
+      <td style="white-space:nowrap">${fmtDate(h.hareket_tarihi)}</td>
+      <td>${h.customers?.company_name||'–'}</td>
+      <td>${turLabel[h.hareket_turu]||h.hareket_turu}</td>
+      <td>${h.aciklama||'–'}</td>
+      <td>${odemeLabel[h.odeme_yontemi]||'–'}</td>
+      <td style="color:${isAlacak?'var(--success)':'var(--danger)'};font-weight:700;text-align:right">
+        ${isAlacak?'+':'-'}${sym}${fmtNum(tutar)}
+      </td>
+      <td style="text-align:right;font-weight:600">${bakiye>=0?'+':'-'}₺${fmtNum(Math.abs(bakiye))}</td>
+      <td>${h.vade_tarihi?`<span style="font-size:11px;color:var(--text2)">${fmtDate(h.vade_tarihi)}</span>`:'–'}</td>
+      <td>${h.projects?.name?`<span class="tag" style="font-size:10px">📁 ${h.projects.name}</span>`:'–'}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteCariHareket('${h.id}')">🗑</button>
+      </td>
+    </tr>`;
+  });
+
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Tarih</th><th>Cari</th><th>Tür</th><th>Açıklama</th><th>Ödeme</th>
+      <th style="text-align:right">Tutar</th><th style="text-align:right">Bakiye</th>
+      <th>Vade</th><th>Proje</th><th></th></tr></thead>
+    <tbody>${rows.join('')}</tbody>
+  </table></div>`;
+}
+
+async function deleteCariHareket(id) {
+  if(!confirm('Bu hareketi silmek istediğinizden emin misiniz?')) return;
+  const { error } = await dbDelete('cari_hareketler', id);
+  if(error) return showNotif('Hata: ' + error.message, 'err');
+  allCariHareketler = allCariHareketler.filter(h => h.id !== id);
+  renderCariKpi(allCariHareketler);
+  loadHareketler();
+  loadCariList();
+  showNotif('Hareket silindi', 'ok');
+}
+
+function exportHareketlerCSV() {
+  const list = allCariHareketler;
+  const rows = [
+    ['Tarih','Cari','Tür','Açıklama','Ödeme Yöntemi','Tutar','Para Birimi','Vade','Proje'],
+    ...list.map(h => [
+      h.hareket_tarihi, h.customers?.company_name||'',
+      h.hareket_turu, h.aciklama||'', h.odeme_yontemi||'',
+      h.tutar, h.para_birimi, h.vade_tarihi||'', h.projects?.name||''
+    ])
+  ];
+  const csv = rows.map(r => r.map(v => String(v).includes(',') ? '"'+v+'"' : v).join(',')).join('\n');
+  downloadFile('\uFEFF'+csv, 'cari-hareketler-'+new Date().toISOString().slice(0,10)+'.csv', 'text/csv');
+  showNotif('CSV indirildi!', 'ok');
+}
+
+// ── HAREKET KAYDET ────────────────────────────
+async function saveCariHareket() {
+  const id     = document.getElementById('chId').value;
+  const cariId = document.getElementById('chCari').value;
+  const type   = document.getElementById('chType').value;
+  const amount = parseFloat(document.getElementById('chAmount').value);
+  const date   = document.getElementById('chDate').value;
+  if(!cariId || !amount || !date) return showNotif('Cari, tutar ve tarih zorunlu', 'err');
+
+  const d = {
+    customer_id:    cariId,
+    hareket_turu:   type,
+    hareket_tarihi: date,
+    tutar:          amount,
+    para_birimi:    document.getElementById('chCurrency').value,
+    odeme_yontemi:  document.getElementById('chPayMethod').value,
+    aciklama:       document.getElementById('chDesc').value,
+    vade_tarihi:    document.getElementById('chDueDate').value || null,
+    project_id:     document.getElementById('chProject').value || null,
+    created_by:     currentUser?.id,
+  };
+
+  const res = id ? await dbUpdate('cari_hareketler', id, d) : await dbInsert('cari_hareketler', d);
+  if(res.error) return showNotif('Hata: ' + res.error.message, 'err');
+
+  closeModal('cariHareket');
+  showNotif('Hareket kaydedildi!', 'ok');
+  logActivity('cari_hareketler', null, id?'update':'create', type + ' — ' + amount + ' ' + d.para_birimi);
+  await loadCari();
+  loadHareketler();
+}
+
+// ── BAŞLANGIÇ BAKİYESİ ────────────────────────
+async function saveBaslangicBakiye() {
+  const cariId = document.getElementById('bsCari').value;
+  const type   = document.getElementById('bsType').value;
+  const amount = parseFloat(document.getElementById('bsAmount').value);
+  if(!cariId || !amount) return showNotif('Cari ve tutar zorunlu', 'err');
+
+  const d = {
+    customer_id:    cariId,
+    hareket_turu:   type === 'alacak' ? 'baslangic_alacak' : 'baslangic_borc',
+    hareket_tarihi: document.getElementById('bsDate').value || new Date().toISOString().split('T')[0],
+    tutar:          amount,
+    para_birimi:    document.getElementById('bsCurrency').value,
+    aciklama:       document.getElementById('bsNote').value || 'Açılış bakiyesi',
+    created_by:     currentUser?.id,
+  };
+
+  const res = await dbInsert('cari_hareketler', d);
+  if(res.error) return showNotif('Hata: ' + res.error.message, 'err');
+  closeModal('cariBaslangic');
+  showNotif('Başlangıç bakiyesi kaydedildi!', 'ok');
+  await loadCari();
+}
+
+// ── EKSTRE ────────────────────────────────────
+async function generateEkstre() {
+  const cariId  = document.getElementById('ekstreCari')?.value;
+  const dtStart = document.getElementById('ekstreStart')?.value;
+  const dtEnd   = document.getElementById('ekstreEnd')?.value;
+  const el      = document.getElementById('ekstreBody');
+  if(!el) return;
+  if(!cariId) { el.innerHTML = '<div class="empty">Cari seçin</div>'; return; }
+
+  const cust = allCariCustomers.find(c => c.id === cariId);
+  let list = allCariHareketler.filter(h => h.customer_id === cariId);
+  const openingList = dtStart ? list.filter(h => h.hareket_tarihi < dtStart) : [];
+  if(dtStart) list = list.filter(h => h.hareket_tarihi >= dtStart);
+  if(dtEnd)   list = list.filter(h => h.hareket_tarihi <= dtEnd);
+
+  // Açılış bakiyesi
+  let openingBal = 0;
+  openingList.forEach(h => {
+    const t = Number(h.tutar||0);
+    if(['tahsilat','iade','baslangic_alacak'].includes(h.hareket_turu)) openingBal += t;
+    else openingBal -= t;
+  });
+
+  // Koşum bakiyesi
+  let bakiye = openingBal;
+  let topTahsilat = 0, topTediye = 0;
+  const rows = list.map(h => {
+    const t = Number(h.tutar||0);
+    const isAlacak = ['tahsilat','iade','baslangic_alacak'].includes(h.hareket_turu);
+    if(isAlacak) { bakiye += t; topTahsilat += t; }
+    else { bakiye -= t; topTediye += t; }
+    const sym = {TRY:'₺',EUR:'€',USD:'$'}[h.para_birimi]||'₺';
+    return `<tr style="border-bottom:1px solid #e5e7eb">
+      <td style="padding:6px 10px;font-size:12px">${fmtDate(h.hareket_tarihi)}</td>
+      <td style="padding:6px 10px;font-size:12px">${h.aciklama||h.hareket_turu}</td>
+      <td style="padding:6px 10px;text-align:right;color:${isAlacak?'#10B981':'#EF4444'};font-weight:600">
+        ${isAlacak ? sym+fmtNum(t) : ''}
+      </td>
+      <td style="padding:6px 10px;text-align:right;color:${!isAlacak?'#EF4444':'#10B981'};font-weight:600">
+        ${!isAlacak ? sym+fmtNum(t) : ''}
+      </td>
+      <td style="padding:6px 10px;text-align:right;font-weight:700;color:${bakiye>=0?'#10B981':'#EF4444'}">
+        ${bakiye>=0?'+':'-'}₺${fmtNum(Math.abs(bakiye))}
+      </td>
+    </tr>`;
+  });
+
+  el.innerHTML = `
+    <div id="ekstrePrintArea" style="font-family:Arial,sans-serif;font-size:13px">
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #1B4FFF">
+        <div>
+          <div style="font-size:22px;font-weight:900;color:#1B4FFF">VexIO</div>
+          <div style="font-size:11px;color:#6b7280">Cari Hesap Ekstresi</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:15px;font-weight:700">${cust?.company_name||'–'}</div>
+          <div style="font-size:11px;color:#6b7280">
+            ${dtStart||'Başlangıç'} — ${dtEnd||'Bugün'}
+          </div>
+        </div>
+      </div>
+      <!-- Açılış -->
+      ${openingBal !== 0 ? `<div style="background:#f8f9ff;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px">
+        <span style="color:#6b7280">Dönem Başı Bakiyesi: </span>
+        <b style="color:${openingBal>=0?'#10B981':'#EF4444'}">${openingBal>=0?'+':'-'}₺${fmtNum(Math.abs(openingBal))}</b>
+      </div>` : ''}
+      <!-- Tablo -->
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#f3f4f6">
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#374151;border-bottom:2px solid #e5e7eb">Tarih</th>
+            <th style="padding:8px 10px;text-align:left;font-size:11px;color:#374151;border-bottom:2px solid #e5e7eb">Açıklama</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#10B981;border-bottom:2px solid #e5e7eb">Alacak (+)</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#EF4444;border-bottom:2px solid #e5e7eb">Borç (-)</th>
+            <th style="padding:8px 10px;text-align:right;font-size:11px;color:#374151;border-bottom:2px solid #e5e7eb">Bakiye</th>
+          </tr>
+        </thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+      <!-- Özet -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px">
+        <div style="background:#E8F5E9;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#388E3C;margin-bottom:4px">Toplam Alacak</div>
+          <div style="font-size:16px;font-weight:800;color:#10B981">+₺${fmtNum(topTahsilat)}</div>
+        </div>
+        <div style="background:#FFEBEE;border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#C62828;margin-bottom:4px">Toplam Borç</div>
+          <div style="font-size:16px;font-weight:800;color:#EF4444">-₺${fmtNum(topTediye)}</div>
+        </div>
+        <div style="background:${bakiye>=0?'#E8F5E9':'#FFEBEE'};border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Net Bakiye</div>
+          <div style="font-size:16px;font-weight:800;color:${bakiye>=0?'#10B981':'#EF4444'}">
+            ${bakiye>=0?'+':'-'}₺${fmtNum(Math.abs(bakiye))}
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;font-size:10px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:10px">
+        Bu ekstre VexIO Yönetim Sistemi tarafından ${new Date().toLocaleDateString('tr-TR')} tarihinde oluşturulmuştur.
+      </div>
+    </div>`;
+}
+
+function printEkstre() {
+  const area = document.getElementById('ekstrePrintArea');
+  if(!area) return showNotif('Önce ekstre oluşturun', 'err');
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>body{font-family:Arial,sans-serif;margin:24px;color:#111}@media print{body{margin:8px}}</style>
+    </head><body>${area.innerHTML}</body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 400);
+}
+
+// ── ÇEK / SENET ──────────────────────────────
+function loadCekler() {
+  const statusFilter = document.getElementById('cekStatusFilter')?.value;
+  let list = allCekler;
+  if(statusFilter) list = list.filter(c => c.durum === statusFilter);
+
+  const el = document.getElementById('ceklerBody');
+  if(!el) return;
+  if(!list.length) { el.innerHTML = '<div class="empty">Çek/Senet kaydı yok</div>'; return; }
+
+  const today = new Date().toISOString().split('T')[0];
+  const turLabel = {
+    cek_alacak:'📥 Alınan Çek', cek_verecek:'📤 Verilen Çek',
+    senet_alacak:'📋 Alınan Senet', senet_verecek:'📋 Verilen Senet'
+  };
+  const durumBadge = d => ({
+    bekliyor: '<span class="status" style="background:rgba(245,158,11,.15);color:#F59E0B">⏳ Bekliyor</span>',
+    tahsil:   '<span class="status s-active">✅ Tahsil Edildi</span>',
+    protestolu:'<span class="status s-cancelled">❌ Protestolu</span>',
+  }[d] || d);
+
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr><th>Tür</th><th>Cari</th><th>Belge No</th><th>Banka</th>
+      <th>Tutar</th><th>Düzenleme</th><th>Vade</th><th>Durum</th><th></th></tr></thead>
+    <tbody>${list.map(c => {
+      const isOverdue = c.vade_tarihi < today && c.durum === 'bekliyor';
+      return `<tr style="${isOverdue?'background:rgba(239,68,68,.05)':''}">
+        <td>${turLabel[c.cek_turu]||c.cek_turu}</td>
+        <td><b>${c.customers?.company_name||'–'}</b></td>
+        <td><span class="tag">${c.belge_no}</span></td>
+        <td style="font-size:12px">${c.banka||'–'}</td>
+        <td style="font-weight:700;color:var(--accent)">${{TRY:'₺',EUR:'€',USD:'$'}[c.para_birimi]||'₺'}${fmtNum(c.tutar)}</td>
+        <td style="font-size:12px">${c.duzenleme_tarihi?fmtDate(c.duzenleme_tarihi):'–'}</td>
+        <td style="font-weight:600;color:${isOverdue?'var(--danger)':'var(--text)'}">
+          ${fmtDate(c.vade_tarihi)}${isOverdue?' ⚠️':''}
+        </td>
+        <td>${durumBadge(c.durum)}</td>
+        <td style="display:flex;gap:4px">
+          ${c.durum==='bekliyor'?`
+            <button class="btn btn-primary btn-sm" style="font-size:10px" onclick="updateCekDurum('${c.id}','tahsil')">✅ Tahsil</button>
+            <button class="btn btn-danger btn-sm" style="font-size:10px" onclick="updateCekDurum('${c.id}','protestolu')">❌ Protesto</button>
+          `:''}
+          <button class="btn btn-ghost btn-sm" onclick="deleteCek('${c.id}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+async function saveCek() {
+  const d = {
+    cek_turu:          document.getElementById('cekType').value,
+    customer_id:       document.getElementById('cekCari').value,
+    belge_no:          document.getElementById('cekNo').value,
+    banka:             document.getElementById('cekBanka').value,
+    tutar:             parseFloat(document.getElementById('cekAmount').value),
+    para_birimi:       document.getElementById('cekCurrency').value,
+    duzenleme_tarihi:  document.getElementById('cekIssueDate').value || null,
+    vade_tarihi:       document.getElementById('cekDueDate').value,
+    notlar:            document.getElementById('cekNote').value,
+    durum:             'bekliyor',
+    created_by:        currentUser?.id,
+  };
+  if(!d.customer_id || !d.belge_no || !d.tutar || !d.vade_tarihi)
+    return showNotif('Cari, belge no, tutar ve vade zorunlu', 'err');
+  const { error } = await dbInsert('cek_senetler', d);
+  if(error) return showNotif('Hata: ' + error.message, 'err');
+  closeModal('cek');
+  showNotif('Çek/Senet kaydedildi!', 'ok');
+  const { data } = await dbSelect('cek_senetler', { select:'*,customers(company_name)', order:'vade_tarihi', asc:true });
+  allCekler = data || [];
+  loadCekler();
+}
+
+async function updateCekDurum(id, durum) {
+  const { error } = await dbUpdate('cek_senetler', id, { durum });
+  if(error) return showNotif('Hata', 'err');
+  const idx = allCekler.findIndex(c => c.id === id);
+  if(idx >= 0) allCekler[idx].durum = durum;
+  loadCekler();
+  showNotif(durum === 'tahsil' ? '✅ Tahsil edildi olarak işaretlendi!' : '❌ Protestolu olarak işaretlendi', 'ok');
+}
+
+async function deleteCek(id) {
+  if(!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return;
+  const { error } = await dbDelete('cek_senetler', id);
+  if(error) return showNotif('Hata', 'err');
+  allCekler = allCekler.filter(c => c.id !== id);
+  loadCekler();
+  showNotif('Silindi', 'ok');
 }
 
 // ═══════════════════════════════════════════════
