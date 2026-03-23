@@ -2455,9 +2455,30 @@ async function loadProducts() {
   document.getElementById('prodRetail').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const { data } = await dbSelect('products', { order:'code' });
   const prods = data || [];
+  allProductsCache = prods;
   renderProductsRetail(prods);
   renderProductsWholesale(prods);
   renderProductsExport(prods);
+  // Populate project dropdowns
+  const {data:projs} = await dbSelect('projects', {select:'id,name', order:'name'});
+  const opts = (projs||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  ['prodProjectFilter','stockProjectFilter'].forEach(sid=>{
+    const el = document.getElementById(sid);
+    if(el) el.innerHTML = '<option value="">Tüm Projeler</option>'+opts;
+  });
+  // Populate producer/broker selects
+  const {data:custs} = await dbSelect('customers', {order:'company_name'});
+  const producers = (custs||[]).filter(c=>c.type==='producer');
+  const brokers   = (custs||[]).filter(c=>c.type==='broker');
+  const ppf = document.getElementById('prodProducerFilter');
+  const pbf = document.getElementById('prodBrokerFilter');
+  if(ppf) ppf.innerHTML='<option value="">Tüm Üreticiler</option>'+producers.map(p=>`<option value="${p.id}">${p.company_name}</option>`).join('');
+  if(pbf) pbf.innerHTML='<option value="">Tüm Brokerlar</option>'+brokers.map(b=>`<option value="${b.id}">${b.company_name}</option>`).join('');
+  // Product modal project select
+  const prodProjSel = document.getElementById('prodProject');
+  if(prodProjSel) prodProjSel.innerHTML='<option value="">Proje seçin (isteğe bağlı)</option>'+opts;
+  // Load proje bazlı tab
+  loadProductsByProject('');
 }
 
 function renderProductsRetail(p) {
@@ -2782,7 +2803,6 @@ function renderCustomers(list){
 }
 async function saveCustomer(){
   const id=document.getElementById('custId').value;
-  // Files already uploaded on select, just collect URLs
   const allUrls = (uploadedFiles['custFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
   const d={
     type:document.getElementById('custType').value,
@@ -2797,11 +2817,13 @@ async function saveCustomer(){
     payment_terms:parseInt(document.getElementById('custPayment').value)||30,
     notes:document.getElementById('custNotes').value,
     attachments: allUrls.length ? JSON.stringify(allUrls) : null,
+    project_ids: custSelectedProjects.length ? JSON.stringify(custSelectedProjects) : null,
   };
   if(!d.company_name) return showNotif('Firma adı zorunlu','err');
   const res=id?await dbUpdate('customers',id,d):await dbInsert('customers',d);
   if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
   clearFileList('custFileList');
+  custSelectedProjects = [];
   closeModal('customer'); loadCustomers(); showNotif('Müşteri kaydedildi!','ok');
 }
 async function editCustomer(id){
@@ -2819,8 +2841,11 @@ async function editCustomer(id){
   document.getElementById('custCurrency').value=c.currency||'TRY';
   document.getElementById('custPayment').value=c.payment_terms||30;
   document.getElementById('custNotes').value=c.notes||'';
+  // Load project tags
+  try { custSelectedProjects = c.project_ids ? JSON.parse(c.project_ids) : []; } catch(e) { custSelectedProjects=[]; }
   loadExistingFiles('custFileList', c.attachments);
   openModal('customer', true);
+  renderCustProjectTags();
 }
 
 // ═══════════════════════════════════════════════
@@ -3266,6 +3291,7 @@ async function populateLeadCustomers() {
 
 async function saveLead() {
   const id = document.getElementById('leadId').value;
+  const projSel = document.getElementById('leadProject');
   const d = {
     customer_id: document.getElementById('leadCustomer').value||null,
     stage: document.getElementById('leadStage').value,
@@ -3276,6 +3302,8 @@ async function saveLead() {
     segment: document.getElementById('leadSegment').value,
     probability: parseInt(document.getElementById('leadProb').value)||null,
     notes: document.getElementById('leadNotes').value,
+    project_id: projSel?.value||null,
+    project_name: projSel?.value ? projSel.options[projSel.selectedIndex]?.text : null,
   };
   if(!d.title) return showNotif('Başlık zorunlu','err');
   const res = id ? await dbUpdate('crm_leads',id,d) : await dbInsert('crm_leads',d);
@@ -3298,6 +3326,10 @@ async function editLead(id) {
   document.getElementById('leadProb').value = l.probability||50;
   document.getElementById('leadNotes').value = l.notes||'';
   openModal('lead', true);
+  // Set project after modal opens
+  if(l.project_id) {
+    setTimeout(()=>{ const sel=document.getElementById('leadProject'); if(sel) sel.value=l.project_id; }, 200);
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -5547,32 +5579,7 @@ async function loadProductsByProject(projectId) {
 }
 
 // Populate project filters when products page loads
-const _origLoadProducts = loadProducts;
-async function loadProducts() {
-  await _origLoadProducts();
-  // Populate project dropdowns
-  const {data:projs} = await dbSelect('projects', {select:'id,name', order:'name'});
-  const opts = (projs||[]).map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
-  ['prodProjectFilter','stockProjectFilter'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.innerHTML = '<option value="">Tüm Projeler</option>'+opts;
-  });
-  // Load producer/broker selects
-  const {data:custs} = await dbSelect('customers', {order:'company_name'});
-  const producers = (custs||[]).filter(c=>c.type==='producer');
-  const brokers = (custs||[]).filter(c=>c.type==='broker');
-  const prodOpts = producers.map(p=>`<option value="${p.id}">${p.company_name}</option>`).join('');
-  const brkOpts = brokers.map(b=>`<option value="${b.id}">${b.company_name}</option>`).join('');
-  const ppf = document.getElementById('prodProducerFilter');
-  const pbf = document.getElementById('prodBrokerFilter');
-  if(ppf) ppf.innerHTML='<option value="">Tüm Üreticiler</option>'+prodOpts;
-  if(pbf) pbf.innerHTML='<option value="">Tüm Brokerlar</option>'+brkOpts;
-  // Also populate product modal project select
-  const prodProjSel = document.getElementById('prodProject');
-  if(prodProjSel) prodProjSel.innerHTML='<option value="">Proje seçin (isteğe bağlı)</option>'+opts;
-  // Load all products by project initially
-  loadProductsByProject('');
-}
+// Populate handled inside loadProducts above
 
 // ═══════════════════════════════════════════════
 // PRODUCER / BROKER PRICE LISTS
@@ -5739,107 +5746,6 @@ openModal = function(name, isEdit=false) {
 };
 
 // Patch saveCustomer to include projects
-const _origSaveCustomer = saveCustomer;
-saveCustomer = async function() {
-  // inject projects before save
-  const custNotesEl = document.getElementById('custNotes');
-  const projectsJson = custSelectedProjects.length ? JSON.stringify(custSelectedProjects) : null;
-  // Call original — but we need to inject project_ids into the data
-  // We'll do a post-save update
-  await _origSaveCustomer();
-  // Update with projects (get last inserted/updated customer)
-  // This is handled by modifying saveCustomer directly below
-};
-
-// Override saveCustomer fully to include project data
-async function saveCustomer(){
-  const id=document.getElementById('custId').value;
-  const fileUrls = (uploadedFiles['custFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
-  const d={
-    type:document.getElementById('custType').value,
-    segment:document.getElementById('custSegment').value,
-    company_name:document.getElementById('custName').value,
-    tax_number:document.getElementById('custTax').value,
-    country:document.getElementById('custCountry').value,
-    city:document.getElementById('custCity').value,
-    email:document.getElementById('custEmail').value,
-    phone:document.getElementById('custPhone').value,
-    currency:document.getElementById('custCurrency').value,
-    payment_terms:parseInt(document.getElementById('custPayment').value)||30,
-    notes:document.getElementById('custNotes').value,
-    attachments: fileUrls.length ? JSON.stringify(fileUrls) : null,
-    project_ids: custSelectedProjects.length ? JSON.stringify(custSelectedProjects) : null,
-  };
-  if(!d.company_name) return showNotif('Firma adı zorunlu','err');
-  const res=id?await dbUpdate('customers',id,d):await dbInsert('customers',d);
-  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
-  clearFileList('custFileList');
-  custSelectedProjects = [];
-  closeModal('customer'); loadCustomers(); showNotif('Müşteri kaydedildi!','ok');
-}
-
-// Override editCustomer to load project tags
-const _origEditCustomer = editCustomer;
-editCustomer = async function(id) {
-  await _origEditCustomer(id);
-  const cust = allCustomers.find(x=>x.id===id);
-  if(cust?.project_ids) {
-    try { custSelectedProjects = JSON.parse(cust.project_ids); } catch(e) { custSelectedProjects=[]; }
-  } else { custSelectedProjects = []; }
-  renderCustProjectTags();
-};
-
-// Patch saveLead to include project_id
-const _origSaveLead = saveLead;
-saveLead = async function() {
-  // inject project_id into lead data before save
-  const projId = document.getElementById('leadProject')?.value||null;
-  const projName = document.getElementById('leadProject')?.options[document.getElementById('leadProject').selectedIndex]?.text;
-  // temporarily add to form — handled in actual save below
-  await _origSaveLead();
-};
-
-// Full saveLead override with project
-async function saveLead() {
-  const id = document.getElementById('leadId').value;
-  const projSel = document.getElementById('leadProject');
-  const d = {
-    customer_id: document.getElementById('leadCustomer').value||null,
-    stage: document.getElementById('leadStage').value,
-    title: document.getElementById('leadTitle').value,
-    value: parseFloat(document.getElementById('leadValue').value)||null,
-    currency: document.getElementById('leadCurrency').value,
-    close_date: document.getElementById('leadClose').value||null,
-    segment: document.getElementById('leadSegment').value,
-    probability: parseInt(document.getElementById('leadProb').value)||null,
-    notes: document.getElementById('leadNotes').value,
-    project_id: projSel?.value||null,
-    project_name: projSel?.value ? projSel.options[projSel.selectedIndex]?.text : null,
-  };
-  if(!d.title) return showNotif('Başlık zorunlu','err');
-  const res = id ? await dbUpdate('crm_leads',id,d) : await dbInsert('crm_leads',d);
-  if(res.error) return showNotif('Hata: '+(res.error.message||''),'err');
-  closeModal('lead'); loadPipeline(); showNotif(id?'Lead güncellendi!':'Lead eklendi!','ok');
-}
-
-// Patch editLead to show project
-const _origEditLead = editLead;
-editLead = async function(id) {
-  await _origEditLead(id);
-  const l = allLeads.find(x=>x.id===id);
-  if(l?.project_id) {
-    const sel = document.getElementById('leadProject');
-    if(sel) sel.value = l.project_id;
-  }
-};
-
-// Patch renderPipelineBoard to show project badge
-const _origRenderPipelineBoard = renderPipelineBoard;
-renderPipelineBoard = function(leads) {
-  _origRenderPipelineBoard(leads);
-  // Add project badges (post-render enhancement handled in card template below)
-};
-
 // ═══════════════════════════════════════════════
 // EXCEL IMPORT MODULE
 // ═══════════════════════════════════════════════
