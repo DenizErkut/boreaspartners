@@ -398,6 +398,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <div class="nav-item" data-page="crm-map" onclick="navigate(this)"><div class="nav-icon">🗺️</div><span class="nav-text">İhracat Haritası</span></div>
         <div class="nav-item" data-page="commercial" onclick="navigate(this)"><div class="nav-icon">💼</div><span class="nav-text">Ticari Kayıtlar</span></div>
         <div class="nav-item" data-page="efatura" onclick="navigate(this)"><div class="nav-icon">🧾</div><span class="nav-text">e-Fatura</span></div>
+        <div class="nav-item" data-page="expenses" onclick="navigate(this)"><div class="nav-icon">💳</div><span class="nav-text">Masraf Takibi</span></div>
       </div>
       <div class="nav-section">
         <div class="nav-label">RAPORLAR & ANALİZ</div>
@@ -1292,6 +1293,52 @@ tr:hover td{background:rgba(255,255,255,.02)}
         </div>
       </div>
 
+      <!-- ── MASRAF TAKİBİ ── -->
+      <div class="page" id="page-expenses">
+        <!-- KPI BAR -->
+        <div class="grid grid-4 mb-14">
+          <div class="kpi blue"><div class="kpi-label">Bu Ay Toplam</div><div class="kpi-value" id="expKpi1">–</div><div class="kpi-icon">💳</div></div>
+          <div class="kpi yellow"><div class="kpi-label">Bekleyen Onay</div><div class="kpi-value" id="expKpi2">–</div><div class="kpi-icon">⏳</div></div>
+          <div class="kpi green"><div class="kpi-label">Onaylanan</div><div class="kpi-value" id="expKpi3">–</div><div class="kpi-icon">✅</div></div>
+          <div class="kpi red"><div class="kpi-label">Reddedilen</div><div class="kpi-value" id="expKpi4">–</div><div class="kpi-icon">❌</div></div>
+        </div>
+        <!-- FİLTRELER + BUTON -->
+        <div class="flex-btw mb-14" style="flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select class="form-select" id="expFilterStatus" onchange="filterExpenses()" style="width:140px;font-size:12px">
+              <option value="">Tüm Durumlar</option>
+              <option value="pending">⏳ Bekliyor</option>
+              <option value="approved">✅ Onaylandı</option>
+              <option value="rejected">❌ Reddedildi</option>
+            </select>
+            <select class="form-select" id="expFilterCat" onchange="filterExpenses()" style="width:150px;font-size:12px">
+              <option value="">Tüm Kategoriler</option>
+              <option value="yemek">🍽️ Yemek</option>
+              <option value="ulasim">🚗 Ulaşım</option>
+              <option value="konaklama">🏨 Konaklama</option>
+              <option value="ofis">🖊️ Ofis</option>
+              <option value="seyahat">✈️ Seyahat</option>
+              <option value="temsil">🤝 Temsil</option>
+              <option value="diger">📦 Diğer</option>
+            </select>
+            <select class="form-select" id="expFilterMonth" onchange="filterExpenses()" style="width:140px;font-size:12px">
+              <option value="">Tüm Aylar</option>
+            </select>
+            <select class="form-select" id="expFilterUser" onchange="filterExpenses()" style="width:150px;font-size:12px">
+              <option value="">Tüm Personel</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="exportExpensesCSV()">📥 CSV Export</button>
+            <button class="btn btn-primary btn-sm" onclick="openModal('expense')">+ Masraf Ekle</button>
+          </div>
+        </div>
+        <!-- TABLO -->
+        <div class="card">
+          <div id="expensesBody"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+
       <!-- USERS -->
       <div class="page" id="page-users">
         <div class="flex-btw mb-14"><div></div><button class="btn btn-primary btn-sm" onclick="openModal('user')">+ Kullanıcı Ekle</button></div>
@@ -1903,6 +1950,91 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ── MASRAF MODAL ── -->
+<div class="modal-overlay" id="m-expense">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="mExpTitle">Masraf Ekle</div>
+      <button class="modal-close" onclick="closeModal('expense')">✕</button>
+    </div>
+    <input type="hidden" id="expId">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Kategori *</label>
+        <select class="form-select" id="expCategory">
+          <option value="yemek">🍽️ Yemek</option>
+          <option value="ulasim">🚗 Ulaşım</option>
+          <option value="konaklama">🏨 Konaklama</option>
+          <option value="ofis">🖊️ Ofis</option>
+          <option value="seyahat">✈️ Seyahat</option>
+          <option value="temsil">🤝 Temsil</option>
+          <option value="diger">📦 Diğer</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Tarih *</label>
+        <input class="form-input" id="expDate" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tutar *</label>
+        <input class="form-input" id="expAmount" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group"><label class="form-label">Para Birimi</label>
+        <select class="form-select" id="expCurrency">
+          <option value="TRY">TRY ₺</option>
+          <option value="EUR">EUR €</option>
+          <option value="USD">USD $</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Açıklama *</label>
+      <input class="form-input" id="expDesc" placeholder="Masraf açıklaması...">
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Bağlı Proje</label>
+        <select class="form-select" id="expProject"><option value="">Proje seçin (isteğe bağlı)</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Tedarikçi / Yer</label>
+        <input class="form-input" id="expVendor" placeholder="Restoran, otel, market adı...">
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Fiş / Fatura Görseli</label>
+      <div class="file-upload-area" onclick="document.getElementById('expFiles').click()">
+        <input type="file" id="expFiles" accept=".pdf,.png,.jpg,.jpeg" onchange="handleFiles(this,'expFileList')">
+        <div style="font-size:20px;margin-bottom:4px">📎</div>
+        <div style="font-size:13px;color:var(--text2)">Fiş veya fatura görselini ekleyin</div>
+      </div>
+      <div class="file-list" id="expFileList"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Not</label>
+      <textarea class="form-textarea" id="expNote" placeholder="Ek açıklama..." style="height:60px"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('expense')">İptal</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MASRAF ONAY MODAL ── -->
+<div class="modal-overlay" id="m-expenseApprove">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Masraf Onay / Red</div>
+      <button class="modal-close" onclick="closeModal('expenseApprove')">✕</button>
+    </div>
+    <input type="hidden" id="eaId">
+    <div id="eaDetail" style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px"></div>
+    <div class="form-group"><label class="form-label">Yönetici Notu</label>
+      <textarea class="form-textarea" id="eaNote" placeholder="Onay/red gerekçesi..." style="height:70px"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('expenseApprove')">İptal</button>
+      <button class="btn btn-danger btn-sm" onclick="decideExpense('rejected')">❌ Reddet</button>
+      <button class="btn btn-primary" onclick="decideExpense('approved')">✅ Onayla</button>
+    </div>
+  </div>
+</div>
+
 <!-- NOTIFICATION PANEL -->
 <div id="notifPanel" style="display:none;position:fixed;top:56px;right:16px;width:340px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px var(--shadow);z-index:500;max-height:480px;overflow-y:auto">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
@@ -1957,7 +2089,7 @@ const PAGE_TITLES = {
   dashboard:'Gösterge Paneli', projects:'Projeler', products:'Ürünler & Fiyatlar', stock:'Stok Takibi', 'price-history':'Fiyat Geçmişi', quotation:'Teklif Oluşturucu', barcode:'Barkod & QR Etiket',
   processes:'Süreç Takibi', gantt:'Gantt Chart — Proje Takvimi', recurring:'Tekrarlayan Görevler', calendar:'Takvim', meetings:'Toplantı Notları',
   customers:'Müşteriler', 'crm-pipeline':'Satış Pipeline', 'crm-interactions':'Etkileşim Geçmişi', 'crm-map':'İhracat Haritası', commercial:'Ticari Kayıtlar', reports:'Ticari Rapor',
-  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", efatura:'e-Fatura', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
+  'dashboard-live':'Canlı Dashboard', analysis:'Kar-Zarar Analizi', charts:'Grafik & Analizler', export:'Dışa Aktar (Export)', import:"Excel'den İçe Al", efatura:'e-Fatura', expenses:'Masraf Takibi', users:'Kullanıcılar & Yetkiler', tasks:'Görev Atama', activity:'Aktivite Akışı', permissions:'İzin Yönetimi', backup:'Veri Yedekleme'
 };
 
 const STATUS_TR = {
@@ -2393,7 +2525,7 @@ function navigate(el) {
     calendar: ()=>{ renderCalendar(); loadEvents(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
-    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, efatura: loadEfatura, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
+    reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, efatura: loadEfatura, expenses: loadExpenses, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
   };
   if (loaders[page]) loaders[page]();
   // Re-apply translations after page switch
@@ -4097,6 +4229,256 @@ async function saveQuotationToCommercial() {
   if(error) return showNotif('Hata: '+(error.message||''),'err');
   showNotif('Ticari kayda aktarıldı!','ok');
 }
+
+// ═══════════════════════════════════════════════
+// MASRAF TAKİBİ
+// ═══════════════════════════════════════════════
+const EXP_CATS = {
+  yemek:'🍽️ Yemek', ulasim:'🚗 Ulaşım', konaklama:'🏨 Konaklama',
+  ofis:'🖊️ Ofis', seyahat:'✈️ Seyahat', temsil:'🤝 Temsil', diger:'📦 Diğer'
+};
+let allExpenses = [];
+
+async function loadExpenses() {
+  document.getElementById('expensesBody').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const { data } = await dbSelect('expenses', {
+    select: '*, profiles(full_name, avatar_initials), projects(name)',
+    order: 'expense_date', asc: false
+  });
+  allExpenses = data || [];
+  renderExpensesKpi(allExpenses);
+  renderExpensesTable(allExpenses);
+
+  // Filtre: aylar
+  const months = [...new Set(allExpenses.map(e => e.expense_date?.slice(0,7)))].sort().reverse();
+  const mSel = document.getElementById('expFilterMonth');
+  if(mSel) {
+    mSel.innerHTML = '<option value="">Tüm Aylar</option>' +
+      months.map(m => `<option value="${m}">${m}</option>`).join('');
+  }
+
+  // Filtre: personel
+  const users = [...new Map(allExpenses.map(e => [e.submitted_by, e.profiles?.full_name])).entries()];
+  const uSel = document.getElementById('expFilterUser');
+  if(uSel) {
+    uSel.innerHTML = '<option value="">Tüm Personel</option>' +
+      users.filter(([id]) => id).map(([id, name]) => `<option value="${id}">${name||id}</option>`).join('');
+  }
+
+  // Proje select in modal
+  const { data: projs } = await dbSelect('projects', { select:'id,name', order:'name' });
+  const pOpts = (projs||[]).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  const ep = document.getElementById('expProject');
+  if(ep) ep.innerHTML = '<option value="">Proje seçin (isteğe bağlı)</option>' + pOpts;
+}
+
+function renderExpensesKpi(list) {
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthList = list.filter(e => e.expense_date?.startsWith(thisMonth));
+  const monthTotal = monthList.reduce((s,e) => s + Number(e.amount||0), 0);
+  const pending  = list.filter(e => e.status === 'pending').length;
+  const approved = list.filter(e => e.status === 'approved').length;
+  const rejected = list.filter(e => e.status === 'rejected').length;
+  document.getElementById('expKpi1').textContent = '₺' + fmtNum(monthTotal);
+  document.getElementById('expKpi2').textContent = pending;
+  document.getElementById('expKpi3').textContent = approved;
+  document.getElementById('expKpi4').textContent = rejected;
+}
+
+function filterExpenses() {
+  const status = document.getElementById('expFilterStatus')?.value;
+  const cat    = document.getElementById('expFilterCat')?.value;
+  const month  = document.getElementById('expFilterMonth')?.value;
+  const user   = document.getElementById('expFilterUser')?.value;
+  let list = allExpenses;
+  if(status) list = list.filter(e => e.status === status);
+  if(cat)    list = list.filter(e => e.category === cat);
+  if(month)  list = list.filter(e => e.expense_date?.startsWith(month));
+  if(user)   list = list.filter(e => e.submitted_by === user);
+  renderExpensesTable(list);
+}
+
+function renderExpensesTable(list) {
+  const el = document.getElementById('expensesBody');
+  if(!list.length) { el.innerHTML = '<div class="empty">Masraf kaydı yok</div>'; return; }
+
+  const statusBadge = s => ({
+    pending:  '<span class="status" style="background:rgba(245,158,11,.15);color:#F59E0B">⏳ Bekliyor</span>',
+    approved: '<span class="status s-active">✅ Onaylandı</span>',
+    rejected: '<span class="status s-cancelled">❌ Reddedildi</span>',
+  }[s] || s);
+
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'manager';
+
+  el.innerHTML = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th>Tarih</th><th>Personel</th><th>Kategori</th>
+      <th>Açıklama</th><th>Tutar</th><th>Proje</th>
+      <th>Tedarikçi</th><th>Durum</th><th></th>
+    </tr></thead>
+    <tbody>${list.map(e => `<tr>
+      <td style="white-space:nowrap">${fmtDate(e.expense_date)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="avatar av-sm">${e.profiles?.avatar_initials||'??'}</div>
+          <span style="font-size:12px">${e.profiles?.full_name||'–'}</span>
+        </div>
+      </td>
+      <td>${EXP_CATS[e.category]||e.category}</td>
+      <td style="max-width:180px"><div style="font-size:13px;font-weight:500">${e.description}</div>
+        ${e.note?`<div class="text-xs">${e.note}</div>`:''}</td>
+      <td style="font-weight:700;color:var(--accent);white-space:nowrap">
+        ${{TRY:'₺',EUR:'€',USD:'$'}[e.currency]||'₺'}${fmtNum(e.amount)}
+        ${e.currency!=='TRY'?`<div class="text-xs">≈ ₺${fmtNum(e.amount * (getFxRate(e.currency)||1))}</div>`:''}
+      </td>
+      <td>${e.projects?.name?`<span class="tag">📁 ${e.projects.name}</span>`:'–'}</td>
+      <td style="font-size:12px;color:var(--text2)">${e.vendor||'–'}</td>
+      <td>${statusBadge(e.status)}
+        ${e.manager_note?`<div class="text-xs">${e.manager_note}</div>`:''}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        ${e.attachments?`<button class="btn btn-ghost btn-sm" onclick="viewExpenseReceipt('${e.id}')" title="Fiş görüntüle">🧾</button>`:''}
+        ${e.status==='pending'&&(isAdmin||e.submitted_by===currentUser?.id)?
+          `<button class="btn btn-ghost btn-sm" onclick="editExpense('${e.id}')">✏️</button>`:''}
+        ${isAdmin&&e.status==='pending'?
+          `<button class="btn btn-primary btn-sm" style="font-size:11px" onclick="openExpenseApprove('${e.id}')">Karar Ver</button>`:''}
+      </td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function openExpenseApprove(id) {
+  const e = allExpenses.find(x => x.id === id);
+  if(!e) return;
+  document.getElementById('eaId').value = id;
+  const sym = {TRY:'₺',EUR:'€',USD:'$'}[e.currency]||'₺';
+  document.getElementById('eaDetail').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+      <div><span style="color:var(--text2)">Personel:</span> <b>${e.profiles?.full_name||'–'}</b></div>
+      <div><span style="color:var(--text2)">Tarih:</span> <b>${fmtDate(e.expense_date)}</b></div>
+      <div><span style="color:var(--text2)">Kategori:</span> <b>${EXP_CATS[e.category]||e.category}</b></div>
+      <div><span style="color:var(--text2)">Tutar:</span> <b style="color:var(--accent)">${sym}${fmtNum(e.amount)}</b></div>
+      <div style="grid-column:1/-1"><span style="color:var(--text2)">Açıklama:</span> <b>${e.description}</b></div>
+      ${e.vendor?`<div style="grid-column:1/-1"><span style="color:var(--text2)">Tedarikçi:</span> ${e.vendor}</div>`:''}
+    </div>`;
+  document.getElementById('eaNote').value = '';
+  openModal('expenseApprove');
+}
+
+async function decideExpense(decision) {
+  const id = document.getElementById('eaId').value;
+  const note = document.getElementById('eaNote').value;
+  const { error } = await dbUpdate('expenses', id, {
+    status: decision,
+    manager_note: note,
+    decided_by: currentUser?.id,
+    decided_at: new Date().toISOString()
+  });
+  if(error) return showNotif('Hata: ' + error.message, 'err');
+  closeModal('expenseApprove');
+  showNotif(decision === 'approved' ? '✅ Masraf onaylandı!' : '❌ Masraf reddedildi', 'ok');
+  logActivity('expenses', id, 'update', 'Masraf ' + (decision==='approved'?'onaylandı':'reddedildi'));
+  loadExpenses();
+}
+
+async function saveExpense() {
+  const id = document.getElementById('expId').value;
+  const amount = parseFloat(document.getElementById('expAmount').value);
+  const desc = document.getElementById('expDesc').value.trim();
+  if(!amount || !desc) return showNotif('Tutar ve açıklama zorunlu', 'err');
+
+  const fileUrls = (uploadedFiles['expFileList']||[]).filter(f=>f.url).map(f=>({name:f.name,url:f.url}));
+
+  const d = {
+    category:     document.getElementById('expCategory').value,
+    expense_date: document.getElementById('expDate').value,
+    amount,
+    currency:     document.getElementById('expCurrency').value,
+    description:  desc,
+    vendor:       document.getElementById('expVendor').value,
+    project_id:   document.getElementById('expProject').value || null,
+    note:         document.getElementById('expNote').value,
+    attachments:  fileUrls.length ? JSON.stringify(fileUrls) : null,
+    submitted_by: currentUser?.id,
+    status:       id ? undefined : 'pending',
+  };
+  if(id) delete d.status;
+
+  const res = id ? await dbUpdate('expenses', id, d) : await dbInsert('expenses', d);
+  if(res.error) return showNotif('Hata: ' + res.error.message, 'err');
+  clearFileList('expFileList');
+  closeModal('expense');
+  showNotif(id ? 'Masraf güncellendi!' : 'Masraf eklendi! Onay bekleniyor.', 'ok');
+  logActivity('expenses', res.data?.[0]?.id, id?'update':'create', desc);
+  loadExpenses();
+}
+
+async function editExpense(id) {
+  const e = allExpenses.find(x => x.id === id);
+  if(!e) return;
+  document.getElementById('expId').value = e.id;
+  document.getElementById('mExpTitle').textContent = 'Masraf Düzenle';
+  document.getElementById('expCategory').value = e.category;
+  document.getElementById('expDate').value = e.expense_date;
+  document.getElementById('expAmount').value = e.amount;
+  document.getElementById('expCurrency').value = e.currency || 'TRY';
+  document.getElementById('expDesc').value = e.description;
+  document.getElementById('expVendor').value = e.vendor || '';
+  document.getElementById('expProject').value = e.project_id || '';
+  document.getElementById('expNote').value = e.note || '';
+  loadExistingFiles('expFileList', e.attachments);
+  openModal('expense', true);
+}
+
+function viewExpenseReceipt(id) {
+  const e = allExpenses.find(x => x.id === id);
+  if(!e || !e.attachments) return;
+  try {
+    const files = JSON.parse(e.attachments);
+    if(files[0]?.url) window.open(files[0].url, '_blank');
+  } catch(err) {}
+}
+
+function exportExpensesCSV() {
+  const status = document.getElementById('expFilterStatus')?.value;
+  const cat    = document.getElementById('expFilterCat')?.value;
+  const month  = document.getElementById('expFilterMonth')?.value;
+  let list = allExpenses;
+  if(status) list = list.filter(e => e.status === status);
+  if(cat)    list = list.filter(e => e.category === cat);
+  if(month)  list = list.filter(e => e.expense_date?.startsWith(month));
+
+  const rows = [
+    ['Tarih','Personel','Kategori','Açıklama','Tedarikçi','Tutar','Para Birimi','Proje','Durum','Yönetici Notu'],
+    ...list.map(e => [
+      e.expense_date, e.profiles?.full_name||'',
+      EXP_CATS[e.category]||e.category, e.description, e.vendor||'',
+      e.amount, e.currency, e.projects?.name||'',
+      {pending:'Bekliyor',approved:'Onaylandı',rejected:'Reddedildi'}[e.status]||'',
+      e.manager_note||''
+    ])
+  ];
+  const csv = rows.map(r => r.map(v => (String(v).includes(',') ? '"'+v+'"' : v)).join(',')).join('\n');
+  downloadFile('\uFEFF'+csv, 'masraf-raporu-'+new Date().toISOString().slice(0,7)+'.csv', 'text/csv');
+  showNotif('CSV indirildi!', 'ok');
+}
+
+// Masraf modal açıldığında tarih doldur
+const _origOpenModalExpense = openModal;
+openModal = function(name, isEdit=false) {
+  _origOpenModalExpense(name, isEdit);
+  if(name === 'expense' && !isEdit) {
+    document.getElementById('expId').value = '';
+    document.getElementById('mExpTitle').textContent = 'Masraf Ekle';
+    document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('expAmount').value = '';
+    document.getElementById('expDesc').value = '';
+    document.getElementById('expVendor').value = '';
+    document.getElementById('expNote').value = '';
+    document.getElementById('expCurrency').value = 'TRY';
+    clearFileList('expFileList');
+  }
+};
 
 // ═══════════════════════════════════════════════
 // DÖVİZ KURU SİSTEMİ — TCMB / exchangerate.host
