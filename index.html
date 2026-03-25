@@ -1148,6 +1148,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
                     <option value="crm_leads">🎯 Lead / Pipeline</option>
                     <option value="commercial_records">💼 Ticari Kayıtlar</option>
                     <option value="partner_price_lists">💰 Partner Fiyat Listesi</option>
+                    <option value="expenses">💳 Masraf Kayıtları</option>
+                    <option value="cari_hareketler">🏦 Cari Hareketler</option>
+                    <option value="cek_senetler">📝 Çek / Senet</option>
                   </select>
                 </div>
                 <div class="file-upload-area" onclick="document.getElementById('importFile').click()" id="importDropZone">
@@ -1196,6 +1199,18 @@ tr:hover td{background:rgba(255,255,255,.02)}
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
                   <div><div style="font-size:13px;font-weight:600">💰 Partner Fiyat Listesi</div><div class="text-xs">partner_adi, urun_kodu, fiyat, para_birimi, gecerlilik</div></div>
                   <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('partner_price_lists')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">💳 Masraf Kayıtları</div><div class="text-xs">kategori, tarih, tutar, para_birimi, aciklama, tedarikci, proje_adi</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('expenses')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">🏦 Cari Hareketler</div><div class="text-xs">firma_adi, hareket_turu, tarih, tutar, para_birimi, aciklama, odeme_yontemi</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('cari_hareketler')">⬇ Şablon</button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
+                  <div><div style="font-size:13px;font-weight:600">📝 Çek / Senet</div><div class="text-xs">firma_adi, cek_turu, belge_no, banka, tutar, para_birimi, vade_tarihi</div></div>
+                  <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('cek_senetler')">⬇ Şablon</button>
                 </div>
               </div>
             </div>
@@ -7681,10 +7696,10 @@ let importTableName = '';
 
 const IMPORT_TEMPLATES = {
   customers: {
-    headers: ['firma_adi','tip','segment','ulke','sehir','eposta','telefon','para_birimi','odeme_vadesi','notlar'],
-    sample: [['Örnek A.Ş.','customer','OEM','Türkiye','İstanbul','info@ornek.com','+90 212 000 0000','TRY','30',''],
-             ['Sample GmbH','export','Tier1','Almanya','Berlin','info@sample.de','+49 30 000 0000','EUR','60','']],
-    tips: 'tip: customer/producer/broker/domestic/export | segment: OEM,Tier1,Distributor | para_birimi: TRY,EUR,USD'
+    headers: ['firma_adi','tip','segment','ulke','sehir','adres','website','sektor','eposta','telefon','para_birimi','odeme_vadesi','notlar'],
+    sample: [['Örnek A.Ş.','customer','OEM','Türkiye','İstanbul','Atatürk Cad. No:1','https://ornek.com','İmalat','info@ornek.com','+90 212 000 0000','TRY','30',''],
+             ['Sample GmbH','export','Tier1','Almanya','Berlin','Berliner Str. 5','https://sample.de','Gıda','info@sample.de','+49 30 000 0000','EUR','60','']],
+    tips: 'tip: customer/producer/broker/domestic/export | segment: OEM,Tier1,Distributor | para_birimi: TRY,EUR,USD | website: https:// ile başlamalı'
   },
   products: {
     headers: ['kod','urun_adi','kategori','birim','perakende_fiyat','toptan_fiyat','ihracat_usd','ihracat_eur','maliyet','stok_miktari','min_stok'],
@@ -7710,6 +7725,33 @@ const IMPORT_TEMPLATES = {
     headers: ['partner_adi','urun_kodu','fiyat','para_birimi','min_miktar','gecerlilik_tarihi','proje_adi','not'],
     sample: [['Tedarikçi A.Ş.','PRD-001','85','TRY','100','2025-12-31','','']],
     tips: 'partner_adi: Musteriler tablosundaki firma | urun_kodu: Urunler kodundan | tarih: YYYY-MM-DD'
+  },
+  expenses: {
+    headers: ['kategori','tarih','tutar','para_birimi','aciklama','tedarikci','proje_adi','not'],
+    sample: [
+      ['yemek','2025-03-15','250','TRY','Öğle yemeği toplantı','Borsa Restaurant','',''],
+      ['ulasim','2025-03-16','180','TRY','Müşteri ziyareti taksi','','Bateel Projesi',''],
+      ['konaklama','2025-03-20','3200','TRY','İzmir seyahat oteli','Grand Hotel','','İzmir fuarı'],
+    ],
+    tips: 'kategori: yemek/ulasim/konaklama/ofis/seyahat/temsil/diger | tarih: YYYY-MM-DD | para_birimi: TRY,EUR,USD | proje_adi: Projeler tablosundaki proje adı (boş bırakılabilir)'
+  },
+  cari_hareketler: {
+    headers: ['firma_adi','hareket_turu','tarih','tutar','para_birimi','aciklama','odeme_yontemi','vade_tarihi'],
+    sample: [
+      ['Örnek A.Ş.','tahsilat','2025-03-01','15000','TRY','Ocak fatura ödemesi','havale',''],
+      ['Örnek A.Ş.','fatura','2025-03-10','20000','TRY','Şubat teslimat faturası','','2025-04-10'],
+      ['Tedarikçi Ltd.','tediye','2025-03-15','8500','TRY','Mart alım ödemesi','nakit',''],
+    ],
+    tips: 'firma_adi: Musteriler tablosundaki firma adı | hareket_turu: tahsilat/tediye/fatura/iade/baslangic_alacak/baslangic_borc | odeme_yontemi: nakit/havale/kredi_karti/cek/senet | tarih & vade_tarihi: YYYY-MM-DD'
+  },
+  cek_senetler: {
+    headers: ['firma_adi','cek_turu','belge_no','banka','tutar','para_birimi','duzenleme_tarihi','vade_tarihi','notlar'],
+    sample: [
+      ['Örnek A.Ş.','cek_alacak','CHK-2025-001','Garanti Bankası','25000','TRY','2025-03-01','2025-06-01',''],
+      ['Tedarikçi Ltd.','cek_verecek','CHK-2025-002','İş Bankası','12000','TRY','2025-03-10','2025-05-10','Mart alımı'],
+      ['Dağıtıcı A.Ş.','senet_alacak','SNT-2025-001','','8500','TRY','2025-02-15','2025-07-15',''],
+    ],
+    tips: 'firma_adi: Musteriler tablosundaki firma | cek_turu: cek_alacak/cek_verecek/senet_alacak/senet_verecek | tarihler: YYYY-MM-DD | banka boş bırakılabilir (senetler için)'
   }
 };
 
@@ -7815,6 +7857,9 @@ async function runImport() {
           segment: row['segment']||'Other',
           country: row['ulke']||row['country']||'',
           city: row['sehir']||row['city']||'',
+          address: row['adres']||row['address']||'',
+          website: row['website']||'',
+          industry: row['sektor']||row['industry']||'',
           email: row['eposta']||row['email']||'',
           phone: row['telefon']||row['phone']||'',
           currency: row['para_birimi']||row['currency']||'TRY',
@@ -7875,6 +7920,70 @@ async function runImport() {
         data.vat_amount = data.amount * data.vat_rate/100;
         data.total_amount = data.amount + data.vat_amount;
         if(!data.doc_number) { errors++; continue; }
+      }
+
+      // ── Expenses mapping ──────────────────────────
+      if(importTableName === 'expenses') {
+        // Proje ID lookup
+        let projId = null;
+        const projName = row['proje_adi']||row['project_name']||'';
+        if(projName) {
+          const {data:pr} = await sb.from('projects').select('id').ilike('name', projName).limit(1).single();
+          projId = pr?.id || null;
+        }
+        data = {
+          category:     row['kategori']||row['category']||'diger',
+          expense_date: row['tarih']||row['date']||new Date().toISOString().split('T')[0],
+          amount:       parseFloat(row['tutar']||row['amount'])||0,
+          currency:     row['para_birimi']||row['currency']||'TRY',
+          description:  row['aciklama']||row['description']||'Import',
+          vendor:       row['tedarikci']||row['vendor']||'',
+          project_id:   projId,
+          note:         row['not']||row['note']||'',
+          status:       'approved', // Import edilen masraflar onaylı kabul edilir
+          submitted_by: currentUser?.id,
+        };
+        if(!data.amount) { errors++; continue; }
+      }
+      // ── Cari Hareketler mapping ────────────────────
+      else if(importTableName === 'cari_hareketler') {
+        const firmadi = row['firma_adi']||row['company_name']||'';
+        if(!firmadi) { errors++; continue; }
+        const {data:cust} = await sb.from('customers').select('id').ilike('company_name', firmadi).limit(1).single();
+        if(!cust?.id) { errors++; continue; }
+        data = {
+          customer_id:    cust.id,
+          hareket_turu:   row['hareket_turu']||'tahsilat',
+          hareket_tarihi: row['tarih']||row['date']||new Date().toISOString().split('T')[0],
+          tutar:          parseFloat(row['tutar']||row['amount'])||0,
+          para_birimi:    row['para_birimi']||row['currency']||'TRY',
+          aciklama:       row['aciklama']||row['description']||'',
+          odeme_yontemi:  row['odeme_yontemi']||row['payment_method']||null,
+          vade_tarihi:    row['vade_tarihi']||null,
+          created_by:     currentUser?.id,
+        };
+        if(!data.tutar) { errors++; continue; }
+      }
+      // ── Çek/Senet mapping ────────────────────────
+      else if(importTableName === 'cek_senetler') {
+        const firmadi = row['firma_adi']||row['company_name']||'';
+        if(!firmadi) { errors++; continue; }
+        const {data:cust} = await sb.from('customers').select('id').ilike('company_name', firmadi).limit(1).single();
+        if(!cust?.id) { errors++; continue; }
+        data = {
+          customer_id:      cust.id,
+          cek_turu:         row['cek_turu']||'cek_alacak',
+          belge_no:         row['belge_no']||'',
+          banka:            row['banka']||'',
+          tutar:            parseFloat(row['tutar']||row['amount'])||0,
+          para_birimi:      row['para_birimi']||row['currency']||'TRY',
+          duzenleme_tarihi: row['duzenleme_tarihi']||null,
+          vade_tarihi:      row['vade_tarihi']||'',
+          notlar:           row['notlar']||row['notes']||'',
+          durum:            'bekliyor',
+          created_by:       currentUser?.id,
+        };
+        if(!data.belge_no || !data.vade_tarihi || !data.tutar) { errors++; continue; }
       }
 
       const {error} = await sb.from(importTableName).insert(data);
