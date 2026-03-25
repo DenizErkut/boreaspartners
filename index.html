@@ -1181,7 +1181,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
               <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Her tablo için hazır Excel şablonunu indirin, doldurun ve yükleyin.</div>
               <div style="display:flex;flex-direction:column;gap:8px">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
-                  <div><div style="font-size:13px;font-weight:600">👥 Müşteriler</div><div class="text-xs">firma_adi, tip, ulke, sehir, eposta, telefon...</div></div>
+                  <div><div style="font-size:13px;font-weight:600">👥 Müşteriler</div><div class="text-xs">firma_adi, tip, ulke, sehir, bagli_projeler, notlar...</div></div>
                   <button class="btn btn-ghost btn-sm" onclick="downloadTemplate('customers')">⬇ Şablon</button>
                 </div>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:8px">
@@ -7696,9 +7696,9 @@ let importTableName = '';
 
 const IMPORT_TEMPLATES = {
   customers: {
-    headers: ['firma_adi','tip','segment','ulke','sehir','adres','website','sektor','eposta','telefon','para_birimi','odeme_vadesi','notlar'],
-    sample: [['Örnek A.Ş.','customer','OEM','Türkiye','İstanbul','Atatürk Cad. No:1','https://ornek.com','İmalat','info@ornek.com','+90 212 000 0000','TRY','30',''],
-             ['Sample GmbH','export','Tier1','Almanya','Berlin','Berliner Str. 5','https://sample.de','Gıda','info@sample.de','+49 30 000 0000','EUR','60','']],
+    headers: ['firma_adi','tip','segment','ulke','sehir','adres','website','sektor','eposta','telefon','para_birimi','odeme_vadesi','bagli_projeler','notlar'],
+    sample: [['Örnek A.Ş.','customer','OEM','Türkiye','İstanbul','Atatürk Cad. No:1','https://ornek.com','İmalat','info@ornek.com','+90 212 000 0000','TRY','30','Proje Adı 1|Proje Adı 2',''],
+             ['Sample GmbH','export','Tier1','Almanya','Berlin','Berliner Str. 5','https://sample.de','Gıda','info@sample.de','+49 30 000 0000','EUR','60','','']],
     tips: 'tip: customer/producer/broker/domestic/export | segment: OEM,Tier1,Distributor | para_birimi: TRY,EUR,USD | website: https:// ile başlamalı'
   },
   products: {
@@ -7867,6 +7867,17 @@ async function runImport() {
           notes: row['notlar']||row['notes']||'',
         };
         if(!data.company_name) { errors++; continue; }
+        // Bağlı projeler — pipe (|) ile ayrılmış proje adları
+        const projStr = row['bagli_projeler']||row['linked_projects']||'';
+        if(projStr.trim()) {
+          const projNames = projStr.split('|').map(p=>p.trim()).filter(Boolean);
+          const projIds = [];
+          for(const pname of projNames) {
+            const {data:pr} = await sb.from('projects').select('id').ilike('name', pname).limit(1).single();
+            if(pr?.id) projIds.push(pr.id);
+          }
+          if(projIds.length) data.project_ids = JSON.stringify(projIds);
+        }
       } else if(importTableName==='products') {
         data = {
           code: row['kod']||row['code'],
