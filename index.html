@@ -388,7 +388,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div class="nav-section">
         <div class="nav-label">PLANLAMA</div>
         <div class="nav-item" data-page="calendar" onclick="navigate(this)"><div class="nav-icon">📅</div><span class="nav-text">Takvim</span></div>
-        <div class="nav-item" data-page="meetings" onclick="navigate(this)"><div class="nav-icon">🗒️</div><span class="nav-text">Toplantı Notları</span></div>
+        
       </div>
       <div class="nav-section">
         <div class="nav-label">MÜŞTERİLER & CRM</div>
@@ -554,30 +554,69 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
       <!-- CALENDAR -->
       <div class="page" id="page-calendar">
-        <div class="grid grid-2">
-          <div class="card">
-            <div class="flex-btw" style="margin-bottom:14px">
-              <button class="btn btn-ghost btn-sm" onclick="calMonth(-1)">◀</button>
-              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px" id="calTitle"></div>
-              <button class="btn btn-ghost btn-sm" onclick="calMonth(1)">▶</button>
-            </div>
-            <div class="cal-grid" id="calGrid"></div>
+        <!-- Üst araç çubuğu -->
+        <div class="flex-btw mb-14" style="flex-wrap:wrap;gap:8px">
+          <div class="tabs" style="margin-bottom:0">
+            <div class="tab active" onclick="switchTab(this,'tCalGrid')">📅 Takvim</div>
+            <div class="tab" onclick="switchTab(this,'tCalMeetings');loadMeetings()">🗒️ Toplantı Notları</div>
           </div>
-          <div>
-            <div class="flex-btw mb-14">
-              <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px" id="calEvTitle">Etkinlikler</div>
-              <button class="btn btn-primary btn-sm" onclick="openModal('event')">+ Ekle</button>
-            </div>
-            <div id="calEvList" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" id="btnNewEvent" onclick="openModal('event')">+ Etkinlik</button>
+            <button class="btn btn-primary btn-sm" id="btnNewMeeting" onclick="openModal('meeting')">+ Toplantı Notu</button>
           </div>
+        </div>
+
+        <!-- TAKVİM SEKMESİ -->
+        <div id="tCalGrid" class="tab-content active">
+          <div class="grid grid-2" style="align-items:start">
+            <!-- Sol: Takvim ızgarası -->
+            <div class="card">
+              <div class="flex-btw" style="margin-bottom:14px">
+                <button class="btn btn-ghost btn-sm" onclick="calMonth(-1)">◀</button>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px" id="calTitle"></div>
+                <button class="btn btn-ghost btn-sm" onclick="calMonth(1)">▶</button>
+              </div>
+              <div class="cal-grid" id="calGrid"></div>
+              <!-- Renk açıklaması -->
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:8px;height:8px;border-radius:50%;background:var(--accent)"></div>Etkinlik</div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:8px;height:8px;border-radius:50%;background:var(--success)"></div>Toplantı</div>
+                <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger)"></div>Termin</div>
+              </div>
+            </div>
+            <!-- Sağ: Seçili güne ait etkinlik + toplantı listesi -->
+            <div>
+              <div class="flex-btw mb-14">
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px" id="calEvTitle">Etkinlikler</div>
+              </div>
+              <div id="calEvList" style="display:flex;flex-direction:column;gap:8px"></div>
+              <!-- Seçili güne ait toplantı notları -->
+              <div id="calMeetDay" style="margin-top:16px;display:none">
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;padding-bottom:6px;border-top:1px solid var(--border);padding-top:12px">📝 Toplantı Notları</div>
+                <div id="calMeetDayList" style="display:flex;flex-direction:column;gap:8px"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOPLANTI NOTLARI SEKMESİ -->
+        <div id="tCalMeetings" class="tab-content">
+          <!-- Filtreler -->
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <input class="form-input" id="meetSearch" placeholder="🔍 Toplantı ara..." oninput="filterMeetings()" style="width:200px;font-size:12px">
+            <select class="form-select" id="meetProjectFilter" onchange="filterMeetings()" style="width:180px;font-size:12px">
+              <option value="">Tüm Projeler</option>
+            </select>
+            <input class="form-input" id="meetDateFrom" type="date" onchange="filterMeetings()" style="width:140px;font-size:12px" title="Başlangıç tarihi">
+            <input class="form-input" id="meetDateTo" type="date" onchange="filterMeetings()" style="width:140px;font-size:12px" title="Bitiş tarihi">
+            <button class="btn btn-ghost btn-sm" onclick="clearMeetFilters()">✕ Temizle</button>
+          </div>
+          <div id="meetingsList" style="display:flex;flex-direction:column;gap:12px"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
 
-      <!-- MEETINGS -->
-      <div class="page" id="page-meetings">
-        <div class="flex-btw mb-14"><div></div><button class="btn btn-primary btn-sm" onclick="openModal('meeting')">+ Toplantı Notu</button></div>
-        <div id="meetingsList" style="display:flex;flex-direction:column;gap:12px"></div>
-      </div>
+      <!-- MEETINGS redirect (eski menü uyumu için) -->
+      <div class="page" id="page-meetings" style="display:none"></div>
 
       <!-- CUSTOMERS -->
       <div class="page" id="page-customers">
@@ -2360,6 +2399,7 @@ let isDemo = false;
 let calDate = new Date(2025, 2);
 let selectedCalDate = null;
 let allEvents = [];
+let allMeetings = [];
 let allProjects = [];
 let allCustomers = [];
 
@@ -2834,7 +2874,7 @@ function navigate(el) {
   currentPage = page;
   const loaders = {
     projects: loadProjects, products: loadProducts, stock: loadStock, 'price-history': loadPriceHistory, quotation: loadQuotation, barcode: loadBarcode, processes: loadProcesses, gantt: loadGantt, recurring: loadRecurring,
-    calendar: ()=>{ renderCalendar(); loadEvents(); },
+    calendar: ()=>{ renderCalendar(); loadEvents(); loadMeetingsForCalendar(); },
     meetings: loadMeetings, customers: loadCustomers, commercial: loadCommercial,
     'crm-pipeline': loadPipeline, 'crm-interactions': loadInteractions, 'crm-map': loadMap,
     reports: loadReports, analysis: loadAnalysis, 'dashboard-live': loadLiveDashboard, charts: loadCharts, export: loadExport, import: loadImport, efatura: loadEfatura, cari: loadCari, expenses: loadExpenses, users: loadUsers, tasks: loadTasks, activity: loadActivity, permissions: loadPermissions, backup: loadBackup
@@ -3235,10 +3275,23 @@ function renderCalendar() {
   }
   for(let d=1;d<=daysInMonth;d++){
     const ds=`${calDate.getFullYear()}-${String(calDate.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const hasEv=allEvents.some(e=>e.event_date===ds);
+    const evs = allEvents.filter(e=>e.event_date===ds);
+    const hasMeet = allMeetings.some(m=>m.meeting_date===ds);
+    const hasDeadline = evs.some(e=>e.type==='deadline');
+    const hasMeeting  = evs.some(e=>e.type==='meeting') || hasMeet;
+    const hasOther    = evs.some(e=>e.type!=='deadline'&&e.type!=='meeting');
     const isToday=today.getDate()===d&&today.getMonth()===calDate.getMonth()&&today.getFullYear()===calDate.getFullYear();
     const isSel=selectedCalDate===ds;
-    grid.innerHTML+=`<div class="cal-day ${isToday?'today':''} ${hasEv?'has-ev':''} ${isSel?'selected':''}" onclick="selectCalDate('${ds}')">${d}</div>`;
+    // Birden fazla renk noktası
+    const dots = [
+      hasOther    ? `<span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block"></span>` : '',
+      hasMeeting  ? `<span style="width:5px;height:5px;border-radius:50%;background:var(--success);display:inline-block"></span>` : '',
+      hasDeadline ? `<span style="width:5px;height:5px;border-radius:50%;background:var(--danger);display:inline-block"></span>` : '',
+    ].filter(Boolean).join('');
+    grid.innerHTML+=`<div class="cal-day ${isToday?'today':''} ${(evs.length||hasMeet)?'has-ev':''} ${isSel?'selected':''}" onclick="selectCalDate('${ds}')">
+      ${d}
+      ${dots ? `<div style="display:flex;gap:2px;justify-content:center;margin-top:2px">${dots}</div>` : ''}
+    </div>`;
   }
 }
 async function loadEvents() {
@@ -3247,24 +3300,64 @@ async function loadEvents() {
   renderCalendar();
   renderEventList(allEvents);
 }
+async function loadMeetingsForCalendar() {
+  const {data}=await dbSelect('meetings',{select:'*,projects(name)',order:'meeting_date'});
+  allMeetings=data||[];
+  renderCalendar();
+  // Proje filtresi doldur
+  const sel=document.getElementById('meetProjectFilter');
+  if(sel) {
+    const projects=[...new Set((data||[]).map(m=>m.projects?.name).filter(Boolean))];
+    sel.innerHTML='<option value="">Tüm Projeler</option>'+projects.map(p=>`<option>${p}</option>`).join('');
+  }
+}
 function calMonth(dir){ calDate.setMonth(calDate.getMonth()+dir); renderCalendar(); }
 function selectCalDate(date){
   selectedCalDate=date;
-  document.getElementById('calEvTitle').textContent='Etkinlikler — '+date.split('-').reverse().join('.');
+  const label = date.split('-').reverse().join('.');
+  document.getElementById('calEvTitle').textContent='📅 '+label;
   renderEventList(allEvents.filter(e=>e.event_date===date));
+  // Aynı güne ait toplantı notlarını göster
+  const dayMeetings = allMeetings.filter(m=>m.meeting_date===date);
+  const meetWrap = document.getElementById('calMeetDay');
+  const meetList = document.getElementById('calMeetDayList');
+  if(dayMeetings.length) {
+    meetWrap.style.display='block';
+    meetList.innerHTML = dayMeetings.map(m=>`
+      <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--success);border-radius:9px;padding:10px 12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:3px">${m.title}</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${m.projects?.name?'📁 '+m.projects.name+' · ':''} ${(m.attendees||[]).join(', ')}</div>
+        ${m.notes?`<div style="font-size:12px;color:var(--text);line-height:1.5;margin-bottom:5px">${m.notes.substring(0,150)}${m.notes.length>150?'…':''}</div>`:''}
+        ${m.action_items?`<div style="font-size:11px;color:var(--warning)">⚡ ${m.action_items.split('\n')[0]}${m.action_items.includes('\n')?'…':''}</div>`:''}
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="editMeeting('${m.id}')">✏️</button>
+          <button class="btn btn-primary btn-sm" style="font-size:10px" onclick="switchTab(document.querySelector('.tab[onclick*=tCalMeetings]'),\'tCalMeetings\');loadMeetings()">📋 Tüm</button>
+        </div>
+      </div>`).join('');
+  } else {
+    meetWrap.style.display='none';
+  }
+  // Toplantı ekle butonuna tarih önceden doldur
+  const meetDateEl = document.getElementById('meetDate');
+  if(meetDateEl) meetDateEl.value = date;
   renderCalendar();
 }
 function renderEventList(evs){
+  const typeColor = {meeting:'var(--success)',deadline:'var(--danger)',delivery:'var(--warning)'};
+  const typeBg    = {meeting:'rgba(16,185,129,.1)',deadline:'rgba(239,68,68,.1)',delivery:'rgba(245,158,11,.1)'};
   document.getElementById('calEvList').innerHTML=evs.length?evs.map(e=>`
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px;display:flex;gap:10px;align-items:center">
-      <div style="width:36px;height:36px;border-radius:7px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${e.type==='meeting'?'🤝':e.type==='deadline'?'📌':'📦'}</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${typeColor[e.type]||'var(--accent)'};border-radius:9px;padding:12px;display:flex;gap:10px;align-items:center">
+      <div style="width:36px;height:36px;border-radius:7px;background:${typeBg[e.type]||'rgba(27,79,255,.1)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${e.type==='meeting'?'🤝':e.type==='deadline'?'📌':'📦'}</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:500">${e.title}</div>
-        <div class="text-xs">${fmtDate(e.event_date)}${e.event_time?' · '+e.event_time:''}</div>
+        <div class="text-xs">${fmtDate(e.event_date)}${e.event_time?' · '+e.event_time:''}${e.description?' · '+e.description.substring(0,50):''}</div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')">🗑</button>
+      <div style="display:flex;gap:4px">
+        ${e.type==='meeting'?`<button class="btn btn-ghost btn-sm" title="Toplantı notu oluştur" onclick="openMeetingFromEvent('${e.id}','${e.title.replace(/'/g,'\'')}','${e.event_date}')">📝</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')">🗑</button>
+      </div>
     </div>`).join(''):
-    '<div class="empty">Etkinlik yok</div>';
+    '<div class="empty">Bu gün için etkinlik yok<br><small style="color:var(--text3)">+ Etkinlik veya + Toplantı Notu ile ekleyin</small></div>';
 }
 async function saveEvent(){
   const d={
@@ -3282,8 +3375,14 @@ async function saveEvent(){
   closeModal('event'); loadEvents(); showNotif('Etkinlik eklendi!','ok');
 }
 async function deleteEvent(id){
-  
   await dbDelete('events',id); loadEvents(); showNotif('Etkinlik silindi','ok');
+}
+function openMeetingFromEvent(evId, title, date) {
+  openModal('meeting');
+  setTimeout(()=>{
+    document.getElementById('meetTitle').value = title;
+    document.getElementById('meetDate').value = date;
+  }, 100);
 }
 
 // ═══════════════════════════════════════════════
@@ -3292,7 +3391,33 @@ async function deleteEvent(id){
 async function loadMeetings(){
   document.getElementById('meetingsList').innerHTML='<div class="loading"><div class="spinner"></div></div>';
   const {data}=await dbSelect('meetings',{select:'*,projects(name)',order:'meeting_date',asc:false});
-  renderMeetings(data||[]);
+  allMeetings=data||[];
+  // Proje filtre dropdown güncelle
+  const sel=document.getElementById('meetProjectFilter');
+  if(sel) {
+    const projects=[...new Set((data||[]).map(m=>m.projects?.name).filter(Boolean))];
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Tüm Projeler</option>'+projects.map(p=>`<option ${p===cur?'selected':''}>${p}</option>`).join('');
+  }
+  filterMeetings();
+  renderCalendar();
+}
+function filterMeetings(){
+  const q=(document.getElementById('meetSearch')?.value||'').toLowerCase();
+  const proj=document.getElementById('meetProjectFilter')?.value||'';
+  const from=document.getElementById('meetDateFrom')?.value||'';
+  const to=document.getElementById('meetDateTo')?.value||'';
+  let list=allMeetings;
+  if(q)    list=list.filter(m=>(m.title+m.notes+m.action_items).toLowerCase().includes(q));
+  if(proj) list=list.filter(m=>m.projects?.name===proj);
+  if(from) list=list.filter(m=>m.meeting_date>=from);
+  if(to)   list=list.filter(m=>m.meeting_date<=to);
+  renderMeetings(list);
+}
+function clearMeetFilters(){
+  ['meetSearch','meetDateFrom','meetDateTo'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const sel=document.getElementById('meetProjectFilter');if(sel)sel.value='';
+  filterMeetings();
 }
 function renderMeetings(list){
   document.getElementById('meetingsList').innerHTML=list.length?list.map(m=>`
@@ -3346,7 +3471,7 @@ async function saveMeeting(){
   const res=id?await dbUpdate('meetings',id,d):await dbInsert('meetings',d);
   if(res.error) return showNotif('Hata','err');
   clearFileList('meetFileList');
-  closeModal('meeting'); loadMeetings(); showNotif('Toplantı notu kaydedildi!','ok');
+  closeModal('meeting'); loadMeetings(); loadMeetingsForCalendar(); showNotif('Toplantı notu kaydedildi!','ok');
 }
 async function editMeeting(id){
   const {data}=await dbSelect('meetings',{eq:{id}});
@@ -3364,7 +3489,7 @@ async function editMeeting(id){
 }
 async function deleteMeeting(id){
   
-  await dbDelete('meetings',id); loadMeetings(); showNotif('Not silindi','ok');
+  await dbDelete('meetings',id); loadMeetings(); loadMeetingsForCalendar(); showNotif('Not silindi','ok');
 }
 
 // ═══════════════════════════════════════════════
